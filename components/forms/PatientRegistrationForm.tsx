@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { Button, FormSection } from '@/components/ui/FormElements';
 
 interface Doctor {
   id: string;
@@ -99,50 +99,70 @@ export const PatientRegistrationForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-        <h2 className="text-xl font-bold">📋 Patient Registration</h2>
-      </div>
-
-      {/* Form Content */}
-      <div className="p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Patient ID Row */}
-            <div className="flex items-center space-x-4">
-              <label className="text-gray-800 font-semibold text-base w-28 flex-shrink-0">Patient ID:</label>
-              <div className="flex flex-1 space-x-3">
+    <FormSection title="📋 Patient Registration" className="max-w-6xl mx-auto">
+      <div className="">
+        {/* Top toolbar: Patient ID/Name + actions */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="min-w-0">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Patient ID</label>
+              <div className="flex gap-2 min-w-0">
                 <input
                   type="text"
                   name="patientId"
                   value={formData.patientId}
                   onChange={handleInputChange}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                  className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="Enter Patient ID"
                 />
-                <Button 
-                  onClick={handleSearch}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-semibold"
-                >
+                <Button onClick={handleSearch} className="bg-blue-600 hover:bg-blue-700 text-white px-4">
                   Search
                 </Button>
               </div>
             </div>
-
-            {/* Patient Name */}
-            <div className="flex items-center space-x-4">
-              <label className="text-gray-800 font-semibold text-base w-28 flex-shrink-0">Patient Name:</label>
+            <div className="min-w-0">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
               <input
                 type="text"
                 name="patientName"
                 value={formData.patientName}
                 onChange={handleInputChange}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 placeholder="Enter patient name"
               />
             </div>
+            <div className="min-w-0">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4 flex-wrap">
+            <Button 
+              onClick={handleNewReceipt}
+              className="bg-green-600 hover:bg-green-700 text-white px-5"
+            >
+              New Receipt
+            </Button>
+            <Button 
+              onClick={handleAddReferredPatient}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-5"
+            >
+              Add Referred Patient
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Patient ID Row */}
+            {/* Toolbar moved above; continue with details */}
 
             {/* Title Radio Buttons */}
             <div className="flex items-center space-x-4">
@@ -165,7 +185,7 @@ export const PatientRegistrationForm: React.FC = () => {
             </div>
 
             {/* Age/Sex Row */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-4">
                 <label className="text-gray-800 font-semibold text-base w-16 flex-shrink-0">Age:</label>
                 <input
@@ -173,7 +193,7 @@ export const PatientRegistrationForm: React.FC = () => {
                   name="age"
                   value={formData.age}
                   onChange={handleInputChange}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="Age"
                 />
               </div>
@@ -183,7 +203,7 @@ export const PatientRegistrationForm: React.FC = () => {
                   name="sex"
                   value={formData.sex}
                   onChange={handleInputChange}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -200,7 +220,7 @@ export const PatientRegistrationForm: React.FC = () => {
                 name="mobileNo"
                 value={formData.mobileNo}
                 onChange={handleInputChange}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 placeholder="Enter mobile number"
               />
             </div>
@@ -209,32 +229,22 @@ export const PatientRegistrationForm: React.FC = () => {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Action Buttons Row */}
-            <div className="flex justify-end space-x-4 mb-6">
+      <div className="flex justify-end gap-3 mb-6">
               <Button 
                 onClick={handleNewReceipt}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 font-semibold"
+        className="bg-green-600 hover:bg-green-700 text-white px-5"
               >
                 New Receipt
               </Button>
               <Button 
                 onClick={handleAddReferredPatient}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 font-semibold"
+        className="bg-purple-600 hover:bg-purple-700 text-white px-5"
               >
                 Add Referred Patient
               </Button>
             </div>
 
-            {/* Date */}
-            <div className="flex items-center space-x-4">
-              <label className="text-gray-800 font-semibold text-base w-16 flex-shrink-0">Date:</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
-              />
-            </div>
+            {/* Date moved to top toolbar */}
 
             {/* Address */}
             <div>
@@ -244,7 +254,7 @@ export const PatientRegistrationForm: React.FC = () => {
                 value={formData.address}
                 onChange={handleInputChange}
                 rows={4}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 placeholder="Enter address"
               />
             </div>
@@ -256,7 +266,7 @@ export const PatientRegistrationForm: React.FC = () => {
                 name="referenceDoctor"
                 value={formData.referenceDoctor}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select Doctor</option>
                 {doctors.map((doctor) => (
@@ -273,11 +283,11 @@ export const PatientRegistrationForm: React.FC = () => {
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mt-8">
           <Button
             onClick={handleSave}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-16 py-4 text-lg font-bold shadow-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3 font-semibold"
           >
             {loading ? 'Saving...' : 'Save Patient'}
           </Button>
@@ -294,6 +304,6 @@ export const PatientRegistrationForm: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </FormSection>
   );
 };

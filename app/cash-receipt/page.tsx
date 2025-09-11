@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { Button, FormSection } from '@/components/ui/FormElements';
 
 interface TestOption {
   id: string;
@@ -134,118 +134,99 @@ export default function CashReceiptPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-4">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-blue-500 text-white px-4 py-2 rounded-t-md mb-0">
-          <h2 className="text-lg font-semibold">📋 New Cash Receipt</h2>
-        </div>
-
-        <div className="bg-white border border-gray-300 rounded-b-md p-8">
+  <div className="py-4">
+      <div className="">
+        <FormSection title="📋 New Cash Receipt">
           {/* First Row - Bill No */}
-          <div className="grid grid-cols-12 gap-6 mb-6 items-center">
-            <div className="col-span-2">
-              <label className="text-base font-semibold text-gray-800">Bill No.</label>
-            </div>
-            <div className="col-span-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Bill No.</label>
               <input
                 type="text"
                 name="billNo"
                 value={receiptData.billNo}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-md text-base text-gray-900 font-medium"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
             </div>
-            <div className="col-span-2">
-              <Button onClick={searchBill} className="bg-blue-500 hover:bg-blue-600 text-white text-base px-6 py-3 font-semibold">
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={searchBill} className="bg-blue-600 hover:bg-blue-700 text-white px-4">
                 Search Bill
               </Button>
-            </div>
-            <div className="col-span-2">
-              <Button onClick={newReceipt} className="bg-green-500 hover:bg-green-600 text-white text-base px-6 py-3 font-semibold">
+              <Button onClick={newReceipt} className="bg-green-600 hover:bg-green-700 text-white px-4">
                 New Receipt
               </Button>
             </div>
-            <div className="col-span-2">
-              <label className="flex items-center text-base font-semibold text-gray-800">
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700">
                 <input
                   type="checkbox"
                   name="isIPD"
                   checked={receiptData.isIPD}
                   onChange={handleInputChange}
-                  className="mr-3 w-4 h-4"
+                  className="mr-2 w-4 h-4"
                 />
                 Is IPD
               </label>
             </div>
-            <div className="col-span-1">
-              <label className="text-base font-semibold text-gray-800">Date :</label>
-            </div>
           </div>
 
           {/* Second Row - Patient No */}
-          <div className="grid grid-cols-12 gap-6 mb-6 items-center">
-            <div className="col-span-2">
-              <label className="text-base font-semibold text-gray-800">Patient No :</label>
-            </div>
-            <div className="col-span-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Patient No</label>
               <input
                 type="text"
                 name="patientNo"
                 value={receiptData.patientNo}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-md text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="col-span-2">
-              <Button onClick={searchPatient} className="bg-blue-500 hover:bg-blue-600 text-white text-base px-6 py-3 font-semibold">
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={searchPatient} className="bg-blue-600 hover:bg-blue-700 text-white px-4">
                 Search Patient
               </Button>
             </div>
-            <div className="col-span-2"></div>
-            <div className="col-span-3">
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-gray-700">Date</label>
               <input
                 type="date"
                 name="date"
                 value={receiptData.date}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-md text-base text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
               />
             </div>
           </div>
 
           {/* Third Row - Patient Name */}
-          <div className="grid grid-cols-12 gap-6 mb-6 items-center">
-            <div className="col-span-2">
-              <label className="text-base font-semibold text-gray-800">Patient Name :</label>
-            </div>
-            <div className="col-span-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-gray-700">Patient Name</label>
               <input
                 type="text"
                 name="patientName"
                 value={receiptData.patientName}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-md text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="col-span-3">
-              <label className="text-sm font-medium text-gray-700">Address :</label>
-            </div>
-            <div className="col-span-3">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Address</label>
               <textarea
                 name="address"
                 value={receiptData.address}
                 onChange={handleInputChange}
                 rows={2}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
               />
             </div>
           </div>
 
           {/* Fourth Row - Title Radio Buttons */}
-          <div className="grid grid-cols-12 gap-4 mb-4 items-center">
-            <div className="col-span-2"></div>
-            <div className="col-span-4 flex space-x-6">
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-6">
               {(['W/o', 'D/o', 'S/o'] as const).map((title) => (
                 <label key={title} className="flex items-center text-sm">
                   <input
@@ -263,38 +244,25 @@ export default function CashReceiptPage() {
           </div>
 
           {/* Fifth Row - Age/Sex and Mobile */}
-          <div className="grid grid-cols-12 gap-4 mb-4 items-center">
-            <div className="col-span-2">
-              <label className="text-sm font-medium text-gray-700">Age/Sex :</label>
-            </div>
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Age/Sex</label>
               <input
                 type="text"
                 name="ageSex"
                 value={receiptData.ageSex}
                 onChange={handleInputChange}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 placeholder="25/M"
               />
             </div>
-            <div className="col-span-2">
-              <select
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-              >
-                <option>Select</option>
-                <option>Male</option>
-                <option>Female</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="text-sm font-medium text-gray-700">Reference Doctor :</label>
-            </div>
-            <div className="col-span-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Reference Doctor</label>
               <select
                 name="referenceDoctor"
                 value={receiptData.referenceDoctor}
                 onChange={handleInputChange}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
               >
                 {doctors.map((doctor, index) => (
                   <option key={index} value={doctor}>{doctor}</option>
@@ -304,17 +272,15 @@ export default function CashReceiptPage() {
           </div>
 
           {/* Sixth Row - Mobile No */}
-          <div className="grid grid-cols-12 gap-4 mb-6 items-center">
-            <div className="col-span-2">
-              <label className="text-sm font-medium text-gray-700">Mobile No :</label>
-            </div>
-            <div className="col-span-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-end">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Mobile No</label>
               <input
                 type="tel"
                 name="mobileNo"
                 value={receiptData.mobileNo}
                 onChange={handleInputChange}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
               />
             </div>
           </div>
@@ -322,7 +288,7 @@ export default function CashReceiptPage() {
           {/* Test Details Section */}
           <div className="grid grid-cols-12 gap-6">
             {/* Left side - Test Selection */}
-            <div className="col-span-6">
+            <div className="col-span-12 lg:col-span-6">
               <div className="bg-gray-50 p-4 rounded border">
                 <h3 className="text-sm font-semibold mb-3">Test Details</h3>
                 <div className="mb-3">
@@ -362,7 +328,7 @@ export default function CashReceiptPage() {
             </div>
 
             {/* Right side - Summary */}
-            <div className="col-span-6">
+            <div className="col-span-12 lg:col-span-6">
               <div className="space-y-4">
                 <div className="text-right">
                   <div className="mb-2">
@@ -413,12 +379,12 @@ export default function CashReceiptPage() {
           <div className="mt-6 text-center">
             <Button
               onClick={handleSave}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
             >
               Save
             </Button>
           </div>
-        </div>
+        </FormSection>
       </div>
     </div>
   );

@@ -268,7 +268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
             </Link>
             
             <Link
-              href="/referal-amount"
+              href="/referral-amount"
               className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
             >
               <div className="flex items-center justify-between">

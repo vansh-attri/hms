@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/FormElements';
@@ -26,7 +26,7 @@ interface DailyStats {
   avgTransactionValue: number;
 }
 
-export default function DailyCollectionReportPage() {
+export default function DailyCollectionPage() {
   const [collections] = useState<CollectionData[]>([
     {
       id: '1',
@@ -163,8 +163,8 @@ export default function DailyCollectionReportPage() {
   const stats = getDailyStats();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="py-6">
+      <div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Daily Collection Report</h1>
           <p className="mt-2 text-gray-600">

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+  "dev": "next dev",
+  "dev:clean": "node -e \"const fs=require('fs'),p='.next';if(fs.existsSync(p)){fs.rmSync(p,{recursive:true,force:true});}console.log('Cleared .next cache');\" && npm run dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

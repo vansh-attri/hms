@@ -1,13 +1,42 @@
 @import "tailwindcss";
 
+/* Global form layout safety net to reduce overlap across pages */
+:where(main#main) label {
+  display: block;
+  margin-bottom: 0.25rem; /* 4px */
+}
+
+:where(main#main) input,
+:where(main#main) select,
+:where(main#main) textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* prevents flex/grid overflow */
+}
+
+/* Ensure grid children can shrink and not overflow */
+:where(main#main) .grid > * {
+  min-width: 0;
+}
+
+/* In horizontal input+button rows, let the input shrink and wrap buttons if needed */
+:where(main#main) .input-actions,
+:where(main#main) .actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+:where(main#main) .input-actions > input,
+:where(main#main) .input-actions > select,
+:where(main#main) .input-actions > textarea {
+  flex: 1 1 auto;
+  min-width: 10rem;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

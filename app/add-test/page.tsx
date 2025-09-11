@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { Button, CheckboxField, FormGrid, FormSection } from '@/components/ui/FormElements';
 
 interface TestData {
   testId: string;
@@ -71,6 +71,11 @@ export default function AddTestPage() {
     }));
   };
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setTestData(prev => ({ ...prev, [name]: checked }));
+  };
+
   const handleQuickAdd = (test: typeof commonTests[0]) => {
     setTestData(prev => ({
       ...prev,
@@ -112,8 +117,8 @@ export default function AddTestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div className="py-4">
+      <div className="">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Add Medical Test</h1>
           <p className="mt-2 text-gray-600">
@@ -121,10 +126,10 @@ export default function AddTestPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Quick Add Section */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-medium mb-4 text-gray-900">Quick Add Common Tests</h3>
               <div className="space-y-2">
                 {commonTests.map((test, index) => (
@@ -143,15 +148,10 @@ export default function AddTestPage() {
 
           {/* Main Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              {/* Header */}
-              <div className="bg-purple-600 text-white px-4 py-2 rounded-t-lg -mx-6 -mt-6 mb-6">
-                <h2 className="text-xl font-semibold">🧪 Add Test</h2>
-              </div>
-
+            <FormSection title="🧪 Add Test" description="Add new medical tests and diagnostic procedures">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormGrid cols={2}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Test ID
@@ -179,9 +179,9 @@ export default function AddTestPage() {
                       placeholder="Enter test name"
                     />
                   </div>
-                </div>
+                </FormGrid>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormGrid cols={2}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Category *
@@ -215,9 +215,9 @@ export default function AddTestPage() {
                       placeholder="Enter price"
                     />
                   </div>
-                </div>
+                </FormGrid>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormGrid cols={2}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Normal Range
@@ -244,7 +244,7 @@ export default function AddTestPage() {
                       placeholder="e.g., mg/dL, cells/mcL"
                     />
                   </div>
-                </div>
+                </FormGrid>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -274,18 +274,12 @@ export default function AddTestPage() {
                   />
                 </div>
 
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    checked={testData.isActive}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">
-                    Test is active and available for booking
-                  </label>
-                </div>
+                <CheckboxField
+                  name="isActive"
+                  checked={testData.isActive}
+                  onChange={handleCheckboxChange}
+                  label="Test is active and available for booking"
+                />
 
                 {/* Submit Button */}
                 <div className="flex justify-center space-x-4">
@@ -326,7 +320,7 @@ export default function AddTestPage() {
                   </div>
                 )}
               </form>
-            </div>
+            </FormSection>
           </div>
         </div>
       </div>

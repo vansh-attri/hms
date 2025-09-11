@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { Button, FormSection } from '@/components/ui/FormElements';
 
 interface Doctor {
   doctorId: string;
@@ -39,10 +39,6 @@ export default function AddDoctorPage() {
 
   const handleSave = () => {
     if (doctorName.trim()) {
-      console.log('Saving doctor:', {
-        doctorName: doctorName,
-        isDeleted: isDeleted
-      });
       setMessage('Doctor saved successfully!');
       setDoctorName('');
       setIsDeleted(false);
@@ -52,19 +48,13 @@ export default function AddDoctorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-4">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-blue-500 text-white px-4 py-2 rounded-t-md">
-          <h2 className="text-lg font-semibold">👨‍⚕️ Add New Doctor Name</h2>
-        </div>
-
-        <div className="bg-white border border-gray-300 rounded-b-md">
-          <div className="p-8">
-            <div className="grid grid-cols-12 gap-8">
+  <main className="py-4">
+      <div className="">
+        <FormSection title="👨‍⚕️ Add New Doctor" className="max-w-6xl">
+          <div className="grid grid-cols-12 gap-6">
               {/* Left side - Add Doctor Form */}
-              <div className="col-span-5">
-                <div className="space-y-8">
+              <div className="col-span-12 md:col-span-5">
+                <div className="space-y-6">
                   <div>
                     <label className="block text-gray-800 font-semibold text-base mb-3">
                       Enter Doctor Name
@@ -92,78 +82,66 @@ export default function AddDoctorPage() {
                     </label>
                   </div>
 
-                  <div className="flex justify-center">
+          <div className="flex justify-center">
                     <Button
                       onClick={handleSave}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-12 py-3 text-lg font-bold shadow-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8"
                     >
                       Save Doctor
                     </Button>
                   </div>
 
                   {message && (
-                    <div className={`p-4 rounded-md text-center font-semibold ${
-                      message.includes('success') 
-                        ? 'bg-green-100 text-green-800 border-2 border-green-200' 
-                        : 'bg-red-100 text-red-800 border-2 border-red-200'
-                    }`}>
+                    <div
+                      className={
+                        message.includes('success')
+                          ? 'p-4 rounded-md text-center font-semibold bg-green-100 text-green-800 border-2 border-green-200'
+                          : 'p-4 rounded-md text-center font-semibold bg-red-100 text-red-800 border-2 border-red-200'
+                      }
+                    >
                       {message}
                     </div>
                   )}
                 </div>
               </div>
 
-            {/* Right side - Doctor List */}
-            <div className="col-span-7">
-              <div className="border border-gray-300 rounded">
-                {/* Table Header */}
-                <div className="grid grid-cols-12 gap-2 bg-gray-100 p-2 text-sm font-medium border-b border-gray-300">
-                  <div className="col-span-1">►</div>
-                  <div className="col-span-3">DoctorID</div>
-                  <div className="col-span-6">DoctorName</div>
-                  <div className="col-span-2">isDeleted</div>
+              {/* Right side - Doctor List */}
+              <div className="col-span-12 md:col-span-7">
+                <div className="border border-gray-200 rounded">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-12 gap-2 bg-gray-100 p-2 text-sm font-medium border-b border-gray-300">
+                    <div className="col-span-1">►</div>
+                    <div className="col-span-3">DoctorID</div>
+                    <div className="col-span-6">DoctorName</div>
+                    <div className="col-span-2">isDeleted</div>
+                  </div>
+
+                  {/* Table Body */}
+                  <div className="max-h-80 overflow-y-auto">
+                    {doctors.map((doctor, index) => {
+                      const rowClasses = 'grid grid-cols-12 gap-2 p-2 text-sm border-b border-gray-200 hover:bg-blue-50 cursor-pointer' + (index === 0 ? ' bg-blue-100' : '');
+                      return (
+                        <div key={doctor.doctorId} className={rowClasses}>
+                          <div className="col-span-1">{index === 0 ? '►' : ''}</div>
+                          <div className="col-span-3 font-medium text-blue-600">{doctor.doctorId}</div>
+                          <div className="col-span-6">{doctor.doctorName}</div>
+                          <div className="col-span-2 text-center">
+                            <input type="checkbox" checked={doctor.isDeleted} readOnly className="cursor-pointer" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Table Body */}
-                <div className="max-h-80 overflow-y-auto">
-                  {doctors.map((doctor, index) => (
-                    <div 
-                      key={doctor.doctorId} 
-                      className={`grid grid-cols-12 gap-2 p-2 text-sm border-b border-gray-200 hover:bg-blue-50 cursor-pointer ${
-                        index === 0 ? 'bg-blue-100' : ''
-                      }`}
-                    >
-                      <div className="col-span-1">
-                        {index === 0 && '►'}
-                      </div>
-                      <div className="col-span-3 font-medium text-blue-600">
-                        {doctor.doctorId}
-                      </div>
-                      <div className="col-span-6">
-                        {doctor.doctorName}
-                      </div>
-                      <div className="col-span-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={doctor.isDeleted}
-                          readOnly
-                          className="cursor-pointer"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                {/* Footer info */}
+                <div className="mt-2 text-xs text-gray-500">
+                  Total doctors: {doctors.length} | Active: {doctors.filter((d) => !d.isDeleted).length}
                 </div>
               </div>
-
-              {/* Footer info */}
-              <div className="mt-2 text-xs text-gray-500">
-                Total doctors: {doctors.length} | Active: {doctors.filter(d => !d.isDeleted).length}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
+    </FormSection>
+      </div>
+    </main>
   );
 }
-

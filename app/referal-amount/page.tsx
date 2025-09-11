@@ -348,3 +348,4 @@ export default function ReferralAmountPage() {
     </div>
   );
 }
+// Removed duplicate misspelled page. Use /referral-amount instead.

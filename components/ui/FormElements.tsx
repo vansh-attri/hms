@@ -22,7 +22,7 @@ export const Button: React.FC<ButtonProps> = ({
   onClick,
   className = '',
 }) => {
-  const base = 'font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200';
+  const base = 'font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed';
   const variants = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-blue-300',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-300',
@@ -49,7 +49,7 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ children, title, className = '' }) => (
-  <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
+  <div className={`bg-white/90 backdrop-blur rounded-lg shadow-sm border border-gray-200 ${className}`}>
     {title && (
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
@@ -69,6 +69,8 @@ interface InputFieldProps {
   error?: string;
   placeholder?: string;
   required?: boolean;
+  helpText?: string;
+  labelSrOnly?: boolean;
   className?: string;
 }
 
@@ -81,10 +83,12 @@ export const InputField: React.FC<InputFieldProps> = ({
   error,
   placeholder,
   required = false,
+  helpText,
+  labelSrOnly = false,
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
+    <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-2 ${labelSrOnly ? 'sr-only' : ''}`}>
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
@@ -95,11 +99,12 @@ export const InputField: React.FC<InputFieldProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black ${
-        error ? 'border-red-500' : 'border-gray-300'
+      className={`w-full px-3 py-2 rounded-md shadow-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 ${
+        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
       }`}
       required={required}
     />
+    {helpText && !error && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
     {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
   </div>
 );
@@ -112,6 +117,8 @@ interface SelectFieldProps {
   options: { value: string | number; label: string }[];
   error?: string;
   required?: boolean;
+  helpText?: string;
+  labelSrOnly?: boolean;
   className?: string;
 }
 
@@ -123,10 +130,12 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   options,
   error,
   required = false,
+  helpText,
+  labelSrOnly = false,
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
+    <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-2 ${labelSrOnly ? 'sr-only' : ''}`}>
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
@@ -135,8 +144,8 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       name={name}
       value={value}
       onChange={onChange}
-      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black ${
-        error ? 'border-red-500' : 'border-gray-300'
+      className={`w-full px-3 py-2 rounded-md shadow-sm text-black focus:outline-none focus:ring-2 ${
+        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
       }`}
       required={required}
     >
@@ -147,6 +156,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         </option>
       ))}
     </select>
+    {helpText && !error && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
     {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
   </div>
 );
@@ -160,6 +170,8 @@ interface TextAreaFieldProps {
   placeholder?: string;
   required?: boolean;
   rows?: number;
+  helpText?: string;
+  labelSrOnly?: boolean;
   className?: string;
 }
 
@@ -172,10 +184,12 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   placeholder,
   required = false,
   rows = 3,
+  helpText,
+  labelSrOnly = false,
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
+    <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-2 ${labelSrOnly ? 'sr-only' : ''}`}>
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
@@ -186,12 +200,74 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       rows={rows}
-      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical text-black ${
-        error ? 'border-red-500' : 'border-gray-300'
+      className={`w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 resize-y text-black ${
+        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
       }`}
       required={required}
     />
+    {helpText && !error && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
     {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
   </div>
+);
+
+// Checkbox Field
+interface CheckboxFieldProps {
+  label: string | React.ReactNode;
+  name: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  helpText?: string;
+  className?: string;
+}
+
+export const CheckboxField: React.FC<CheckboxFieldProps> = ({
+  label,
+  name,
+  checked,
+  onChange,
+  helpText,
+  className = '',
+}) => (
+  <div className={`mb-4 ${className}`}>
+    <label className="flex items-start gap-3 text-sm text-gray-700">
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+      />
+      <span>{label}</span>
+    </label>
+    {helpText && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
+  </div>
+);
+
+// Layout helpers
+export const FormGrid: React.FC<{
+  children: React.ReactNode;
+  cols?: 1 | 2 | 3 | 4;
+  className?: string;
+}> = ({ children, cols = 2, className = '' }) => {
+  const map: Record<number, string> = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-1 md:grid-cols-2',
+    3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+  };
+  return <div className={`grid ${map[cols]} gap-4 ${className}`}>{children}</div>;
+};
+
+export const FormSection: React.FC<{ title?: string; description?: string; children: React.ReactNode; className?: string }>
+  = ({ title, description, children, className = '' }) => (
+  <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 ${className}`}>
+    {(title || description) && (
+      <header className="mb-3">
+        {title && <h2 className="text-base font-semibold text-gray-900">{title}</h2>}
+        {description && <p className="text-sm text-gray-600">{description}</p>}
+      </header>
+    )}
+    {children}
+  </section>
 );
 

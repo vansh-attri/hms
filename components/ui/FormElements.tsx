@@ -24,17 +24,23 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const base = 'font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed';
   const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-blue-300',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-300',
+    primary: 'text-white hover:brightness-95 focus:ring-[var(--color-accent)] disabled:opacity-50',
+    secondary: 'text-[var(--color-text)] hover:brightness-95 focus:ring-[var(--color-primary)] disabled:opacity-50',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-300',
   } as const;
   const sizes = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2 text-base', lg: 'px-6 py-3 text-lg' } as const;
+  const paletteBg = {
+    primary: 'bg-[var(--color-accent)]',
+    secondary: 'bg-[var(--color-secondary)]',
+    danger: '',
+  } as const;
+
   return (
     <button
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`${base} ${variants[variant ?? 'primary']} ${sizes[size ?? 'md']} ${className}`}
+      className={`${base} ${paletteBg[variant ?? 'primary']} ${variants[variant ?? 'primary']} ${sizes[size ?? 'md']} ${className}`}
     >
       {children}
     </button>
@@ -49,9 +55,9 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ children, title, className = '' }) => (
-  <div className={`bg-white/90 backdrop-blur rounded-lg shadow-sm border border-gray-200 ${className}`}>
+  <div className={`bg-white/90 backdrop-blur rounded-lg shadow-sm border ${className}`} style={{ borderColor: 'var(--color-secondary)' }}>
     {title && (
-      <div className="px-6 py-4 border-b border-gray-200">
+  <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--color-secondary)' }}>
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       </div>
     )}
@@ -88,7 +94,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-2 ${labelSrOnly ? 'sr-only' : ''}`}>
+  <label htmlFor={name} className={`block text-sm font-medium mb-2 ${labelSrOnly ? 'sr-only' : ''}`} style={{ color: 'var(--color-text)' }}>
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
@@ -99,9 +105,10 @@ export const InputField: React.FC<InputFieldProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full px-3 py-2 rounded-md shadow-sm text-black placeholder:text-gray-400 focus:outline-none focus:ring-2 ${
-        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+      className={`w-full px-3 py-2 rounded-md shadow-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 ${
+        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border focus:ring-[var(--color-accent)]'
       }`}
+      style={!error ? { borderColor: 'var(--color-secondary)' } : undefined}
       required={required}
     />
     {helpText && !error && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
@@ -135,7 +142,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-2 ${labelSrOnly ? 'sr-only' : ''}`}>
+  <label htmlFor={name} className={`block text-sm font-medium mb-2 ${labelSrOnly ? 'sr-only' : ''}`} style={{ color: 'var(--color-text)' }}>
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
@@ -145,8 +152,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       value={value}
       onChange={onChange}
       className={`w-full px-3 py-2 rounded-md shadow-sm text-black focus:outline-none focus:ring-2 ${
-        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border focus:ring-[var(--color-accent)]'
       }`}
+      style={!error ? { borderColor: 'var(--color-secondary)' } : undefined}
       required={required}
     >
       <option value="">Select {label.toLowerCase()}</option>
@@ -189,7 +197,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label htmlFor={name} className={`block text-sm font-medium text-gray-700 mb-2 ${labelSrOnly ? 'sr-only' : ''}`}>
+  <label htmlFor={name} className={`block text-sm font-medium mb-2 ${labelSrOnly ? 'sr-only' : ''}`} style={{ color: 'var(--color-text)' }}>
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
     </label>
@@ -201,8 +209,9 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
       placeholder={placeholder}
       rows={rows}
       className={`w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 resize-y text-black ${
-        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+        error ? 'border-red-500 focus:ring-red-500 border-2' : 'border focus:ring-[var(--color-accent)]'
       }`}
+      style={!error ? { borderColor: 'var(--color-secondary)' } : undefined}
       required={required}
     />
     {helpText && !error && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
@@ -229,13 +238,14 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
   className = '',
 }) => (
   <div className={`mb-4 ${className}`}>
-    <label className="flex items-start gap-3 text-sm text-gray-700">
+  <label className="flex items-start gap-3 text-sm" style={{ color: 'var(--color-text)' }}>
       <input
         type="checkbox"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+  className="mt-0.5 h-4 w-4 rounded focus:ring-[var(--color-accent)]"
+  style={{ borderColor: 'var(--color-secondary)', color: 'var(--color-accent)' }}
       />
       <span>{label}</span>
     </label>
@@ -260,11 +270,11 @@ export const FormGrid: React.FC<{
 
 export const FormSection: React.FC<{ title?: string; description?: string; children: React.ReactNode; className?: string }>
   = ({ title, description, children, className = '' }) => (
-  <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-5 ${className}`}>
+  <section className={`bg-white rounded-lg shadow-sm border p-4 sm:p-5 ${className}`} style={{ borderColor: 'var(--color-secondary)' }}>
     {(title || description) && (
       <header className="mb-3">
-        {title && <h2 className="text-base font-semibold text-gray-900">{title}</h2>}
-        {description && <p className="text-sm text-gray-600">{description}</p>}
+  {title && <h2 className="text-base font-semibold" style={{ color: 'var(--color-primary)' }}>{title}</h2>}
+  {description && <p className="text-sm" style={{ color: 'var(--color-text)' }}>{description}</p>}
       </header>
     )}
     {children}

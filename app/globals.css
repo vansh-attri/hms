@@ -35,8 +35,17 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* App palette */
+  --color-primary: #37474F;   /* Charcoal Gray */
+  --color-secondary: #ECEFF1; /* Light Gray */
+  --color-accent: #2E7D32;    /* Emerald Green */
+  --color-accent-alt: #FF7043;/* Warm Orange */
+  --color-bg: #FFFFFF;        /* Background */
+  --color-text: #212121;      /* Dark Gray */
+
+  /* Legacy bindings used across the app */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

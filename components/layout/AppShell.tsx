@@ -39,17 +39,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+  <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-blue-600 text-white px-3 py-1 rounded">Skip to content</a>
 
       {/* Topbar */}
-      <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3">
-          <button aria-label="Toggle sidebar" className="md:hidden p-2 rounded hover:bg-gray-100" onClick={() => setSidebarOpen(v => !v)}>
+      <header className="sticky top-0 z-40 w-full border-b" style={{ backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)' }}>
+        <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3">
+          <button aria-label="Toggle sidebar" className="md:hidden p-2 rounded hover:bg-[var(--color-secondary)]" onClick={() => setSidebarOpen(v => !v)}>
             {iconMenu()}
           </button>
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded bg-blue-600 text-white">H</span>
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded" style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>H</span>
             <span>HMS Admin</span>
           </Link>
           <div className="ml-auto flex items-center gap-2">
@@ -59,15 +59,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 placeholder="Search pages (e.g. patient, receipt)"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-72 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-72 rounded-md border px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2"
+                style={{ backgroundColor: '#fff', borderColor: 'var(--color-secondary)' }}
               />
               {query && (
-                <div className="absolute mt-1 w-full rounded-md border bg-white shadow-lg max-h-64 overflow-auto">
+                <div className="absolute mt-1 w-full rounded-md border bg-white shadow-lg max-h-64 overflow-auto" style={{ borderColor: 'var(--color-secondary)' }}>
                   {filtered.map(item => (
                     <Link
                       key={item.id}
                       href={item.href}
-                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-secondary)]"
                     >
                       <span className="text-gray-500">{item.icon}</span>
                       <span>{item.label}</span>
@@ -77,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               )}
             </div>
-            <button className="hidden md:inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-50" title="Toggle theme">
+            <button className="hidden md:inline-flex items-center gap-2 rounded-md border bg-white px-2.5 py-1.5 text-sm shadow-sm hover:bg-[var(--color-secondary)]" style={{ borderColor: 'var(--color-secondary)' }} title="Toggle theme">
               {iconSun()}
               <span className="sr-only">Toggle theme</span>
             </button>
@@ -88,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Layout */}
   <div className="flex">
         {/* Sidebar */}
-        <nav aria-label="Main" className={`fixed md:sticky left-0 top-14 md:top-16 z-30 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-64 transform border-r bg-white p-3 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <nav aria-label="Main" className={`fixed md:sticky left-0 top-14 md:top-16 z-30 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-64 transform border-r bg-white p-3 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ borderColor: 'var(--color-secondary)' }}>
           <ul className="space-y-1">
             {NAV_ITEMS.map(item => {
               const active = pathname === item.href;
@@ -97,9 +98,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Link
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${active ? 'bg-blue-50 text-blue-700 hover:bg-blue-50' : 'hover:bg-gray-50'}`}
+                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${active ? 'text-[var(--color-primary)]' : ''} hover:bg-[var(--color-secondary)]`}
                   >
-                    <span className={`text-gray-500 ${active ? 'text-blue-600' : ''}`}>{item.icon}</span>
+                    <span className={`text-gray-500 ${active ? 'text-[var(--color-primary)]' : ''}`}>{item.icon}</span>
                     <span>{item.label}</span>
                   </Link>
                 </li>

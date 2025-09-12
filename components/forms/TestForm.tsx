@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
+import { api } from '@/utils/api';
 
 interface TestFormData {
   testId?: string;
@@ -75,21 +76,24 @@ export const TestForm: React.FC = () => {
 
   const loadTests = async () => {
     try {
-      // Mock data based on database structure
-      const mockTests: TestRecord[] = [
-        { ID: 289, TestName: 'USG Abdomen', Price: 1000, Category: 'USG', isDeleted: false },
-        { ID: 290, TestName: 'USG OBSTETRICS', Price: 1000, Category: 'USG', isDeleted: false },
-        { ID: 291, TestName: 'NT NB SCAN / LEVEL I', Price: 1800, Category: 'USG', isDeleted: false },
-        { ID: 292, TestName: 'LEVEL II', Price: 2500, Category: 'USG', isDeleted: false },
-        { ID: 293, TestName: 'Complete Blood Count (CBC)', Price: 300, Category: 'Blood Tests', isDeleted: false },
-        { ID: 294, TestName: 'Fasting Blood Sugar', Price: 150, Category: 'Diabetes', isDeleted: false },
-        { ID: 295, TestName: 'Lipid Profile', Price: 800, Category: 'Blood Tests', isDeleted: false },
-        { ID: 296, TestName: 'Liver Function Test', Price: 600, Category: 'Liver Function', isDeleted: false },
-      ];
-      setTests(mockTests);
+      setLoading(true);
+      const testsData = await api.tests.getAll();
+      
+      // Convert API response to match our TestRecord interface
+      const convertedTests: TestRecord[] = testsData.map(test => ({
+        ID: test.id,
+        TestName: test.name,
+        Price: test.price,
+        Category: test.category || 'General',
+        isDeleted: test.isDeleted
+      }));
+      
+      setTests(convertedTests);
     } catch (error) {
       console.error('Failed to load tests:', error);
-      setMessage('Failed to load tests');
+      setMessage('Failed to load tests from server');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -157,17 +161,25 @@ export const TestForm: React.FC = () => {
     setMessage('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const testData = {
+        name: formData.testName.trim(),
+        price: formData.price,
+        category: formData.category,
+        isDeleted: formData.isDeleted
+      };
+
       if (formData.testId) {
+        // Update existing test
+        await api.tests.update(formData.testId, testData);
         setMessage('Test updated successfully!');
       } else {
+        // Create new test
+        await api.tests.create(testData);
         setMessage('Test added successfully!');
       }
 
-      // In a real implementation, this would call the actual API
-      // and reload the tests list
+      // Reload tests list
+      await loadTests();
       
       // Reset form
       handleClear();
@@ -186,12 +198,11 @@ export const TestForm: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.tests.delete(formData.testId);
       setMessage('Test deleted successfully!');
       
-      // In a real implementation, this would call the actual API
-      // and reload the tests list
+      // Reload tests list
+      await loadTests();
       
       handleClear();
     } catch (error) {

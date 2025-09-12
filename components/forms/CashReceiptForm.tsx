@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
+import { api, patientAPI } from '@/utils/api';
+
+type PatientSearchRow = Awaited<ReturnType<typeof patientAPI.search>>[number];
 
 interface CashReceiptFormData {
   receiptId?: string;
@@ -46,21 +49,9 @@ interface TestOption {
 }
 
 interface DoctorOption {
-  ID: number;
-  DoctorName: string;
-  isDeleted: boolean;
-}
-
-interface PatientOption {
   id: number;
   name: string;
-  Mobile: string;
-  Age: string;
-  Gender: string;
-  Address: string;
-  RelationType: string;
-  Relation: string;
-  DoctorID: number;
+  isDeleted: number; // 0 = active, 1 = deleted
 }
 
 export const CashReceiptForm: React.FC = () => {
@@ -89,10 +80,11 @@ export const CashReceiptForm: React.FC = () => {
 
   const [tests, setTests] = useState<TestOption[]>([]);
   const [doctors, setDoctors] = useState<DoctorOption[]>([]);
-  const [patients, setPatients] = useState<PatientOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [searchPatientQuery, setSearchPatientQuery] = useState('');
+  const [searchPatientResults, setSearchPatientResults] = useState<PatientSearchRow[]>([]);
+  const [searchingPatients, setSearchingPatients] = useState(false);
   const [searchTestQuery, setSearchTestQuery] = useState('');
   const [showPatientSearch, setShowPatientSearch] = useState(false);
 
@@ -103,39 +95,49 @@ export const CashReceiptForm: React.FC = () => {
 
   const loadInitialData = async () => {
     try {
-      // Mock data for tests
-      const mockTests: TestOption[] = [
-        { ID: 289, TestName: 'USG Abdomen', Price: 1000, Category: 'USG', isDeleted: false },
-        { ID: 290, TestName: 'USG OBSTETRICS', Price: 1000, Category: 'USG', isDeleted: false },
-        { ID: 291, TestName: 'NT NB SCAN / LEVEL I', Price: 1800, Category: 'USG', isDeleted: false },
-        { ID: 292, TestName: 'LEVEL II', Price: 2500, Category: 'USG', isDeleted: false },
-        { ID: 293, TestName: 'Complete Blood Count (CBC)', Price: 300, Category: 'Blood Tests', isDeleted: false },
-        { ID: 294, TestName: 'Fasting Blood Sugar', Price: 150, Category: 'Diabetes', isDeleted: false },
-        { ID: 295, TestName: 'Lipid Profile', Price: 800, Category: 'Blood Tests', isDeleted: false },
-        { ID: 296, TestName: 'Liver Function Test', Price: 600, Category: 'Liver Function', isDeleted: false },
-      ];
+      setLoading(true);
+      console.log('Starting to load initial data...');
+      
+      // Load real data from APIs
+      const [testsData, doctorsData] = await Promise.all([
+        api.tests.getAll().catch(err => {
+          console.error('Tests API failed:', err);
+          return [];
+        }),
+        api.doctors.getAll().catch(err => {
+          console.error('Doctors API failed:', err);
+          return [];
+        })
+      ]);
 
-      // Mock data for doctors
-      const mockDoctors: DoctorOption[] = [
-        { ID: 1594, DoctorName: 'Dr. Virender Kumar', isDeleted: false },
-        { ID: 1595, DoctorName: 'SELF', isDeleted: false },
-        { ID: 1596, DoctorName: 'MALIK HOSPITAL', isDeleted: false },
-        { ID: 1597, DoctorName: 'SIDDHIVINAYAK', isDeleted: false },
-      ];
+      console.log('Raw API responses:');
+      console.log('Tests:', testsData?.length || 0);
+      console.log('Doctors:', doctorsData?.length || 0);
 
-      // Mock data for patients
-      const mockPatients: PatientOption[] = [
-        { id: 1, name: 'John Doe', Mobile: '9876543210', Age: '35', Gender: 'Male', Address: '123 Main St', RelationType: 'S/o', Relation: 'Ram Doe', DoctorID: 1594 },
-        { id: 2, name: 'Jane Smith', Mobile: '9876543211', Age: '28', Gender: 'Female', Address: '456 Oak Ave', RelationType: 'D/o', Relation: 'Robert Smith', DoctorID: 1595 },
-        { id: 3, name: 'Mike Johnson', Mobile: '9876543212', Age: '45', Gender: 'Male', Address: '789 Pine St', RelationType: 'S/o', Relation: 'David Johnson', DoctorID: 1596 },
-      ];
+      // Convert tests data to match TestOption interface
+      const convertedTests: TestOption[] = testsData.map(test => ({
+        ID: test.id,
+        TestName: test.name,
+        Price: test.price,
+        Category: test.category || 'General',
+        isDeleted: test.isDeleted
+      }));
 
-      setTests(mockTests);
-      setDoctors(mockDoctors);
-      setPatients(mockPatients);
+      // Convert doctors data to match DoctorOption interface
+      const convertedDoctors: DoctorOption[] = doctorsData.map(doctor => ({
+        id: doctor.id,
+        name: doctor.name,
+        isDeleted: doctor.isDeleted // Keep as number (0 = active, 1 = deleted)
+      }));
+
+      setTests(convertedTests);
+      setDoctors(convertedDoctors);
+      console.log('Successfully loaded:', convertedDoctors.length, 'doctors');
     } catch (error) {
       console.error('Failed to load initial data:', error);
       setMessage('Failed to load initial data');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,21 +151,41 @@ export const CashReceiptForm: React.FC = () => {
     }));
   };
 
-  const handlePatientSelect = (patient: PatientOption) => {
+  // Patient search function similar to PatientRegistrationForm
+  const handlePatientSearch = async () => {
+    if (!searchPatientQuery.trim()) return;
+    
+    setSearchingPatients(true);
+    try {
+      const rows = await patientAPI.search({ 
+        name: /\D/.test(searchPatientQuery) ? searchPatientQuery : undefined, 
+        mobile: /^\d+$/.test(searchPatientQuery) ? searchPatientQuery : undefined, 
+        limit: 20 
+      });
+      setSearchPatientResults(rows);
+    } catch {
+      setMessage('Error searching patients');
+    } finally {
+      setSearchingPatients(false);
+    }
+  };
+
+  const applyPatientToForm = (row: PatientSearchRow) => {
     setFormData(prev => ({
       ...prev,
-      patientID: patient.id,
-      patientName: patient.name,
-      mobile: patient.Mobile,
-      age: patient.Age,
-      gender: patient.Gender as 'Male' | 'Female' | 'Other',
-      address: patient.Address,
-      relationType: patient.RelationType as 'W/o' | 'D/o' | 'S/o',
-      relation: patient.Relation,
-      doctorID: patient.DoctorID,
+      patientID: row.id,
+      patientName: row.name || '',
+      mobile: row.Mobile || '',
+      age: row.Age ? String(row.Age) : '',
+      gender: (row.Gender as 'Male' | 'Female' | 'Other') || 'Male',
+      address: row.Address || '',
+      relationType: (row.RelationType as 'W/o' | 'D/o' | 'S/o') || 'W/o',
+      relation: row.Relation || '',
+      doctorID: row.DoctorID || 1594,
     }));
-    setShowPatientSearch(false);
+    setSearchPatientResults([]);
     setSearchPatientQuery('');
+    setShowPatientSearch(false);
   };
 
   const handleTestSelect = (test: TestOption) => {
@@ -285,22 +307,59 @@ export const CashReceiptForm: React.FC = () => {
       return;
     }
 
+    if (!formData.doctorID) {
+      setMessage('Doctor is required');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setMessage('Cash receipt saved successfully!');
+      // Prepare the receipt data according to CashReceiptCreateData interface
+      const receiptData = {
+        PatientName: formData.patientName,
+        BillDate: formData.billDate,
+        UserName: formData.userName || 'web',
+        OrgID: formData.orgID || 1,
+        RelationType: formData.relationType,
+        Relation: formData.relation,
+        Mobile: formData.mobile,
+        Age: formData.age,
+        Address: formData.address,
+        Gender: formData.gender,
+        TotalAmount: formData.totalAmount,
+        Discount: formData.discount,
+        NetAmount: formData.netAmount,
+        NetAmountWords: '', // Could be calculated
+        RefAmount: formData.refAmount,
+        DoctorID: Number(formData.doctorID),
+        IsRefPaid: formData.isRefPaid,
+        PatientID: formData.patientID || undefined,
+        IsIPD: formData.isIPD,
+        IsDischarged: formData.isDischarged,
+        tests: formData.selectedTests.map(test => ({
+          TestID: test.testId,
+          Quantity: test.quantity,
+          Rate: test.price,
+          Amount: test.price * test.quantity,
+          IsPrintable: test.isPrintable
+        }))
+      };
+
+      // Call the actual API
+      const savedReceipt = await api.receipts.create(receiptData);
       
-      // In a real implementation, this would call the actual API
-      // to save both tbl_cashreceipt and tbl_cashreceipt_details
+      setMessage(`Cash receipt saved successfully! Receipt ID: ${savedReceipt.ReceiptID}`);
       
       // Reset form after successful save
-      handleClear();
+      setTimeout(() => {
+        handleClear();
+      }, 2000);
+      
     } catch (error) {
       console.error('Save failed:', error);
-      setMessage('Error saving cash receipt');
+      setMessage('Error saving cash receipt. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -314,11 +373,6 @@ export const CashReceiptForm: React.FC = () => {
   const filteredTests = tests.filter(test => 
     !test.isDeleted && 
     test.TestName.toLowerCase().includes(searchTestQuery.toLowerCase())
-  );
-
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchPatientQuery.toLowerCase()) ||
-    patient.Mobile.includes(searchPatientQuery)
   );
 
   return (
@@ -366,27 +420,67 @@ export const CashReceiptForm: React.FC = () => {
             {showPatientSearch && (
               <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Search Existing Patient</h4>
-                <input
-                  type="text"
-                  value={searchPatientQuery}
-                  onChange={(e) => setSearchPatientQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="Search by name or mobile number..."
-                />
-                {searchPatientQuery && (
-                  <div className="mt-3 max-h-40 overflow-y-auto border border-gray-200 rounded-lg">
-                    {filteredPatients.map((patient) => (
-                      <div
-                        key={patient.id}
-                        onClick={() => handlePatientSelect(patient)}
-                        className="p-3 border-b border-gray-100 hover:bg-green-50 cursor-pointer transition-colors"
-                      >
-                        <div className="font-medium text-gray-900">{patient.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {patient.Mobile} • {patient.Age} years • {patient.Gender}
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={searchPatientQuery}
+                      onChange={(e) => setSearchPatientQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handlePatientSearch()}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      placeholder="Search by name or mobile number..."
+                    />
+                  </div>
+                  <Button
+                    onClick={handlePatientSearch}
+                    disabled={searchingPatients || !searchPatientQuery.trim()}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                  >
+                    {searchingPatients ? 'Searching...' : 'Search'}
+                  </Button>
+                  {searchPatientQuery && (
+                    <Button
+                      onClick={() => {
+                        setSearchPatientQuery('');
+                        setSearchPatientResults([]);
+                      }}
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
+                {/* Search Results */}
+                {searchPatientResults.length > 0 && (
+                  <div className="mt-4 bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700">
+                      Found {searchPatientResults.length} patient(s)
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {searchPatientResults.map((row) => (
+                        <div
+                          key={row.id}
+                          onClick={() => applyPatientToForm(row)}
+                          className="p-4 border-b border-gray-100 hover:bg-green-50 cursor-pointer transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-gray-900">{row.name}</div>
+                              <div className="text-sm text-gray-500">
+                                {row.Mobile} • {row.Age} years • {row.Gender}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {row.RelationType} {row.Relation} • {row.Address}
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              ID: {row.id}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -530,13 +624,19 @@ export const CashReceiptForm: React.FC = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                   >
-                    <option value={0}>Select Doctor</option>
-                    {doctors.filter(d => !d.isDeleted).map((doctor) => (
-                      <option key={doctor.ID} value={doctor.ID}>
-                        {doctor.DoctorName}
+                    <option value={0}>Select Doctor ({doctors.filter(d => d.isDeleted === 0).length} available)</option>
+                    {doctors.filter(d => d.isDeleted === 0).map((doctor) => (
+                      <option key={doctor.id} value={doctor.id}>
+                        {doctor.name}
                       </option>
                     ))}
                   </select>
+                  {/* Debug info */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Total doctors: {doctors.length}, Active: {doctors.filter(d => d.isDeleted === 0).length}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

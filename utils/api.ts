@@ -45,32 +45,29 @@ export type LegacyPatientCreate = {
 
 // Test types
 export type TestSummary = {
-  ID: number;
-  TestName: string;
-  Price: number;
-  Category?: string | null;
+  id: number;
+  name: string;
+  price: number;
+  category?: string | null;
   isDeleted: boolean;
 };
 
 export type TestCreateData = {
-  TestName: string;
-  Price: number;
-  Category?: string;
-  NormalRange?: string;
-  Unit?: string;
-  Description?: string;
-  isPrintable?: boolean;
+  name: string;
+  price: number;
+  category?: string;
+  isDeleted?: boolean;
 };
 
 // Doctor types
 export type DoctorSummary = {
-  ID: number;
-  DoctorName: string;
+  id: number;
+  name: string;
   Specialty?: string | null;
   Mobile?: string | null;
   Email?: string | null;
   ConsultationFee?: number | null;
-  isDeleted: boolean;
+  isDeleted: number; // 0 = active, 1 = deleted
 };
 
 export type DoctorCreateData = {
@@ -544,6 +541,27 @@ export const api = {
   referrals: referralAPI,
   referringDoctors: referringDoctorAPI,
   health: healthAPI,
+  
+  stats: {
+    getDashboard: async () => {
+      const response = await fetch(`${API_BASE_URL}/stats/dashboard`);
+      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+      return response.json();
+    },
+
+    getRecentActivities: async (limit = 10) => {
+      const response = await fetch(`${API_BASE_URL}/stats/recent-activities?limit=${limit}`);
+      if (!response.ok) throw new Error('Failed to fetch recent activities');
+      return response.json();
+    },
+
+    getDailyCollection: async (date?: string) => {
+      const queryParam = date ? `?date=${date}` : '';
+      const response = await fetch(`${API_BASE_URL}/stats/daily-collection${queryParam}`);
+      if (!response.ok) throw new Error('Failed to fetch daily collection');
+      return response.json();
+    }
+  }
 };
 
 export default api;

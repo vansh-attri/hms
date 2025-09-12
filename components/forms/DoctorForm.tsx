@@ -3,23 +3,24 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
 import { validateForm, doctorFormSchema } from '@/utils/validation';
+import { api, DoctorSummary } from '@/utils/api';
 
 interface DoctorFormData {
   doctorId?: string;
   doctorName: string;
-  isDeleted: boolean;
+  isDeleted: number; // 0 = active, 1 = deleted
 }
 
 interface DoctorRecord {
-  ID: number;
-  DoctorName: string;
-  isDeleted: boolean;
+  id: number;
+  name: string;
+  isDeleted: number; // 0 = active, 1 = deleted
 }
 
 export const DoctorForm: React.FC = () => {
   const [formData, setFormData] = useState<DoctorFormData>({
     doctorName: '',
-    isDeleted: false,
+    isDeleted: 0,
   });
 
   const [doctors, setDoctors] = useState<DoctorRecord[]>([]);
@@ -36,21 +37,26 @@ export const DoctorForm: React.FC = () => {
 
   const loadDoctors = async () => {
     try {
-      // For now, use mock data that matches the database structure
-      // In a real implementation, this would call the actual API
-      const mockDoctors: DoctorRecord[] = [
-        { ID: 1594, DoctorName: 'Dr. Virender Kumar', isDeleted: false },
-        { ID: 1595, DoctorName: 'SELF', isDeleted: false },
-        { ID: 1596, DoctorName: 'MALIK HOSPITAL', isDeleted: false },
-        { ID: 1597, DoctorName: 'SIDDHIVINAYAK', isDeleted: false },
-        { ID: 1598, DoctorName: 'AW BABI KAKRIPUR', isDeleted: false },
-        { ID: 1599, DoctorName: 'AW GEET KAKRIPUR', isDeleted: false },
-        { ID: 1600, DoctorName: 'DR.LALIT DHATIR', isDeleted: false },
-      ];
-      setDoctors(mockDoctors);
+      // Load real data from API
+      const doctorsData = await api.doctors.getAll();
+      console.log('Loaded doctors from API:', doctorsData.length);
+      
+      // Convert API data to match DoctorRecord interface
+      const convertedDoctors: DoctorRecord[] = doctorsData.map((doctor: DoctorSummary) => ({
+        id: doctor.id,
+        name: doctor.name,
+        isDeleted: doctor.isDeleted // Keep as number (0 = active, 1 = deleted)
+      }));
+      
+      setDoctors(convertedDoctors);
+      console.log('Total doctors loaded:', convertedDoctors.length);
+      console.log('Active doctors:', convertedDoctors.filter(d => d.isDeleted === 0).length);
     } catch (error) {
       console.error('Failed to load doctors:', error);
-      setMessage('Failed to load doctors');
+      setMessage('Failed to load doctors from API');
+      
+      // Fallback to empty array if API fails
+      setDoctors([]);
     }
   };
 
@@ -58,7 +64,7 @@ export const DoctorForm: React.FC = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
     }));
     
     // Clear error for this field
@@ -69,8 +75,8 @@ export const DoctorForm: React.FC = () => {
 
   const handleDoctorSelect = (doctor: DoctorRecord, index: number) => {
     setFormData({
-      doctorId: String(doctor.ID),
-      doctorName: doctor.DoctorName,
+      doctorId: String(doctor.id),
+      doctorName: doctor.name,
       isDeleted: doctor.isDeleted,
     });
     setSelectedDoctorIndex(index);
@@ -81,7 +87,7 @@ export const DoctorForm: React.FC = () => {
   const handleClear = () => {
     setFormData({
       doctorName: '',
-      isDeleted: false,
+      isDeleted: 0,
     });
     setSelectedDoctorIndex(-1);
     setMessage('');
@@ -157,7 +163,7 @@ export const DoctorForm: React.FC = () => {
   };
 
   const filteredDoctors = doctors.filter(doctor => 
-    doctor.DoctorName.toLowerCase().includes(searchQuery.toLowerCase())
+    doctor.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -208,7 +214,7 @@ export const DoctorForm: React.FC = () => {
                     <input
                       type="checkbox"
                       name="isDeleted"
-                      checked={formData.isDeleted}
+                      checked={formData.isDeleted === 1}
                       onChange={handleInputChange}
                       className="mr-3 mt-0.5 w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
                     />
@@ -313,7 +319,7 @@ export const DoctorForm: React.FC = () => {
                     
                     return (
                       <div
-                        key={doctor.ID}
+                        key={doctor.id}
                         className={rowClasses}
                         onClick={() => handleDoctorSelect(doctor, index)}
                       >
@@ -321,18 +327,18 @@ export const DoctorForm: React.FC = () => {
                           {isSelected ? '►' : ''}
                         </div>
                         <div className="col-span-2 font-medium text-emerald-700">
-                          {doctor.ID}
+                          {doctor.id}
                         </div>
                         <div className="col-span-6 font-medium text-gray-900">
-                          {doctor.DoctorName}
+                          {doctor.name}
                         </div>
                         <div className="col-span-3 text-center">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            doctor.isDeleted 
+                            doctor.isDeleted === 1
                               ? 'bg-red-100 text-red-700' 
                               : 'bg-green-100 text-green-700'
                           }`}>
-                            {doctor.isDeleted ? 'Deleted' : 'Active'}
+                            {doctor.isDeleted === 1 ? 'Deleted' : 'Active'}
                           </span>
                         </div>
                       </div>
@@ -347,8 +353,8 @@ export const DoctorForm: React.FC = () => {
                   Total: {doctors.length} doctors
                 </span>
                 <span>
-                  Active: {doctors.filter(d => !d.isDeleted).length} | 
-                  Deleted: {doctors.filter(d => d.isDeleted).length}
+                  Active: {doctors.filter(d => d.isDeleted === 0).length} | 
+                  Deleted: {doctors.filter(d => d.isDeleted === 1).length}
                 </span>
               </div>
             </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
+import { api } from '@/utils/api';
 
 interface CollectionData {
   id: string;
@@ -27,48 +28,49 @@ interface DailyStats {
 }
 
 export default function DailyCollectionPage() {
-  const [collections] = useState<CollectionData[]>([
-    {
-      id: '1',
-      date: '2025-09-09',
-      patientId: 'P001',
-      patientName: 'John Doe',
-      services: ['Ultrasound Scan', 'Blood Test'],
-      amount: 2300,
-      paymentMethod: 'Cash',
-      receiptNo: 'RCP001',
-      collectedBy: 'Admin',
-      timestamp: '09:30 AM'
-    },
-    {
-      id: '2',
-      date: '2025-09-09',
-      patientId: 'P002',
-      patientName: 'Jane Smith',
-      services: ['X-Ray', 'Consultation'],
-      amount: 1500,
-      paymentMethod: 'UPI',
-      receiptNo: 'RCP002',
-      collectedBy: 'Admin',
-      timestamp: '11:15 AM'
-    },
-    {
-      id: '3',
-      date: '2025-09-09',
-      patientId: 'P003',
-      patientName: 'Mike Johnson',
-      services: ['Blood Test', 'ECG'],
-      amount: 800,
-      paymentMethod: 'Card',
-      receiptNo: 'RCP003',
-      collectedBy: 'Admin',
-      timestamp: '02:45 PM'
-    },
-  ]);
-
+  const [collections, setCollections] = useState<CollectionData[]>([]);
+  const [stats, setStats] = useState<DailyStats>({
+    totalCollection: 0,
+    totalTransactions: 0,
+    cashAmount: 0,
+    cardAmount: 0,
+    upiAmount: 0,
+    chequeAmount: 0,
+    avgTransactionValue: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentFilter, setPaymentFilter] = useState<'All' | 'Cash' | 'Card' | 'UPI' | 'Cheque'>('All');
   const [sortBy, setSortBy] = useState<'time' | 'amount' | 'patient'>('time');
+
+  useEffect(() => {
+    fetchDailyCollection();
+  }, [selectedDate]);
+
+  const fetchDailyCollection = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await api.stats.getDailyCollection(selectedDate);
+      setCollections(data.receipts || []);
+      setStats(data.stats || {
+        totalCollection: 0,
+        totalTransactions: 0,
+        cashAmount: 0,
+        cardAmount: 0,
+        upiAmount: 0,
+        chequeAmount: 0,
+        avgTransactionValue: 0
+      });
+    } catch (error) {
+      console.error('Error fetching daily collection:', error);
+      setError('Failed to load daily collection data');
+      setCollections([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getFilteredCollections = () => {
     let filtered = collections.filter(collection => collection.date === selectedDate);
@@ -91,43 +93,6 @@ export default function DailyCollectionPage() {
     });
 
     return filtered;
-  };
-
-  const getDailyStats = (): DailyStats => {
-    const dayCollections = getFilteredCollections();
-    
-    const stats: DailyStats = {
-      totalCollection: 0,
-      totalTransactions: dayCollections.length,
-      cashAmount: 0,
-      cardAmount: 0,
-      upiAmount: 0,
-      chequeAmount: 0,
-      avgTransactionValue: 0,
-    };
-
-    dayCollections.forEach(collection => {
-      stats.totalCollection += collection.amount;
-      
-      switch (collection.paymentMethod) {
-        case 'Cash':
-          stats.cashAmount += collection.amount;
-          break;
-        case 'Card':
-          stats.cardAmount += collection.amount;
-          break;
-        case 'UPI':
-          stats.upiAmount += collection.amount;
-          break;
-        case 'Cheque':
-          stats.chequeAmount += collection.amount;
-          break;
-      }
-    });
-
-    stats.avgTransactionValue = stats.totalTransactions > 0 ? stats.totalCollection / stats.totalTransactions : 0;
-
-    return stats;
   };
 
   const exportToCSV = () => {
@@ -160,10 +125,27 @@ export default function DailyCollectionPage() {
     window.print();
   };
 
-  const stats = getDailyStats();
+  if (loading) {
+    return (
+      <div className="py-6 flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading daily collection...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-6">
+      {error && (
+        <div className="bg-red-100 text-red-700 p-4 rounded-md mb-6">
+          {error}
+          <button 
+            onClick={fetchDailyCollection}
+            className="ml-4 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div>
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Daily Collection Report</h1>
@@ -182,7 +164,10 @@ export default function DailyCollectionPage() {
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  // fetchDailyCollection will be called by useEffect
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>

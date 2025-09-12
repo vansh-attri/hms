@@ -1,14 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/FormElements';
+import { api } from '@/utils/api';
 
 interface DashboardStats {
   totalPatients: number;
   totalServices: number;
   activeServices: number;
   recentPatientsCount: number;
+  todaysRevenue: number;
+  monthlyTotalRevenue: number;
+  pendingReferralAmount: number;
 }
 
 interface DashboardProps {
@@ -16,6 +20,29 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRecentActivities();
+  }, []);
+
+  const fetchRecentActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const activities = await api.stats.getRecentActivities(4);
+      setRecentActivities(activities);
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      // Fallback to static data if API fails
+      setRecentActivities([
+        { action: 'New patient registration', patientName: 'Loading...', time: 'Just now', type: 'patient' },
+        { action: 'Payment received', patientName: 'Loading...', time: 'Few minutes ago', type: 'payment' }
+      ]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
   const quickActions = [
     {
       title: 'Add New Patient',
@@ -83,7 +110,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
     },
     {
       title: 'Today&apos;s Revenue',
-      value: '₹45,250',
+      value: `₹${stats.todaysRevenue.toLocaleString()}`,
       change: '+8.2%',
       changeType: 'positive',
       icon: (
@@ -109,7 +136,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
     },
     {
       title: 'Pending Referrals',
-      value: '₹12,300',
+      value: `₹${stats.pendingReferralAmount.toLocaleString()}`,
       change: '+₹2,400',
       changeType: 'neutral',
       icon: (
@@ -122,12 +149,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
     },
   ];
 
-  const recentActivities = [
-    { action: 'New patient registration', patient: 'John Doe', time: '10 minutes ago', type: 'patient' },
-    { action: 'Payment received', patient: 'Jane Smith', time: '25 minutes ago', type: 'payment' },
-    { action: 'Test result uploaded', patient: 'Mike Johnson', time: '1 hour ago', type: 'test' },
-    { action: 'Doctor referral added', patient: 'Sarah Wilson', time: '2 hours ago', type: 'referral' },
-  ];
+  // recentActivities is now managed by useState above
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -227,18 +249,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Recent Activity">
           <div className="space-y-4">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-2">
-                  {getActivityIcon(activity.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                  <p className="text-sm text-gray-600">{activity.patient}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
-                </div>
+            {recentActivities.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                {activitiesLoading ? 'Loading activities...' : 'No recent activities'}
               </div>
-            ))}
+            ) : (
+              recentActivities.map((activity, index) => (
+                <div key={index} className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 mt-2">
+                    {getActivityIcon(activity.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                    <p className="text-sm text-gray-600">{activity.patientName}</p>
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           <div className="mt-6">
             <Link

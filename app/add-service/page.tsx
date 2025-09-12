@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-export default function Page() {
-  // This route is no longer used. Redirect to Add Test instead.
-  redirect('/add-test');
+import { ServiceForm } from '@/components/forms';
+
+export default function AddServicePage() {
+  return <ServiceForm />;
 }

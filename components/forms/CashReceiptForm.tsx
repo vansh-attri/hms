@@ -2,9 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
-import { api, patientAPI } from '@/utils/api';
+import { api, patientAPI, receiptAPI, CashReceiptSearchResult } from '@/utils/api';
 
 type PatientSearchRow = Awaited<ReturnType<typeof patientAPI.search>>[number];
+
+interface BillItem {
+  testId: number;
+  TestName: string;
+  Quantity: number;
+  CreatedDate: string;
+}
 
 interface CashReceiptFormData {
   receiptId?: string;
@@ -74,7 +81,7 @@ export const CashReceiptForm: React.FC = () => {
     doctorID: 0,
     isRefPaid: false,
     isIPD: false,
-    isDischarged: true,
+    isDischarged: false, // Should be false (0) by default
     selectedTests: [],
   });
 
@@ -87,11 +94,35 @@ export const CashReceiptForm: React.FC = () => {
   const [searchingPatients, setSearchingPatients] = useState(false);
   const [searchTestQuery, setSearchTestQuery] = useState('');
   const [showPatientSearch, setShowPatientSearch] = useState(false);
+  
+  // Bill Search functionality
+  const [showBillSearch, setShowBillSearch] = useState(false);
+  const [searchBillQuery, setSearchBillQuery] = useState('');
+  const [searchBillResults, setSearchBillResults] = useState<CashReceiptSearchResult[]>([]);
+  const [searchingBills, setSearchingBills] = useState(false);
+  
+  // Print functionality
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
   // Load data from APIs
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Close print dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showPrintPreview && !(event.target as Element).closest('.print-dropdown')) {
+        setShowPrintPreview(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showPrintPreview]);
 
   const loadInitialData = async () => {
     try {
@@ -145,9 +176,43 @@ export const CashReceiptForm: React.FC = () => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
+    // Clear validation error for this field
+    setValidationErrors(prev => ({
+      ...prev,
+      [name]: ''
+    }));
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
+      [name]: type === 'checkbox' ? checked : (type === 'number' ? (value === '' ? 0 : Number(value)) : value)
+    }));
+    
+    // Validate mobile number specifically
+    if (name === 'mobile' && value) {
+      validateMobile(value);
+    }
+  };
+
+  const validateMobile = (mobile: string) => {
+    if (mobile && !/^[0-9]{10}$/.test(mobile)) {
+      setValidationErrors(prev => ({
+        ...prev,
+        mobile: 'Mobile number must be exactly 10 digits'
+      }));
+      return false;
+    }
+    setValidationErrors(prev => ({
+      ...prev,
+      mobile: ''
+    }));
+    return true;
+  };
+
+  const handleRefAmountChange = (value: string) => {
+    const refAmount = value === '' ? 0 : Number(value) || 0;
+    setFormData(prev => ({
+      ...prev,
+      refAmount
     }));
   };
 
@@ -188,6 +253,73 @@ export const CashReceiptForm: React.FC = () => {
     setShowPatientSearch(false);
   };
 
+  // Bill search function
+  const handleBillSearch = async () => {
+    if (!searchBillQuery.trim()) return;
+    
+    setSearchingBills(true);
+    try {
+      const results = await receiptAPI.search(searchBillQuery.trim(), 20);
+      setSearchBillResults(results);
+    } catch (error) {
+      console.error('Bill search failed:', error);
+      setMessage('Error searching bills');
+    } finally {
+      setSearchingBills(false);
+    }
+  };
+
+  const applyBillToForm = async (bill: CashReceiptSearchResult) => {
+    try {
+      setLoading(true);
+      
+      // Get full bill details including items
+      const fullBill = await receiptAPI.getById(bill.id);
+      
+      // Update form with bill data
+      setFormData(prev => ({
+        ...prev,
+        receiptId: String(bill.id),
+        patientID: bill.PatientID || undefined,
+        patientName: bill.PatientName || '',
+        billDate: bill.BillDate ? new Date(bill.BillDate).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+        mobile: bill.Mobile || '',
+        age: bill.Age || '',
+        address: bill.Address || '',
+        gender: (bill.Gender as 'Male' | 'Female' | 'Other') || 'Male',
+        relationType: (bill.RelationType as 'W/o' | 'D/o' | 'S/o') || 'W/o',
+        relation: bill.Relation || '',
+        doctorID: bill.DoctorID || 0,
+        discount: bill.Discount || 0,
+        totalAmount: bill.TotalAmount || 0,
+        netAmount: bill.NetAmount || 0,
+        netAmountWords: numberToWords(bill.NetAmount || 0),
+        refAmount: bill.RefAmount || 0,
+        isRefPaid: bill.isRefPaid || false,
+        selectedTests: fullBill.items ? fullBill.items.map((item: BillItem) => ({
+          testId: item.testId,
+          testName: item.TestName,
+          price: bill.Rate || 0, // Use the rate from the receipt
+          quantity: item.Quantity,
+          amount: (bill.Rate || 0) * item.Quantity,
+          isPrintable: true,
+        })) : []
+      }));
+      
+      // Close search
+      setSearchBillResults([]);
+      setSearchBillQuery('');
+      setShowBillSearch(false);
+      setMessage(`Loaded bill #${bill.id} for editing`);
+      
+    } catch (error) {
+      console.error('Error loading bill details:', error);
+      setMessage('Error loading bill details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTestSelect = (test: TestOption) => {
     const isAlreadySelected = formData.selectedTests.some(t => t.testId === test.ID);
     if (isAlreadySelected) return;
@@ -197,7 +329,7 @@ export const CashReceiptForm: React.FC = () => {
       testName: test.TestName,
       price: test.Price,
       quantity: 1,
-      amount: test.Price,
+      amount: test.Price * 1, // Ensure correct calculation
       isPrintable: true,
     };
 
@@ -256,7 +388,8 @@ export const CashReceiptForm: React.FC = () => {
     });
   };
 
-  const handleDiscountChange = (discount: number) => {
+  const handleDiscountChange = (value: string) => {
+    const discount = value === '' ? 0 : Number(value) || 0;
     setFormData(prev => {
       const newNetAmount = prev.totalAmount - discount;
       return {
@@ -270,6 +403,7 @@ export const CashReceiptForm: React.FC = () => {
 
   const handleClear = () => {
     setFormData({
+      receiptId: undefined,
       patientName: '',
       billDate: new Date().toISOString().slice(0, 16),
       userName: 'admin',
@@ -288,12 +422,268 @@ export const CashReceiptForm: React.FC = () => {
       doctorID: 0,
       isRefPaid: false,
       isIPD: false,
-      isDischarged: true,
+      isDischarged: false, // Set to false (0) as default
       selectedTests: [],
     });
     setMessage('');
     setSearchPatientQuery('');
+    setSearchBillQuery('');
     setShowPatientSearch(false);
+    setShowBillSearch(false);
+  };
+
+  const handlePrintBill = (showPreview = false) => {
+    // Check if there's data to print
+    if (!formData.patientName.trim()) {
+      setMessage('No receipt data to print. Please save a receipt first.');
+      return;
+    }
+
+    // Create print content
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Cash Receipt - ${formData.receiptId || 'New'}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.4;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+          .receipt-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .receipt-id {
+            font-size: 14px;
+            color: #666;
+          }
+          .patient-info {
+            margin-bottom: 20px;
+          }
+          .info-row {
+            display: flex;
+            margin-bottom: 8px;
+          }
+          .info-label {
+            font-weight: bold;
+            width: 140px;
+            flex-shrink: 0;
+          }
+          .info-value {
+            flex: 1;
+          }
+          .tests-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+          }
+          .tests-table th,
+          .tests-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          .tests-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .tests-table .number-cell {
+            text-align: right;
+          }
+          .billing-summary {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+          }
+          .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          }
+          .summary-total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 1px solid #333;
+            padding-top: 8px;
+            margin-top: 8px;
+          }
+          .amount-words {
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+          }
+          .print-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          }
+          .print-controls button {
+            margin: 0 5px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+          }
+          .print-btn {
+            background: #4CAF50;
+            color: white;
+          }
+          .close-btn {
+            background: #f44336;
+            color: white;
+          }
+          @media print {
+            body { margin: 0; padding: 15px; }
+            .no-print, .print-controls { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        ${showPreview ? `
+        <div class="print-controls no-print">
+          <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+          <button class="close-btn" onclick="window.close()">✕ Close</button>
+        </div>
+        ` : ''}
+
+        <div class="header">
+          <div class="receipt-title">CASH RECEIPT</div>
+          <div class="receipt-id">Receipt ID: ${formData.receiptId || 'Not Saved'}</div>
+        </div>
+
+        <div class="patient-info">
+          <h3>Patient Information</h3>
+          <div class="info-row">
+            <span class="info-label">Patient Name:</span>
+            <span class="info-value">${formData.patientName}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date & Time:</span>
+            <span class="info-value">${new Date(formData.billDate).toLocaleString()}</span>
+          </div>
+          ${formData.mobile ? `
+          <div class="info-row">
+            <span class="info-label">Mobile:</span>
+            <span class="info-value">${formData.mobile}</span>
+          </div>
+          ` : ''}
+          ${formData.age ? `
+          <div class="info-row">
+            <span class="info-label">Age:</span>
+            <span class="info-value">${formData.age} years</span>
+          </div>
+          ` : ''}
+          <div class="info-row">
+            <span class="info-label">Gender:</span>
+            <span class="info-value">${formData.gender}</span>
+          </div>
+          ${formData.relation ? `
+          <div class="info-row">
+            <span class="info-label">Relation:</span>
+            <span class="info-value">${formData.relationType} ${formData.relation}</span>
+          </div>
+          ` : ''}
+          ${formData.address ? `
+          <div class="info-row">
+            <span class="info-label">Address:</span>
+            <span class="info-value">${formData.address}</span>
+          </div>
+          ` : ''}
+        </div>
+
+        <div class="tests-section">
+          <h3>Tests/Services</h3>
+          <table class="tests-table">
+            <thead>
+              <tr>
+                <th>S.No.</th>
+                <th>Test/Service Name</th>
+                <th>Rate</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${formData.selectedTests.map((test, index) => `
+                <tr>
+                  <td class="number-cell">${index + 1}</td>
+                  <td>${test.testName}</td>
+                  <td class="number-cell">₹${test.price}</td>
+                  <td class="number-cell">${test.quantity}</td>
+                  <td class="number-cell">₹${test.amount}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="billing-summary">
+          <div class="summary-row">
+            <span>Total Amount:</span>
+            <span>₹${formData.totalAmount}</span>
+          </div>
+          <div class="summary-row">
+            <span>Discount:</span>
+            <span>₹${formData.discount}</span>
+          </div>
+          <div class="summary-row summary-total">
+            <span>Net Amount:</span>
+            <span>₹${formData.netAmount}</span>
+          </div>
+          ${formData.netAmountWords ? `
+          <div class="amount-words">
+            Amount in words: ${formData.netAmountWords}
+          </div>
+          ` : ''}
+        </div>
+
+        <div class="footer">
+          <p>Thank you for choosing our services!</p>
+          <p>Generated on: ${new Date().toLocaleString()}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Open print window
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      
+      if (!showPreview) {
+        // Auto-print after a short delay to ensure content is loaded
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 500);
+      }
+    } else {
+      setMessage('Please allow popups to enable printing.');
+    }
   };
 
   const handleSave = async () => {
@@ -312,45 +702,51 @@ export const CashReceiptForm: React.FC = () => {
       return;
     }
 
+    // Validate mobile number if provided
+    if (formData.mobile && !validateMobile(formData.mobile)) {
+      setMessage('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
 
     try {
-      // Prepare the receipt data according to CashReceiptCreateData interface
+      // Prepare the receipt data according to what the backend actually expects
       const receiptData = {
-        PatientName: formData.patientName,
+        PatientID: formData.patientID || undefined,
+        PatientName: formData.patientName.trim(),
         BillDate: formData.billDate,
-        UserName: formData.userName || 'web',
-        OrgID: formData.orgID || 1,
-        RelationType: formData.relationType,
-        Relation: formData.relation,
+        Discount: formData.discount,
+        DoctorID: Number(formData.doctorID),
+        isRefPaid: formData.isRefPaid,
+        // Include patient details
         Mobile: formData.mobile,
         Age: formData.age,
         Address: formData.address,
         Gender: formData.gender,
-        TotalAmount: formData.totalAmount,
-        Discount: formData.discount,
-        NetAmount: formData.netAmount,
-        NetAmountWords: '', // Could be calculated
-        RefAmount: formData.refAmount,
-        DoctorID: Number(formData.doctorID),
-        IsRefPaid: formData.isRefPaid,
-        PatientID: formData.patientID || undefined,
-        IsIPD: formData.isIPD,
-        IsDischarged: formData.isDischarged,
-        tests: formData.selectedTests.map(test => ({
-          TestID: test.testId,
+        RelationType: formData.relationType,
+        Relation: formData.relation,
+        items: formData.selectedTests.map(test => ({
+          testId: test.testId, // Backend expects 'testId' not 'TestID'
           Quantity: test.quantity,
-          Rate: test.price,
-          Amount: test.price * test.quantity,
-          IsPrintable: test.isPrintable
+          Rate: test.price
         }))
       };
 
-      // Call the actual API
-      const savedReceipt = await api.receipts.create(receiptData);
+      console.log('Saving receipt data:', receiptData); // Debug log
+
+      let savedReceipt;
       
-      setMessage(`Cash receipt saved successfully! Receipt ID: ${savedReceipt.ReceiptID}`);
+      if (formData.receiptId) {
+        // Update existing receipt
+        savedReceipt = await api.receipts.update(formData.receiptId, receiptData);
+        setMessage(`Cash receipt updated successfully! Receipt ID: ${formData.receiptId}`);
+      } else {
+        // Create new receipt
+        savedReceipt = await api.receipts.create(receiptData);
+        setMessage(`Cash receipt saved successfully! Receipt ID: ${savedReceipt.ReceiptID}`);
+      }
       
       // Reset form after successful save
       setTimeout(() => {
@@ -366,8 +762,23 @@ export const CashReceiptForm: React.FC = () => {
   };
 
   const numberToWords = (num: number): string => {
-    // Simple implementation - in real app, use a proper library
-    return `Rupees ${num} only`;
+    if (num === 0) return 'Zero Rupees Only';
+    
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                  'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 
+                  'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    const convertToWords = (n: number): string => {
+      if (n < 20) return ones[n];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convertToWords(n % 100) : '');
+      if (n < 100000) return convertToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convertToWords(n % 1000) : '');
+      if (n < 10000000) return convertToWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convertToWords(n % 100000) : '');
+      return convertToWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convertToWords(n % 10000000) : '');
+    };
+    
+    return convertToWords(Math.floor(num)) + ' Rupees Only';
   };
 
   const filteredTests = tests.filter(test => 
@@ -399,8 +810,24 @@ export const CashReceiptForm: React.FC = () => {
           {/* Patient Information Section */}
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Patient Information</h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Patient Information</h3>
+                {formData.patientID && (
+                  <p className="text-sm text-amber-600 mt-1 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Patient details are locked for existing patients
+                  </p>
+                )}
+              </div>
               <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowBillSearch(!showBillSearch)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
+                >
+                  {showBillSearch ? 'Hide Bill Search' : 'Search Bills'}
+                </Button>
                 <Button
                   onClick={() => setShowPatientSearch(!showPatientSearch)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
@@ -415,6 +842,80 @@ export const CashReceiptForm: React.FC = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Bill Search */}
+            {showBillSearch && (
+              <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Search Previous Bills</h4>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={searchBillQuery}
+                      onChange={(e) => setSearchBillQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleBillSearch()}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                      placeholder="Search by bill number, patient name, or mobile number..."
+                    />
+                  </div>
+                  <Button
+                    onClick={handleBillSearch}
+                    disabled={searchingBills || !searchBillQuery.trim()}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
+                  >
+                    {searchingBills ? 'Searching...' : 'Search'}
+                  </Button>
+                  {searchBillQuery && (
+                    <Button
+                      onClick={() => {
+                        setSearchBillQuery('');
+                        setSearchBillResults([]);
+                      }}
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
+                {/* Bill Search Results */}
+                {searchBillResults.length > 0 && (
+                  <div className="mt-4 bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700">
+                      Found {searchBillResults.length} bill(s)
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {searchBillResults.map((bill) => (
+                        <div
+                          key={bill.id}
+                          onClick={() => applyBillToForm(bill)}
+                          className="p-4 border-b border-gray-100 hover:bg-purple-50 cursor-pointer transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                Bill #{bill.id} - {bill.PatientName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {bill.Mobile} • {bill.Age} years • {bill.Gender}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Date: {new Date(bill.BillDate).toLocaleString()} • 
+                                Total: ₹{bill.TotalAmount} • 
+                                Net: ₹{bill.NetAmount}
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {bill.isRefPaid ? '💰 Ref Paid' : '⏳ Pending'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Patient Search */}
             {showPatientSearch && (
@@ -498,8 +999,8 @@ export const CashReceiptForm: React.FC = () => {
                       type="number"
                       name="patientID"
                       value={formData.patientID || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      readOnly
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                       placeholder="Auto-filled"
                     />
                   </div>
@@ -526,9 +1027,17 @@ export const CashReceiptForm: React.FC = () => {
                     name="patientName"
                     value={formData.patientName}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    readOnly={!!formData.patientID}
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                      formData.patientID 
+                        ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                        : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                    }`}
                     placeholder="Enter patient name"
                   />
+                  {formData.patientID && (
+                    <p className="text-xs text-gray-500 mt-1">Patient name cannot be changed for existing patients</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -543,12 +1052,20 @@ export const CashReceiptForm: React.FC = () => {
                             value={type}
                             checked={formData.relationType === type}
                             onChange={handleInputChange}
-                            className="w-4 h-4 text-green-600 focus:ring-green-500"
+                            disabled={!!formData.patientID}
+                            className={`w-4 h-4 text-green-600 focus:ring-green-500 ${
+                              formData.patientID ? 'cursor-not-allowed opacity-50' : ''
+                            }`}
                           />
-                          <span className="ml-2 text-sm text-gray-700">{type}</span>
+                          <span className={`ml-2 text-sm ${
+                            formData.patientID ? 'text-gray-400' : 'text-gray-700'
+                          }`}>{type}</span>
                         </label>
                       ))}
                     </div>
+                    {formData.patientID && (
+                      <p className="text-xs text-gray-500 mt-1">Relation type is fixed for existing patients</p>
+                    )}
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Relation Name</label>
@@ -557,9 +1074,17 @@ export const CashReceiptForm: React.FC = () => {
                       name="relation"
                       value={formData.relation}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      readOnly={!!formData.patientID}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                        formData.patientID 
+                          ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                          : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                      }`}
                       placeholder="Father's/Husband's name"
                     />
+                    {formData.patientID && (
+                      <p className="text-xs text-gray-500 mt-1">Relation name cannot be changed</p>
+                    )}
                   </div>
                 </div>
 
@@ -571,9 +1096,17 @@ export const CashReceiptForm: React.FC = () => {
                       name="age"
                       value={formData.age}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      readOnly={!!formData.patientID}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                        formData.patientID 
+                          ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                          : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                      }`}
                       placeholder="Age"
                     />
+                    {formData.patientID && (
+                      <p className="text-xs text-gray-500 mt-1">Age is fixed</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
@@ -581,12 +1114,20 @@ export const CashReceiptForm: React.FC = () => {
                       name="gender"
                       value={formData.gender}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      disabled={!!formData.patientID}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                        formData.patientID 
+                          ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                          : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                      }`}
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
                     </select>
+                    {formData.patientID && (
+                      <p className="text-xs text-gray-500 mt-1">Gender is fixed</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Mobile</label>
@@ -595,9 +1136,20 @@ export const CashReceiptForm: React.FC = () => {
                       name="mobile"
                       value={formData.mobile}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      readOnly={!!formData.patientID}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                        formData.patientID 
+                          ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                          : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                      }`}
                       placeholder="Mobile number"
                     />
+                    {validationErrors.mobile && !formData.patientID && (
+                      <p className="text-red-500 text-sm mt-1">{validationErrors.mobile}</p>
+                    )}
+                    {formData.patientID && (
+                      <p className="text-xs text-gray-500 mt-1">Mobile number cannot be changed</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -611,9 +1163,17 @@ export const CashReceiptForm: React.FC = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    readOnly={!!formData.patientID}
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                      formData.patientID 
+                        ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                        : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                    }`}
                     placeholder="Enter complete address"
                   />
+                  {formData.patientID && (
+                    <p className="text-xs text-gray-500 mt-1">Address cannot be changed for existing patients</p>
+                  )}
                 </div>
 
                 <div>
@@ -622,7 +1182,12 @@ export const CashReceiptForm: React.FC = () => {
                     name="doctorID"
                     value={formData.doctorID}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    disabled={!!formData.patientID}
+                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                      formData.patientID 
+                        ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
+                        : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
+                    }`}
                   >
                     <option value={0}>Select Doctor ({doctors.filter(d => d.isDeleted === 0).length} available)</option>
                     {doctors.filter(d => d.isDeleted === 0).map((doctor) => (
@@ -631,8 +1196,11 @@ export const CashReceiptForm: React.FC = () => {
                       </option>
                     ))}
                   </select>
+                  {formData.patientID && (
+                    <p className="text-xs text-gray-500 mt-1">Reference doctor is fixed for existing patients</p>
+                  )}
                   {/* Debug info */}
-                  {process.env.NODE_ENV === 'development' && (
+                  {process.env.NODE_ENV === 'development' && !formData.patientID && (
                     <div className="text-xs text-gray-500 mt-1">
                       Total doctors: {doctors.length}, Active: {doctors.filter(d => d.isDeleted === 0).length}
                     </div>
@@ -645,11 +1213,11 @@ export const CashReceiptForm: React.FC = () => {
                     <input
                       type="number"
                       name="refAmount"
-                      value={formData.refAmount}
-                      onChange={handleInputChange}
+                      value={formData.refAmount === 0 ? '' : formData.refAmount}
+                      onChange={(e) => handleRefAmountChange(e.target.value)}
                       min="0"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                      placeholder="0"
+                      placeholder="Enter referral amount"
                     />
                   </div>
                   <div className="flex items-end space-y-2">
@@ -761,11 +1329,12 @@ export const CashReceiptForm: React.FC = () => {
                     <span className="font-medium">Discount:</span>
                     <input
                       type="number"
-                      value={formData.discount}
-                      onChange={(e) => handleDiscountChange(Number(e.target.value) || 0)}
+                      value={formData.discount === 0 ? '' : formData.discount}
+                      onChange={(e) => handleDiscountChange(e.target.value)}
                       min="0"
                       max={formData.totalAmount}
                       className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-right"
+                      placeholder="0"
                     />
                   </div>
                   
@@ -797,12 +1366,58 @@ export const CashReceiptForm: React.FC = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Saving Receipt...
+                  {formData.receiptId ? 'Updating Receipt...' : 'Saving Receipt...'}
                 </span>
               ) : (
-                'Save Cash Receipt'
+                formData.receiptId ? 'Update Cash Receipt' : 'Save Cash Receipt'
               )}
             </Button>
+
+            <div className="relative print-dropdown">
+              <Button
+                onClick={() => setShowPrintPreview(!showPrintPreview)}
+                disabled={!formData.patientName.trim() || formData.selectedTests.length === 0}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Bill
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </Button>
+              
+              {showPrintPreview && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48">
+                  <button
+                    onClick={() => {
+                      handlePrintBill(false);
+                      setShowPrintPreview(false);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    Print Directly
+                  </button>
+                  <button
+                    onClick={() => {
+                      handlePrintBill(true);
+                      setShowPrintPreview(false);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Preview & Print
+                  </button>
+                </div>
+              )}
+            </div>
             
             <Button
               onClick={handleClear}

@@ -71,6 +71,10 @@ export const DoctorForm: React.FC = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+    // Also clear doctorName error when name field changes
+    if (name === 'doctorName' && errors.doctorName) {
+      setErrors(prev => ({ ...prev, doctorName: '' }));
+    }
   };
 
   const handleDoctorSelect = (doctor: DoctorRecord, index: number) => {
@@ -102,8 +106,8 @@ export const DoctorForm: React.FC = () => {
 
     // Validate form data
     const validationResult = validateForm(doctorFormSchema, {
-      name: formData.doctorName,
-      isDeleted: formData.isDeleted,
+      doctorName: formData.doctorName,
+      isDeleted: formData.isDeleted === 1, // Convert number to boolean
     });
 
     if (!validationResult.success) {
@@ -117,54 +121,40 @@ export const DoctorForm: React.FC = () => {
     setErrors({});
 
     try {
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Prepare data for API (backend expects { name, isDeleted })
+      const apiData = {
+        name: formData.doctorName,
+        isDeleted: formData.isDeleted === 1
+      };
+
       if (formData.doctorId) {
+        // Update existing doctor
+        await api.doctors.update(formData.doctorId, apiData);
         setMessage('Doctor updated successfully!');
       } else {
+        // Create new doctor
+        await api.doctors.create(apiData);
         setMessage('Doctor added successfully!');
       }
 
-      // In a real implementation, this would call the actual API
-      // and reload the doctors list
+      // Reload the doctors list
+      await loadDoctors();
       
       // Reset form
       handleClear();
     } catch (error) {
       console.error('Save failed:', error);
-      setMessage('Error saving doctor data');
+      setMessage(`Error saving doctor: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!formData.doctorId) return;
-
-    if (!confirm('Are you sure you want to delete this doctor?')) return;
-
-    setLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage('Doctor deleted successfully!');
-      
-      // In a real implementation, this would call the actual API
-      // and reload the doctors list
-      
-      handleClear();
-    } catch (error) {
-      console.error('Delete failed:', error);
-      setMessage('Error deleting doctor');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredDoctors = doctors.filter(doctor => 
-    doctor.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDoctors = doctors
+    .filter(doctor => 
+      doctor.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => b.id - a.id); // Sort by ID in descending order
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -200,12 +190,12 @@ export const DoctorForm: React.FC = () => {
                     value={formData.doctorName}
                     onChange={handleInputChange}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 transition-colors ${
-                      errors.name ? 'border-red-300' : 'border-gray-300'
+                      errors.doctorName ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="Enter doctor name"
                   />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                  {errors.doctorName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.doctorName}</p>
                   )}
                 </div>
 
@@ -242,16 +232,6 @@ export const DoctorForm: React.FC = () => {
                       formData.doctorId ? 'Update Doctor' : 'Add Doctor'
                     )}
                   </Button>
-                  
-                  {formData.doctorId && (
-                    <Button
-                      onClick={handleDelete}
-                      disabled={loading}
-                      className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 font-medium rounded-lg"
-                    >
-                      Delete
-                    </Button>
-                  )}
                   
                   <Button
                     onClick={handleClear}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
+import { api } from '@/utils/api';
 
 interface ExpenseFormData {
   expenseId?: string;
@@ -17,21 +18,7 @@ interface ExpenseRecord {
   Amount: number;
   Remarks: string;
   UserName: string;
-  datecreated: string;
 }
-
-const commonExpenseTypes = [
-  { remarks: 'Office Supplies', amount: 500 },
-  { remarks: 'Medical Equipment', amount: 2000 },
-  { remarks: 'Utilities - Electricity', amount: 1500 },
-  { remarks: 'Utilities - Water', amount: 800 },
-  { remarks: 'Staff Refreshments', amount: 300 },
-  { remarks: 'Cleaning Supplies', amount: 400 },
-  { remarks: 'Fuel/Petrol', amount: 1000 },
-  { remarks: 'Internet/Phone Bill', amount: 1200 },
-  { remarks: 'Maintenance & Repairs', amount: 1500 },
-  { remarks: 'Laboratory Supplies', amount: 2500 },
-];
 
 export const ExpenseForm: React.FC = () => {
   const [formData, setFormData] = useState<ExpenseFormData>({
@@ -55,19 +42,27 @@ export const ExpenseForm: React.FC = () => {
 
   const loadExpenses = async () => {
     try {
-      // Mock data based on database structure
-      const mockExpenses: ExpenseRecord[] = [
-        { ID: 1, ExpenseDate: '2025-07-19', Amount: 60, Remarks: 'BREAKFAST', UserName: 'admin', datecreated: '2025-07-19 13:47:08' },
-        { ID: 2, ExpenseDate: '2025-07-19', Amount: 100, Remarks: 'PETROL', UserName: 'admin', datecreated: '2025-07-19 13:50:30' },
-        { ID: 3, ExpenseDate: '2025-07-21', Amount: 1300, Remarks: 'JELLY', UserName: 'YASH', datecreated: '2025-07-21 13:33:56' },
-        { ID: 4, ExpenseDate: '2025-09-12', Amount: 1500, Remarks: 'Office Supplies', UserName: 'admin', datecreated: '2025-09-12 10:30:00' },
-        { ID: 5, ExpenseDate: '2025-09-12', Amount: 800, Remarks: 'Cleaning Supplies', UserName: 'admin', datecreated: '2025-09-12 11:15:00' },
-        { ID: 6, ExpenseDate: '2025-09-11', Amount: 2000, Remarks: 'Medical Equipment', UserName: 'YASH', datecreated: '2025-09-11 14:20:00' },
-      ];
-      setExpenses(mockExpenses);
+      setLoading(true);
+      const expensesData = await api.expenses.getAll();
+      
+      // Convert API response to match our ExpenseRecord interface
+      const convertedExpenses: ExpenseRecord[] = expensesData.map(expense => ({
+        ID: expense.ID,
+        ExpenseDate: expense.ExpenseDate,
+        Amount: expense.Amount,
+        Remarks: expense.Remarks || '',
+        UserName: expense.UserName || ''
+      }));
+      
+      setExpenses(convertedExpenses);
     } catch (error) {
       console.error('Failed to load expenses:', error);
-      setMessage('Failed to load expenses');
+      setMessage('Failed to load expenses from server');
+      
+      // Fallback to empty array if API fails
+      setExpenses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,15 +85,6 @@ export const ExpenseForm: React.FC = () => {
     });
     setSelectedExpenseIndex(index);
     setMessage('');
-  };
-
-  const handleQuickAdd = (expense: typeof commonExpenseTypes[0]) => {
-    setFormData(prev => ({
-      ...prev,
-      remarks: expense.remarks,
-      amount: expense.amount,
-    }));
-    setSelectedExpenseIndex(-1);
   };
 
   const handleClear = () => {
@@ -132,23 +118,32 @@ export const ExpenseForm: React.FC = () => {
     setMessage('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Prepare data for API (backend expects specific field names)
+      const expenseData = {
+        ExpenseDate: formData.expenseDate,
+        Amount: formData.amount,
+        Remarks: formData.remarks.trim(),
+        UserName: formData.userName.trim() || 'admin'
+      };
+
       if (formData.expenseId) {
+        // Update existing expense
+        await api.expenses.update(formData.expenseId, expenseData);
         setMessage('Expense updated successfully!');
       } else {
+        // Create new expense
+        await api.expenses.create(expenseData);
         setMessage('Expense added successfully!');
       }
 
-      // In a real implementation, this would call the actual API
-      // and reload the expenses list
+      // Reload expenses list
+      await loadExpenses();
       
       // Reset form
       handleClear();
     } catch (error) {
       console.error('Save failed:', error);
-      setMessage('Error saving expense data');
+      setMessage(`Error saving expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -161,17 +156,16 @@ export const ExpenseForm: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.expenses.delete(formData.expenseId);
       setMessage('Expense deleted successfully!');
       
-      // In a real implementation, this would call the actual API
-      // and reload the expenses list
+      // Reload expenses list
+      await loadExpenses();
       
       handleClear();
     } catch (error) {
       console.error('Delete failed:', error);
-      setMessage('Error deleting expense');
+      setMessage(`Error deleting expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -226,23 +220,6 @@ export const ExpenseForm: React.FC = () => {
                 {formData.expenseId ? 'Edit Expense' : 'Add New Expense'}
               </h3>
               
-              {/* Quick Add Section */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Add Common Expenses</h4>
-                <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                  {commonExpenseTypes.map((expense, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleQuickAdd(expense)}
-                      className="text-left p-2 rounded-md border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-xs"
-                    >
-                      <div className="font-medium text-gray-900">{expense.remarks}</div>
-                      <div className="text-gray-500">₹{expense.amount}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Form Fields */}
               <div className="space-y-4">
                 <div>

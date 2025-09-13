@@ -41,6 +41,7 @@ export type LegacyPatientCreate = {
   Gender?: string | null;
   DoctorID?: string | number | null;
   CreatedBy?: string | null;
+  RefNo?: string | number | null; // For referral patients
 };
 
 // Test types
@@ -71,38 +72,24 @@ export type DoctorSummary = {
 };
 
 export type DoctorCreateData = {
-  DoctorName: string;
-  Specialty?: string;
-  Mobile?: string;
-  Email?: string;
-  ConsultationFee?: number;
-  CommissionPercent?: number;
-  Address?: string;
+  name: string;
+  isDeleted?: boolean;
 };
 
 // Expense types
 export type ExpenseSummary = {
   ID: number;
   ExpenseDate: string;
-  Category: string;
-  Description: string;
   Amount: number;
-  PaymentMethod: string;
-  VendorName?: string | null;
-  BillNumber?: string | null;
-  isDeleted: boolean;
+  Remarks?: string | null;
+  UserName?: string | null;
 };
 
 export type ExpenseCreateData = {
   ExpenseDate: string;
-  Category: string;
-  Description: string;
   Amount: number;
-  PaymentMethod: string;
-  VendorName?: string;
-  BillNumber?: string;
-  Notes?: string;
-  ApprovedBy?: string;
+  Remarks?: string;
+  UserName?: string;
 };
 
 // Cash Receipt types
@@ -117,33 +104,54 @@ export type CashReceiptSummary = {
   isDeleted: boolean;
 };
 
-export type CashReceiptCreateData = {
+export type CashReceiptSearchResult = {
+  id: number;
   PatientName: string;
   BillDate: string;
-  UserName: string;
-  OrgID: number;
-  RelationType: string;
-  Relation?: string;
-  Mobile?: string;
-  Age?: string;
-  Address?: string;
-  Gender: string;
   TotalAmount: number;
   Discount: number;
   NetAmount: number;
-  NetAmountWords?: string;
-  RefAmount: number;
-  DoctorID: number;
-  IsRefPaid: boolean;
-  PatientID?: number;
-  IsIPD: boolean;
-  IsDischarged: boolean;
-  tests: Array<{
-    TestID: number;
+  TestID?: number | null;
+  Rate?: number | null;
+  RefAmount?: number | null;
+  DoctorID?: number | null;
+  isRefPaid: boolean;
+  PatientID?: number | null;
+  Mobile?: string | null;
+  Age?: string | null;
+  Address?: string | null;
+  Gender?: string | null;
+  RelationType?: string | null;
+  Relation?: string | null;
+};
+
+export type CashReceiptWithDetails = CashReceiptSearchResult & {
+  items?: Array<{
+    testId: number;
+    TestName: string;
     Quantity: number;
-    Rate: number;
-    Amount: number;
-    IsPrintable: boolean;
+    CreatedDate: string;
+  }>;
+};
+
+export type CashReceiptCreateData = {
+  PatientID?: number;
+  PatientName: string;
+  BillDate?: string;
+  Discount?: number;
+  DoctorID?: number;
+  isRefPaid?: boolean;
+  // Patient details
+  Mobile?: string;
+  Age?: string;
+  Address?: string;
+  Gender?: string;
+  RelationType?: string;
+  Relation?: string;
+  items?: Array<{
+    testId: number;
+    Quantity: number;
+    Rate?: number;
   }>;
 };
 
@@ -158,6 +166,20 @@ export type ReferralSummary = {
   PaymentMethod?: string | null;
   Notes?: string | null;
   isDeleted: boolean;
+};
+
+export type UnregisteredReferral = {
+  RefNo: number; // Updated to match API response field name
+  PatientName: string;
+  RelationType?: 'W/o' | 'S/o' | 'D/o' | string; // Now normalized to match patient table format
+  Relation?: string;
+  Mobile?: string;
+  Age?: string;
+  Address?: string;
+  Gender?: string;
+  DoctorName?: string;
+  CreatedBy?: string;
+  CreatedDate: string;
 };
 
 export type ReferralCreateData = {
@@ -441,25 +463,17 @@ export const receiptAPI = {
     return apiRequest<CashReceiptSummary[]>('/receipts');
   },
 
-  // Search receipts by patient name/date
-  search: (opts: { 
-    patientName?: string; 
-    startDate?: string; 
-    endDate?: string; 
-    limit?: number 
-  } = {}): Promise<CashReceiptSummary[]> => {
+  // Search receipts by bill number, patient name, or mobile number
+  search: (query: string, limit?: number): Promise<CashReceiptSearchResult[]> => {
     const params = new URLSearchParams();
-    if (opts.patientName) params.set('patientName', opts.patientName);
-    if (opts.startDate) params.set('startDate', opts.startDate);
-    if (opts.endDate) params.set('endDate', opts.endDate);
-    if (opts.limit) params.set('limit', String(opts.limit));
-    const q = params.toString();
-    return apiRequest<CashReceiptSummary[]>(`/receipts${q ? `?${q}` : ''}`);
+    params.set('query', query);
+    if (limit) params.set('limit', String(limit));
+    return apiRequest<CashReceiptSearchResult[]>(`/receipts/search?${params.toString()}`);
   },
 
-  // Get receipt by ID
-  getById: (id: string | number): Promise<CashReceiptSummary> => {
-    return apiRequest<CashReceiptSummary>(`/receipts/${id}`);
+  // Get receipt by ID (with details)
+  getById: (id: string | number): Promise<CashReceiptWithDetails> => {
+    return apiRequest<CashReceiptWithDetails>(`/receipts/${id}`);
   },
 
   // Create new receipt
@@ -491,6 +505,11 @@ export const referralAPI = {
   // Get all referrals
   getAll: (): Promise<ReferralSummary[]> => {
     return apiRequest<ReferralSummary[]>('/referrals');
+  },
+
+  // Get unregistered referrals (from public referral form)
+  getUnregistered: (): Promise<UnregisteredReferral[]> => {
+    return apiRequest<UnregisteredReferral[]>('/referrals/unregistered');
   },
 
   // Create new referral

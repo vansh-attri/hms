@@ -19,8 +19,19 @@ interface DashboardProps {
   stats: DashboardStats;
 }
 
+interface RecentActivity {
+  id?: number;
+  type: string;
+  description?: string;
+  timestamp?: string;
+  amount?: number;
+  action: string;
+  patientName: string;
+  time: string;
+}
+
 export const Dashboard: React.FC<DashboardProps> = ({ stats }) => {
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
 
   useEffect(() => {

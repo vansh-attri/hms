@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/FormElements';
 import { api } from '@/utils/api';
 
@@ -44,11 +44,7 @@ export default function DailyCollectionPage() {
   const [paymentFilter, setPaymentFilter] = useState<'All' | 'Cash' | 'Card' | 'UPI' | 'Cheque'>('All');
   const [sortBy, setSortBy] = useState<'time' | 'amount' | 'patient'>('time');
 
-  useEffect(() => {
-    fetchDailyCollection();
-  }, [selectedDate]);
-
-  const fetchDailyCollection = async () => {
+  const fetchDailyCollection = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -70,7 +66,11 @@ export default function DailyCollectionPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  useEffect(() => {
+    fetchDailyCollection();
+  }, [fetchDailyCollection]);
 
   const getFilteredCollections = () => {
     let filtered = collections.filter(collection => collection.date === selectedDate);

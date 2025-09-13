@@ -17,6 +17,7 @@ export default function ReferralAmountPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchData();
@@ -58,12 +59,46 @@ export default function ReferralAmountPage() {
   };
 
   const markAsPaid = async (id: number) => {
+    if (updatingIds.has(id)) return; // Prevent double-clicks
+    
+    setUpdatingIds(prev => new Set(prev.add(id)));
+    setError(''); // Clear any previous errors
+    
     try {
-      await api.receipts.update(id, { IsRefPaid: true });
+      console.log(`Attempting to mark referral ${id} as paid...`);
+      console.log('API call URL will be:', `http://localhost:5000/api/receipts/${id}`);
+      console.log('API call payload:', { isRefPaid: true });
+      
+      // Call the API to update the receipt
+      const result = await api.receipts.update(id, { isRefPaid: true });
+      console.log('API update successful:', result);
+      
+      // Update local state
       setReferrals(prev => prev.map(r => r.id === id ? { ...r, isPaid: true } : r));
+      
+      // Show success message briefly
+      setError(''); // Clear error if there was one
+      
     } catch (error) {
-      console.error('Error updating referral:', error);
-      setError('Failed to update referral status');
+      console.error('Error updating referral payment status:', error);
+      console.error('Full error object:', error);
+      
+      // More detailed error message
+      let errorMessage = 'Failed to update referral status';
+      if (error instanceof Error) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      setError(errorMessage);
+      
+      // Auto-clear error after 5 seconds
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setUpdatingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     }
   };
 
@@ -220,10 +255,18 @@ export default function ReferralAmountPage() {
                         {!referral.isPaid && (
                           <button
                             onClick={() => markAsPaid(referral.id)}
-                            className="text-green-600 hover:text-green-900"
+                            disabled={updatingIds.has(referral.id)}
+                            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                              updatingIds.has(referral.id)
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'text-green-600 hover:text-white hover:bg-green-600 border border-green-600'
+                            }`}
                           >
-                            Mark as Paid
+                            {updatingIds.has(referral.id) ? 'Updating...' : 'Mark as Paid'}
                           </button>
+                        )}
+                        {referral.isPaid && (
+                          <span className="text-gray-400 text-sm">Paid ✓</span>
                         )}
                       </td>
                     </tr>

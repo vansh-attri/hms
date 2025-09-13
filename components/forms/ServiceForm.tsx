@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
+import { serviceAPI } from '@/utils/api';
 
 interface ServiceFormData {
   serviceId?: string;
@@ -78,16 +79,18 @@ export const ServiceForm: React.FC = () => {
 
   const loadServices = async () => {
     try {
-      // Mock data based on typical service structure
-      const mockServices: ServiceRecord[] = [
-        { ID: 1, ServiceName: 'General Consultation', Category: 'General Medicine', Price: 500, Description: 'General medical consultation and check-up', Duration: '30', isActive: true },
-        { ID: 2, ServiceName: 'Cardiac Consultation', Category: 'Cardiology', Price: 800, Description: 'Specialized cardiac examination and consultation', Duration: '45', isActive: true },
-        { ID: 3, ServiceName: 'Pediatric Consultation', Category: 'Pediatrics', Price: 600, Description: 'Medical consultation for children', Duration: '30', isActive: true },
-        { ID: 4, ServiceName: 'Emergency Consultation', Category: 'Emergency Care', Price: 1000, Description: 'Emergency medical consultation', Duration: '60', isActive: true },
-        { ID: 5, ServiceName: 'Physiotherapy Session', Category: 'Therapy', Price: 400, Description: 'Physical therapy and rehabilitation session', Duration: '60', isActive: true },
-        { ID: 6, ServiceName: 'Eye Check-up', Category: 'Ophthalmology', Price: 500, Description: 'Comprehensive eye examination', Duration: '30', isActive: true },
-      ];
-      setServices(mockServices);
+      const services = await serviceAPI.getAll();
+      // Convert API response to local format
+      const serviceRecords: ServiceRecord[] = services.map(service => ({
+        ID: service.id,
+        ServiceName: service.name,
+        Category: 'General', // Default category since API doesn't have category
+        Price: service.price || 0,
+        Description: service.description || '',
+        Duration: '30', // Default duration since API doesn't have duration
+        isActive: service.isActive !== false
+      }));
+      setServices(serviceRecords);
     } catch (error) {
       console.error('Failed to load services:', error);
       setMessage('Failed to load services');
@@ -163,17 +166,26 @@ export const ServiceForm: React.FC = () => {
     setMessage('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const serviceData = {
+        name: formData.serviceName,
+        description: formData.description,
+        price: formData.price,
+        isActive: formData.isActive
+      };
+
       if (formData.serviceId) {
+        // Update existing service
+        await serviceAPI.update(formData.serviceId, serviceData);
         setMessage('Service updated successfully!');
       } else {
+        // Create new service
+        const created = await serviceAPI.create(serviceData);
+        setFormData(prev => ({ ...prev, serviceId: String(created.id) }));
         setMessage('Service added successfully!');
       }
 
-      // In a real implementation, this would call the actual API
-      // and reload the services list
+      // Reload services list
+      await loadServices();
       
       // Reset form
       handleClear();
@@ -192,12 +204,11 @@ export const ServiceForm: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await serviceAPI.delete(formData.serviceId);
       setMessage('Service deleted successfully!');
       
-      // In a real implementation, this would call the actual API
-      // and reload the services list
+      // Reload services list
+      await loadServices();
       
       handleClear();
     } catch (error) {

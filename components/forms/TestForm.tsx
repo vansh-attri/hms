@@ -17,7 +17,7 @@ interface TestRecord {
   TestName: string;
   Price: number;
   Category: string;
-  isDeleted: boolean;
+  isDeleted: boolean; // Should be boolean, not number
 }
 
 const testCategories = [
@@ -36,22 +36,6 @@ const testCategories = [
   'Thyroid',
   'Liver Function',
   'Kidney Function',
-];
-
-const commonTests = [
-  { name: 'USG Abdomen', category: 'USG', price: 1000 },
-  { name: 'USG OBSTETRICS', category: 'USG', price: 1000 },
-  { name: 'NT NB SCAN / LEVEL I', category: 'USG', price: 1800 },
-  { name: 'LEVEL II', category: 'USG', price: 2500 },
-  { name: 'Complete Blood Count (CBC)', category: 'Blood Tests', price: 300 },
-  { name: 'Fasting Blood Sugar', category: 'Diabetes', price: 150 },
-  { name: 'Lipid Profile', category: 'Blood Tests', price: 800 },
-  { name: 'Liver Function Test', category: 'Liver Function', price: 600 },
-  { name: 'Kidney Function Test', category: 'Kidney Function', price: 500 },
-  { name: 'Thyroid Profile', category: 'Thyroid', price: 900 },
-  { name: 'Urine Routine', category: 'Urine Tests', price: 200 },
-  { name: 'ECG', category: 'ECG', price: 400 },
-  { name: 'Chest X-Ray', category: 'X-Ray', price: 500 },
 ];
 
 export const TestForm: React.FC = () => {
@@ -85,7 +69,7 @@ export const TestForm: React.FC = () => {
         TestName: test.name,
         Price: test.price,
         Category: test.category || 'General',
-        isDeleted: test.isDeleted
+        isDeleted: Boolean(test.isDeleted) // Convert number to boolean
       }));
       
       setTests(convertedTests);
@@ -113,21 +97,10 @@ export const TestForm: React.FC = () => {
       testName: test.TestName,
       price: test.Price,
       category: test.Category,
-      isDeleted: test.isDeleted,
+      isDeleted: Boolean(test.isDeleted), // Ensure boolean type
     });
     setSelectedTestIndex(index);
     setMessage('');
-  };
-
-  const handleQuickAdd = (test: typeof commonTests[0]) => {
-    setFormData(prev => ({
-      ...prev,
-      testName: test.name,
-      category: test.category,
-      price: test.price,
-      isDeleted: false,
-    }));
-    setSelectedTestIndex(-1);
   };
 
   const handleClear = () => {
@@ -165,15 +138,20 @@ export const TestForm: React.FC = () => {
         name: formData.testName.trim(),
         price: formData.price,
         category: formData.category,
-        isDeleted: formData.isDeleted
+        isDeleted: Boolean(formData.isDeleted) // Convert to boolean to match backend validation
       };
+
+      console.log('Attempting to save test with data:', testData);
+      console.log('Test ID:', formData.testId);
 
       if (formData.testId) {
         // Update existing test
+        console.log('Updating test with ID:', formData.testId);
         await api.tests.update(formData.testId, testData);
         setMessage('Test updated successfully!');
       } else {
         // Create new test
+        console.log('Creating new test');
         await api.tests.create(testData);
         setMessage('Test added successfully!');
       }
@@ -185,39 +163,42 @@ export const TestForm: React.FC = () => {
       handleClear();
     } catch (error) {
       console.error('Save failed:', error);
-      setMessage('Error saving test data');
+      let errorMessage = 'Error saving test data';
+      
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+        
+        // Check for specific error types
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMessage = 'Network error: Cannot connect to server. Please ensure the backend server is running.';
+        } else if (error.message.includes('HTTP 404')) {
+          errorMessage = 'Test not found. It may have been deleted by another user.';
+        } else if (error.message.includes('HTTP 400')) {
+          errorMessage = `Invalid data: ${error.message}`;
+        } else if (error.message.includes('HTTP 500')) {
+          errorMessage = 'Server error. Please try again later.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!formData.testId) return;
-
-    if (!confirm('Are you sure you want to delete this test?')) return;
-
-    setLoading(true);
-    try {
-      await api.tests.delete(formData.testId);
-      setMessage('Test deleted successfully!');
-      
-      // Reload tests list
-      await loadTests();
-      
-      handleClear();
-    } catch (error) {
-      console.error('Delete failed:', error);
-      setMessage('Error deleting test');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredTests = tests.filter(test => {
-    const matchesSearch = test.TestName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !filterCategory || test.Category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredTests = tests
+    .filter(test => {
+      const matchesSearch = test.TestName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !filterCategory || test.Category === filterCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => b.ID - a.ID); // Sort by ID in descending order
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -242,23 +223,6 @@ export const TestForm: React.FC = () => {
                 {formData.testId ? 'Edit Test' : 'Add New Test'}
               </h3>
               
-              {/* Quick Add Section */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Add Common Tests</h4>
-                <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                  {commonTests.map((test, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleQuickAdd(test)}
-                      className="text-left p-2 rounded-md border border-gray-200 hover:bg-purple-50 hover:border-purple-300 transition-colors text-xs"
-                    >
-                      <div className="font-medium text-gray-900">{test.name}</div>
-                      <div className="text-gray-500">₹{test.price} • {test.category}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Form Fields */}
               <div className="space-y-4">
                 <div>
@@ -341,16 +305,6 @@ export const TestForm: React.FC = () => {
                       formData.testId ? 'Update Test' : 'Add Test'
                     )}
                   </Button>
-                  
-                  {formData.testId && (
-                    <Button
-                      onClick={handleDelete}
-                      disabled={loading}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 font-medium rounded-lg"
-                    >
-                      Delete
-                    </Button>
-                  )}
                 </div>
 
                 <Button

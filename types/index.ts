@@ -1,17 +1,4 @@
 // Canonical types used by the frontend
-export interface Patient {
-  id: number;
-  opdNumber: string;
-  firstName: string;
-  lastName: string;
-  gender?: 'Male' | 'Female' | 'Other';
-  dob?: string;
-  phone?: string;
-  address?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface Doctor {
   id: number;
   name: string;
@@ -49,7 +36,6 @@ export interface Appointment {
   status?: 'scheduled' | 'completed' | 'cancelled';
 }
 
-export type PatientFormData = Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>;
 export type DoctorFormData = Omit<Doctor, 'id'>;
 export type ServiceFormData = Omit<Service, 'id'>;
 export interface AppointmentFormData {

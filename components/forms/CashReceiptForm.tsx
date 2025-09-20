@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
-import { api, patientAPI, receiptAPI, CashReceiptSearchResult } from '@/utils/api';
+import { api, patientAPI, receiptAPI, CashReceiptSearchResult, CashReceiptSummary } from '@/utils/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 type PatientSearchRow = Awaited<ReturnType<typeof patientAPI.search>>[number];
 
@@ -62,10 +63,11 @@ interface DoctorOption {
 }
 
 export const CashReceiptForm: React.FC = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<CashReceiptFormData>({
     patientName: '',
     billDate: new Date().toISOString().slice(0, 16),
-    userName: 'admin',
+    userName: user?.username || 'admin',
     orgID: 1,
     relationType: 'W/o',
     relation: '',
@@ -111,6 +113,16 @@ export const CashReceiptForm: React.FC = () => {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Update username when user changes
+  useEffect(() => {
+    if (user?.username) {
+      setFormData(prev => ({
+        ...prev,
+        userName: user.username
+      }));
+    }
+  }, [user?.username]);
 
   // Close print dropdown when clicking outside
   useEffect(() => {
@@ -406,7 +418,7 @@ export const CashReceiptForm: React.FC = () => {
       receiptId: undefined,
       patientName: '',
       billDate: new Date().toISOString().slice(0, 16),
-      userName: 'admin',
+      userName: user?.username || 'admin',
       orgID: 1,
       relationType: 'W/o',
       relation: '',
@@ -648,6 +660,12 @@ export const CashReceiptForm: React.FC = () => {
             <span>Discount:</span>
             <span>₹${formData.discount}</span>
           </div>
+          ${formData.refAmount > 0 ? `
+          <div class="summary-row">
+            <span>Referral Amount:</span>
+            <span>₹${formData.refAmount}</span>
+          </div>
+          ` : ''}
           <div class="summary-row summary-total">
             <span>Net Amount:</span>
             <span>₹${formData.netAmount}</span>
@@ -718,6 +736,7 @@ export const CashReceiptForm: React.FC = () => {
         PatientName: formData.patientName.trim(),
         BillDate: formData.billDate,
         Discount: formData.discount,
+        RefAmount: formData.refAmount, // Add referral amount to request data
         DoctorID: Number(formData.doctorID),
         isRefPaid: formData.isRefPaid,
         // Include patient details
@@ -736,22 +755,25 @@ export const CashReceiptForm: React.FC = () => {
 
       console.log('Saving receipt data:', receiptData); // Debug log
 
-      let savedReceipt;
+      let savedReceipt: CashReceiptSummary;
       
       if (formData.receiptId) {
         // Update existing receipt
         savedReceipt = await api.receipts.update(formData.receiptId, receiptData);
         setMessage(`Cash receipt updated successfully! Receipt ID: ${formData.receiptId}`);
+        // Don't clear form when updating - keep data for further editing
       } else {
         // Create new receipt
         savedReceipt = await api.receipts.create(receiptData);
         setMessage(`Cash receipt saved successfully! Receipt ID: ${savedReceipt.ReceiptID}`);
+        
+        // Update form with the new receipt ID for potential future edits
+        setFormData(prev => ({
+          ...prev,
+          receiptId: String(savedReceipt.ReceiptID)
+        }));
+        // Don't clear form after creating - keep data for further editing or creating similar bills
       }
-      
-      // Reset form after successful save
-      setTimeout(() => {
-        handleClear();
-      }, 2000);
       
     } catch (error) {
       console.error('Save failed:', error);
@@ -1207,20 +1229,8 @@ export const CashReceiptForm: React.FC = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Referral Amount</label>
-                    <input
-                      type="number"
-                      name="refAmount"
-                      value={formData.refAmount === 0 ? '' : formData.refAmount}
-                      onChange={(e) => handleRefAmountChange(e.target.value)}
-                      min="0"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                      placeholder="Enter referral amount"
-                    />
-                  </div>
-                  <div className="flex items-end space-y-2">
+                <div className="flex justify-start">
+                  <div className="flex items-center">
                     <label className="flex items-center text-sm font-medium text-gray-700">
                       <input
                         type="checkbox"
@@ -1333,6 +1343,18 @@ export const CashReceiptForm: React.FC = () => {
                       onChange={(e) => handleDiscountChange(e.target.value)}
                       min="0"
                       max={formData.totalAmount}
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-right"
+                      placeholder="0"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Referral Amount:</span>
+                    <input
+                      type="number"
+                      value={formData.refAmount === 0 ? '' : formData.refAmount}
+                      onChange={(e) => handleRefAmountChange(e.target.value)}
+                      min="0"
                       className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-right"
                       placeholder="0"
                     />

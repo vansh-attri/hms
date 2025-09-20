@@ -41,7 +41,7 @@ export default function ReferralAmountPage() {
       const referralData: ReferralRecord[] = (receiptsData as any[])
         .filter((r) => r.RefAmount && r.RefAmount > 0 && r.DoctorID)
         .map((r) => ({
-          id: r.ID,
+          id: r.id, // Use lowercase 'id' as returned by backend
           doctorName: doctorMap.get(r.DoctorID) || 'Unknown Doctor',
           amount: Number(r.RefAmount),
           patientName: r.PatientName,
@@ -66,11 +66,34 @@ export default function ReferralAmountPage() {
     
     try {
       console.log(`Attempting to mark referral ${id} as paid...`);
+      
+      // First, fetch the existing receipt to get all required fields
+      const existingReceipt = await api.receipts.getById(id);
+      console.log('Fetched existing receipt:', existingReceipt);
+      
+      // Prepare the update payload with all existing data plus the new payment status
+      const updatePayload = {
+        PatientID: existingReceipt.PatientID || undefined,
+        PatientName: existingReceipt.PatientName,
+        BillDate: existingReceipt.BillDate,
+        Discount: existingReceipt.Discount || 0,
+        RefAmount: existingReceipt.RefAmount || 0,
+        DoctorID: existingReceipt.DoctorID || undefined,
+        isRefPaid: true, // This is the field we want to update
+        Mobile: existingReceipt.Mobile || undefined,
+        Age: existingReceipt.Age || undefined,
+        Address: existingReceipt.Address || undefined,
+        Gender: existingReceipt.Gender || undefined,
+        RelationType: existingReceipt.RelationType || undefined,
+        Relation: existingReceipt.Relation || undefined,
+        items: existingReceipt.items || []
+      };
+      
       console.log('API call URL will be:', `http://localhost:5000/api/receipts/${id}`);
-      console.log('API call payload:', { isRefPaid: true });
+      console.log('API call payload:', updatePayload);
       
       // Call the API to update the receipt
-      const result = await api.receipts.update(id, { isRefPaid: true });
+      const result = await api.receipts.update(id, updatePayload);
       console.log('API update successful:', result);
       
       // Update local state

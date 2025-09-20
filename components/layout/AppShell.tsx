@@ -3,118 +3,169 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 
 type NavItem = {
   id: string;
   label: string;
   href: string;
   icon?: React.ReactNode;
+  adminOnly?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'home', label: 'Dashboard', href: '/', icon: iconHome() },
   { id: 'add-patient', label: 'Add Patient', href: '/add-patient', icon: iconUserPlus() },
-  { id: 'manage-patients', label: 'Manage Patients', href: '/manage-patients', icon: iconUsers() },
   { id: 'cash-receipt', label: 'Cash Receipt', href: '/cash-receipt', icon: iconReceipt() },
   { id: 'add-test', label: 'Add Test', href: '/add-test', icon: iconBeaker() },
   { id: 'add-doctor', label: 'Add Doctor', href: '/add-doctor', icon: iconDoctor() },
   { id: 'daily-expenses', label: 'Daily Expenses', href: '/daily-expenses', icon: iconCurrency() },
   { id: 'referral-amount', label: 'Referral Amount', href: '/referral-amount', icon: iconReferral() },
   { id: 'daily-collection', label: 'Daily Collection', href: '/daily-collection', icon: iconChart() },
+  { id: 'manage-users', label: 'Manage Users', href: '/admin/manage-users', icon: iconAdminUsers(), adminOnly: true },
+  { id: 'run-scripts', label: 'Run Scripts', href: '/admin/scripts', icon: iconScript(), adminOnly: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, logout, isAdmin } = useAuth();
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Filter nav items based on user role
+  const availableNavItems = NAV_ITEMS.filter(item => !item.adminOnly || isAdmin);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return NAV_ITEMS;
-    return NAV_ITEMS.filter(n => n.label.toLowerCase().includes(q) || n.href.toLowerCase().includes(q));
-  }, [query]);
+    if (!q) return availableNavItems;
+    return availableNavItems.filter(n => n.label.toLowerCase().includes(q) || n.href.toLowerCase().includes(q));
+  }, [query, availableNavItems]);
 
   return (
-  <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-blue-600 text-white px-3 py-1 rounded">Skip to content</a>
+    <ProtectedRoute>
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-blue-600 text-white px-3 py-1 rounded">Skip to content</a>
 
-      {/* Topbar */}
-      <header className="sticky top-0 z-40 w-full border-b" style={{ backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)' }}>
-        <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3">
-          <button aria-label="Toggle sidebar" className="md:hidden p-2 rounded hover:bg-[var(--color-secondary)]" onClick={() => setSidebarOpen(v => !v)}>
-            {iconMenu()}
-          </button>
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded" style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>H</span>
-            <span>HMS Admin</span>
-          </Link>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="relative hidden md:block">
-              <input
-                aria-label="Quick search navigation"
-                placeholder="Search pages (e.g. patient, receipt)"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-72 rounded-md border px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2"
-                style={{ backgroundColor: '#fff', borderColor: 'var(--color-secondary)' }}
-              />
-              {query && (
-                <div className="absolute mt-1 w-full rounded-md border bg-white shadow-lg max-h-64 overflow-auto" style={{ borderColor: 'var(--color-secondary)' }}>
-                  {filtered.map(item => (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-secondary)]"
-                    >
-                      <span className="text-gray-500">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
-                  {!filtered.length && <div className="px-3 py-2 text-sm text-gray-500">No matches</div>}
-                </div>
-              )}
-            </div>
-            <button className="hidden md:inline-flex items-center gap-2 rounded-md border bg-white px-2.5 py-1.5 text-sm shadow-sm hover:bg-[var(--color-secondary)]" style={{ borderColor: 'var(--color-secondary)' }} title="Toggle theme">
-              {iconSun()}
-              <span className="sr-only">Toggle theme</span>
+        {/* Topbar */}
+        <header className="sticky top-0 z-40 w-full border-b" style={{ backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)' }}>
+          <div className="px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-3">
+            <button aria-label="Toggle sidebar" className="md:hidden p-2 rounded hover:bg-[var(--color-secondary)]" onClick={() => setSidebarOpen(v => !v)}>
+              {iconMenu()}
             </button>
+            <Link href="/" className="flex items-center gap-2 font-semibold">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded" style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>H</span>
+              <span>HMS Admin</span>
+            </Link>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="relative hidden md:block">
+                <input
+                  aria-label="Quick search navigation"
+                  placeholder="Search pages (e.g. patient, receipt)"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-72 rounded-md border px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2"
+                  style={{ backgroundColor: '#fff', borderColor: 'var(--color-secondary)' }}
+                />
+                {query && (
+                  <div className="absolute mt-1 w-full rounded-md border bg-white shadow-lg max-h-64 overflow-auto" style={{ borderColor: 'var(--color-secondary)' }}>
+                    {filtered.map(item => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-[var(--color-secondary)]"
+                        onClick={() => setQuery('')}
+                      >
+                        <span className="text-gray-500">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                    {!filtered.length && <div className="px-3 py-2 text-sm text-gray-500">No matches</div>}
+                  </div>
+                )}
+              </div>
+              
+              {/* User menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 rounded-md border bg-white px-2.5 py-1.5 text-sm shadow-sm hover:bg-[var(--color-secondary)]"
+                  style={{ borderColor: 'var(--color-secondary)' }}
+                >
+                  <span>{user?.firstName} {user?.lastName}</span>
+                  {isAdmin && <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded">Admin</span>}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border" style={{ borderColor: 'var(--color-secondary)' }}>
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/change-password"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      Change Password
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowUserMenu(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+        </header>
+
+        {/* Layout */}
+        <div className="flex">
+          {/* Sidebar */}
+          <nav aria-label="Main" className={`fixed md:sticky left-0 top-14 md:top-16 z-30 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-64 transform border-r bg-white p-3 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ borderColor: 'var(--color-secondary)' }}>
+            <ul className="space-y-1">
+              {availableNavItems.map(item => {
+                const active = pathname === item.href;
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${active ? 'text-[var(--color-primary)] bg-[var(--color-secondary)]' : ''} hover:bg-[var(--color-secondary)]`}
+                    >
+                      <span className={`text-gray-500 ${active ? 'text-[var(--color-primary)]' : ''}`}>{item.icon}</span>
+                      <span>{item.label}</span>
+                      {item.adminOnly && <span className="ml-auto px-1 py-0.5 bg-orange-100 text-orange-800 text-xs rounded">Admin</span>}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          {/* Main content */}
+          <main id="main" className="flex-1 w-full min-h-[calc(100vh-3.5rem)] px-4 sm:px-6 lg:px-8 py-4">
+            {children}
+          </main>
         </div>
-      </header>
-
-      {/* Layout */}
-  <div className="flex">
-        {/* Sidebar */}
-        <nav aria-label="Main" className={`fixed md:sticky left-0 top-14 md:top-16 z-30 h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] w-64 transform border-r bg-white p-3 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ borderColor: 'var(--color-secondary)' }}>
-          <ul className="space-y-1">
-            {NAV_ITEMS.map(item => {
-              const active = pathname === item.href;
-              return (
-                <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${active ? 'text-[var(--color-primary)]' : ''} hover:bg-[var(--color-secondary)]`}
-                  >
-                    <span className={`text-gray-500 ${active ? 'text-[var(--color-primary)]' : ''}`}>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        {/* Main content */}
-        <main id="main" className="flex-1 w-full min-h-[calc(100vh-3.5rem)] px-4 sm:px-6 lg:px-8 py-4">
-          {children}
-        </main>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
 
@@ -128,19 +179,9 @@ function iconMenu() {
     </svg>
   );
 }
-function iconHome() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
-  );
-}
 function iconUserPlus() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-  );
-}
-function iconUsers() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M7 21v-2a4 4 0 0 1 3-3.87"/><path d="M12 12a5 5 0 1 0-5-5"/><path d="M17 11a4 4 0 1 0 0-8"/></svg>
   );
 }
 function iconReceipt() {
@@ -174,11 +215,18 @@ function iconChart() {
   );
 }
 
-function iconSun() {
+function iconAdminUsers() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+    </svg>
+  );
+}
+
+function iconScript() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
     </svg>
   );
 }

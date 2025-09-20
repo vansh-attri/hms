@@ -201,13 +201,25 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  // Get authentication token
+  const token = typeof window !== 'undefined' ? localStorage.getItem('hms_token') : null;
+  
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
     },
   };
 
   const config = { ...defaultOptions, ...options };
+  
+  // Merge headers properly
+  if (options.headers) {
+    config.headers = {
+      ...defaultOptions.headers,
+      ...options.headers,
+    };
+  }
 
   try {
     const response = await fetch(url, config);
@@ -562,23 +574,19 @@ export const api = {
   health: healthAPI,
   
   stats: {
-    getDashboard: async () => {
-      const response = await fetch(`${API_BASE_URL}/stats/dashboard`);
-      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
-      return response.json();
-    },
-
     getRecentActivities: async (limit = 10) => {
       const response = await fetch(`${API_BASE_URL}/stats/recent-activities?limit=${limit}`);
       if (!response.ok) throw new Error('Failed to fetch recent activities');
       return response.json();
     },
 
-    getDailyCollection: async (date?: string) => {
-      const queryParam = date ? `?date=${date}` : '';
-      const response = await fetch(`${API_BASE_URL}/stats/daily-collection${queryParam}`);
-      if (!response.ok) throw new Error('Failed to fetch daily collection');
-      return response.json();
+    getDailyCollection: async (fromDate?: string, toDate?: string) => {
+      const params = new URLSearchParams();
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+      const queryParam = params.toString() ? `?${params.toString()}` : '';
+      const response = await apiRequest(`/stats/daily-collection${queryParam}`, { method: 'GET' });
+      return response;
     }
   }
 };

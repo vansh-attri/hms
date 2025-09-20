@@ -192,7 +192,7 @@ export type ReferralCreateData = {
   Notes?: string;
 };
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
 
 // Generic API request function
 async function apiRequest<T>(

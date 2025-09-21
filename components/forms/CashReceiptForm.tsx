@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { 
+  Button, 
+  Card, 
+  InputField
+} from '@/components/ui/FormElements';
 import { api, patientAPI, receiptAPI, CashReceiptSearchResult, CashReceiptSummary } from '@/utils/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -1062,53 +1066,59 @@ export const CashReceiptForm: React.FC = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Relation</label>
-                    <div className="space-y-2">
-                      {(['W/o', 'D/o', 'S/o'] as const).map((type) => (
-                        <label key={type} className="flex items-center">
-                          <input
-                            type="radio"
-                            name="relationType"
-                            value={type}
-                            checked={formData.relationType === type}
-                            onChange={handleInputChange}
-                            disabled={!!formData.patientID}
-                            className={`w-4 h-4 text-green-600 focus:ring-green-500 ${
-                              formData.patientID ? 'cursor-not-allowed opacity-50' : ''
-                            }`}
-                          />
-                          <span className={`ml-2 text-sm ${
-                            formData.patientID ? 'text-gray-400' : 'text-gray-700'
-                          }`}>{type}</span>
-                        </label>
-                      ))}
+                {/* Relation Type & Name */}
+                <Card className="p-4 bg-gray-50 border border-gray-200">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Patient Relation Details</h4>
+                    
+                    {/* Relation Type Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Relation Type</label>
+                      <div className="flex gap-4">
+                        {(['W/o', 'D/o', 'S/o'] as const).map((type) => (
+                          <label key={type} className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="relationType"
+                              value={type}
+                              checked={formData.relationType === type}
+                              onChange={handleInputChange}
+                              disabled={!!formData.patientID}
+                              className={`w-4 h-4 text-blue-600 bg-white border-gray-300 focus:ring-blue-500 focus:ring-2 ${
+                                formData.patientID ? 'cursor-not-allowed opacity-50' : ''
+                              }`}
+                            />
+                            <span className={`ml-2 text-sm font-medium select-none ${
+                              formData.patientID ? 'text-gray-400' : 'text-gray-700'
+                            }`}>
+                              {type === 'W/o' && 'Wife of'}
+                              {type === 'D/o' && 'Daughter of'} 
+                              {type === 'S/o' && 'Son of'}
+                              <span className="text-gray-500 ml-1">({type})</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {formData.patientID && (
+                        <p className="text-xs text-gray-500 mt-2">Relation type is fixed for existing patients</p>
+                      )}
                     </div>
-                    {formData.patientID && (
-                      <p className="text-xs text-gray-500 mt-1">Relation type is fixed for existing patients</p>
-                    )}
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Relation Name</label>
-                    <input
-                      type="text"
+
+                    {/* Relation Name */}
+                    <InputField
+                      label={`${formData.relationType === 'W/o' ? 'Husband' : 'Father'}'s Name`}
                       name="relation"
                       value={formData.relation}
                       onChange={handleInputChange}
-                      readOnly={!!formData.patientID}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                        formData.patientID 
-                          ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
-                          : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
-                      }`}
-                      placeholder="Father's/Husband's name"
+                      placeholder={`Enter ${formData.relationType === 'W/o' ? 'husband' : 'father'}'s full name`}
+                      className="w-full"
+                      disabled={!!formData.patientID}
                     />
                     {formData.patientID && (
-                      <p className="text-xs text-gray-500 mt-1">Relation name cannot be changed</p>
+                      <p className="text-xs text-gray-500 mt-1">Relation name cannot be changed for existing patients</p>
                     )}
                   </div>
-                </div>
+                </Card>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>

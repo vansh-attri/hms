@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { 
+  Button, 
+  Card, 
+  InputField, 
+  SelectField, 
+  Alert, 
+  LoadingSpinner,
+  FormGrid,
+  FormSection 
+} from '@/components/ui/FormElements';
 import { doctorAPI, patientAPI, referralAPI, type UnregisteredReferral } from '@/utils/api';
 
 interface DoctorOption { id: number; name: string }
@@ -284,200 +293,196 @@ export const PatientRegistrationForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-xl p-6 text-white">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
-          <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">👤</span>
-          Patient Registration
-        </h2>
-        <p className="mt-2 text-blue-100">Add new patients to the system</p>
-      </div>
-
-      <div className="bg-white rounded-b-xl shadow-lg border border-gray-200">
-        {/* Search Section */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Search Existing Patient</h3>
-          <div className="flex gap-3 mb-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                placeholder="Search by name or mobile number..."
-              />
-            </div>
-            <Button
-              onClick={handleSearch}
-              disabled={searching || !searchQuery.trim()}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-            >
-              {searching ? 'Searching...' : 'Search'}
-            </Button>
-            {searchQuery && (
-              <Button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSearchResults([]);
-                }}
-                className="px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-
-          {/* Add Referred Patient Button */}
-          <div className="flex justify-center">
-            <Button
-              onClick={loadReferredPatients}
-              disabled={loadingReferred}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-2"
-            >
-              <span className="w-5 h-5 bg-white/20 rounded flex items-center justify-center text-sm">📋</span>
-              {loadingReferred ? 'Loading...' : 'Add Referred Patient'}
-            </Button>
-          </div>
-
-          {/* Search Results */}
-          {searchResults.length > 0 && (
-            <div className="mt-4 bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700">
-                Found {searchResults.length} patient(s)
-              </div>
-              <div className="max-h-64 overflow-y-auto">
-                {searchResults.map((row) => (
-                  <div
-                    key={row.id}
-                    onClick={() => applyPatientToForm(row)}
-                    className="p-4 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-medium text-gray-900">{row.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {row.Age && `${row.Age} years`} {row.Gender && `• ${row.Gender}`} {row.Mobile && `• ${row.Mobile}`}
-                        </div>
-                      </div>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">ID: {row.id}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+    <div className="max-w-5xl mx-auto p-6">
+      <Card>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-xl p-6 text-white">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
+            <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">👤</span>
+            Patient Registration
+          </h2>
+          <p className="mt-2 text-blue-100">Add new patients to the system</p>
         </div>
 
-        {/* Form Section */}
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Patient Information</h3>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column */}
-            <div className="space-y-6">
-              {/* Patient Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Patient Name *
-                </label>
-                <input
-                  type="text"
-                  name="patientName"
-                  value={formData.patientName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="Enter patient full name"
+        {/* Search Section */}
+        <FormSection 
+          title="Search Existing Patient"
+          className="border-b border-gray-200 bg-gray-50"
+        >
+          <div className="space-y-4">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <InputField
+                  label="Search Patient"
+                  name="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name or mobile number..."
                 />
               </div>
-
-              {/* Relation Type & Name */}
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Relation</label>
-                  <div className="space-y-2">
-                    {(['W/o', 'D/o', 'S/o'] as const).map((type) => (
-                      <label key={type} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="relationType"
-                          value={type}
-                          checked={formData.relationType === type}
-                          onChange={handleInputChange}
-                          className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{type}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Relation Name</label>
-                  <input
-                    type="text"
-                    name="relation"
-                    value={formData.relation}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    placeholder="Father's/Husband's name"
-                  />
-                </div>
-              </div>
-
-              {/* Age & Gender */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
-                  <input
-                    type="number"
-                    name="age"
-                    value={formData.age}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    placeholder="Age"
-                    min="0"
-                    max="150"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              <div className="flex gap-2 pt-6">
+                <Button
+                  onClick={handleSearch}
+                  disabled={searching || !searchQuery.trim()}
+                  variant="primary"
+                >
+                  {searching ? (
+                    <span className="flex items-center gap-2">
+                      <LoadingSpinner size="sm" />
+                      Searching...
+                    </span>
+                  ) : (
+                    'Search'
+                  )}
+                </Button>
+                {searchQuery && (
+                  <Button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    variant="secondary"
                   >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Mobile */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
-                <input
-                  type="tel"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 ${
-                    validationErrors.mobile ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
-                  }`}
-                  placeholder="10-digit mobile number"
-                  maxLength={10}
-                />
-                {validationErrors.mobile && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.mobile}</p>
+                    Clear
+                  </Button>
                 )}
               </div>
             </div>
 
+            {/* Add Referred Patient Button */}
+            <div className="flex justify-center">
+              <Button
+                onClick={loadReferredPatients}
+                disabled={loadingReferred}
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+              >
+                <span className="w-5 h-5 bg-white/20 rounded flex items-center justify-center text-sm">📋</span>
+                {loadingReferred ? 'Loading...' : 'Add Referred Patient'}
+              </Button>
+            </div>
+
+            {/* Search Results */}
+            {searchResults.length > 0 && (
+              <Card className="mt-4 overflow-hidden">
+                <div className="bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700">
+                  Found {searchResults.length} patient(s)
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {searchResults.map((row) => (
+                    <div
+                      key={row.id}
+                      onClick={() => applyPatientToForm(row)}
+                      className="p-4 border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium text-gray-900">{row.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {row.Age && `${row.Age} years`} {row.Gender && `• ${row.Gender}`} {row.Mobile && `• ${row.Mobile}`}
+                          </div>
+                        </div>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">ID: {row.id}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+        </FormSection>
+
+        {/* Form Section */}
+        <FormSection title="Patient Information">
+          <FormGrid>
+            {/* Left Column */}
+            <div className="lg:col-span-6 space-y-6">
+              <InputField
+                label="Patient Name"
+                name="patientName"
+                value={formData.patientName}
+                onChange={handleInputChange}
+                placeholder="Enter patient full name"
+                required
+              />
+
+              {/* Relation Type & Name */}
+              <Card className="p-4 bg-gray-50 border border-gray-200">
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Patient Relation Details</h4>
+                  
+                  {/* Relation Type Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Relation Type</label>
+                    <div className="flex gap-4">
+                      {(['W/o', 'D/o', 'S/o'] as const).map((type) => (
+                        <label key={type} className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="relationType"
+                            value={type}
+                            checked={formData.relationType === type}
+                            onChange={handleInputChange}
+                            className="w-4 h-4 text-blue-600 bg-white border-gray-300 focus:ring-blue-500 focus:ring-2"
+                          />
+                          <span className="ml-2 text-sm font-medium text-gray-700 select-none">
+                            {type === 'W/o' && 'Wife of'}
+                            {type === 'D/o' && 'Daughter of'} 
+                            {type === 'S/o' && 'Son of'}
+                            <span className="text-gray-500 ml-1">({type})</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Relation Name */}
+                  <InputField
+                    label={`${formData.relationType === 'W/o' ? 'Husband' : 'Father'}'s Name`}
+                    name="relation"
+                    value={formData.relation}
+                    onChange={handleInputChange}
+                    placeholder={`Enter ${formData.relationType === 'W/o' ? 'husband' : 'father'}'s full name`}
+                    className="w-full"
+                  />
+                </div>
+              </Card>
+
+              {/* Age & Gender */}
+              <div className="grid grid-cols-2 gap-4">
+                <InputField
+                  label="Age"
+                  name="age"
+                  type="number"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  placeholder="Age"
+                />
+                <SelectField
+                  label="Gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'Male', label: 'Male' },
+                    { value: 'Female', label: 'Female' },
+                    { value: 'Other', label: 'Other' }
+                  ]}
+                />
+              </div>
+
+              <InputField
+                label="Mobile Number"
+                name="mobile"
+                type="tel"
+                value={formData.mobile}
+                onChange={handleInputChange}
+                placeholder="10-digit mobile number"
+                error={validationErrors.mobile}
+              />
+            </div>
+
             {/* Right Column */}
-            <div className="space-y-6">
-              {/* Address */}
+            <div className="lg:col-span-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                 <textarea
@@ -490,47 +495,35 @@ export const PatientRegistrationForm: React.FC = () => {
                 />
               </div>
 
-              {/* Reference Doctor */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reference Doctor</label>
-                <select
-                  name="doctorId"
-                  value={formData.doctorId}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                >
-                  <option value="">Select Doctor</option>
-                  {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SelectField
+                label="Reference Doctor"
+                name="doctorId"
+                value={formData.doctorId}
+                onChange={handleInputChange}
+                options={doctors.map(doctor => ({ value: String(doctor.id), label: doctor.name }))}
+              />
 
               {/* Patient ID Display */}
               {formData.patientId && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <Card className="bg-green-50 border-green-200">
                   <label className="block text-sm font-medium text-green-700 mb-1">Patient ID</label>
                   <div className="text-lg font-mono text-green-800">{formData.patientId}</div>
-                </div>
+                </Card>
               )}
             </div>
-          </div>
+          </FormGrid>
 
           {/* Action Buttons */}
           <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex-1 sm:flex-none"
+              variant="primary"
+              className="flex-1 sm:flex-none"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
+                  <LoadingSpinner size="sm" />
                   Saving...
                 </span>
               ) : (
@@ -540,7 +533,7 @@ export const PatientRegistrationForm: React.FC = () => {
             
             <Button
               onClick={handleClear}
-              className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium"
+              variant="secondary"
             >
               Clear Form
             </Button>
@@ -548,16 +541,14 @@ export const PatientRegistrationForm: React.FC = () => {
 
           {/* Message */}
           {message && (
-            <div className={`mt-6 p-4 rounded-lg text-center font-medium ${
-              message.includes('success') 
-                ? 'bg-green-50 text-green-800 border border-green-200' 
-                : 'bg-red-50 text-red-800 border border-red-200'
-            }`}>
-              {message}
-            </div>
+            <Alert
+              type={message.includes('success') ? 'success' : 'error'}
+              message={message}
+              className="mt-6"
+            />
           )}
-        </div>
-      </div>
+        </FormSection>
+      </Card>
 
       {/* Referred Patients Modal */}
       {showReferredModal && (

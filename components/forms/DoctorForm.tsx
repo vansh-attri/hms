@@ -1,7 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { 
+  Button, 
+  Card, 
+  InputField, 
+  Alert, 
+  LoadingSpinner,
+  FormGrid,
+  FormSection 
+} from '@/components/ui/FormElements';
 import { validateForm, doctorFormSchema } from '@/utils/validation';
 import { api, DoctorSummary } from '@/utils/api';
 
@@ -157,108 +165,88 @@ export const DoctorForm: React.FC = () => {
     .sort((a, b) => b.id - a.id); // Sort by ID in descending order
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-t-xl p-6 text-white">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
-          <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">👨‍⚕️</span>
-          Doctor Management
-        </h2>
-        <p className="mt-2 text-emerald-100">Add, edit, and manage doctors in the system</p>
-      </div>
+    <div className="max-w-7xl mx-auto p-6">
+      <Card className="mb-6">
+        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-t-xl p-6 text-white">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
+            <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">👨‍⚕️</span>
+            Doctor Management
+          </h2>
+          <p className="mt-2 text-emerald-100">Add, edit, and manage doctors in the system</p>
+        </div>
 
-      <div className="bg-white rounded-b-xl shadow-lg border border-gray-200">
-        <div className="grid grid-cols-12 gap-8 p-6">
+        <FormGrid>
           {/* Left side - Doctor Form */}
-          <div className="col-span-12 lg:col-span-5">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-6 h-6 bg-emerald-600 rounded-lg flex items-center justify-center text-white text-sm">
-                  {formData.doctorId ? '✏️' : '➕'}
-                </span>
-                {formData.doctorId ? 'Edit Doctor' : 'Add New Doctor'}
-              </h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Doctor Name *
-                  </label>
-                  <input
-                    type="text"
+          <div className="lg:col-span-5">
+            <Card className="bg-gray-50">
+              <FormSection 
+                title={`${formData.doctorId ? '✏️ Edit Doctor' : '➕ Add New Doctor'}`}
+              >
+                <div className="space-y-6">
+                  <InputField
+                    label="Doctor Name"
                     name="doctorName"
                     value={formData.doctorName}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 transition-colors ${
-                      errors.doctorName ? 'border-red-300' : 'border-gray-300'
-                    }`}
                     placeholder="Enter doctor name"
+                    error={errors.doctorName}
+                    required
                   />
-                  {errors.doctorName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.doctorName}</p>
+
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <label className="flex items-start text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="isDeleted"
+                        checked={formData.isDeleted === 1}
+                        onChange={handleInputChange}
+                        className="mr-3 mt-0.5 w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                      />
+                      <span className="leading-relaxed">
+                        Mark as deleted (will not appear in dropdown lists)
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      onClick={handleSave}
+                      disabled={loading}
+                      variant="primary"
+                      className="flex-1"
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Saving...
+                        </span>
+                      ) : (
+                        formData.doctorId ? 'Update Doctor' : 'Add Doctor'
+                      )}
+                    </Button>
+                    
+                    <Button
+                      onClick={handleClear}
+                      variant="secondary"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+
+                  {message && (
+                    <Alert
+                      type={message.includes('success') ? 'success' : 'error'}
+                      message={message}
+                    />
                   )}
                 </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <label className="flex items-start text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="isDeleted"
-                      checked={formData.isDeleted === 1}
-                      onChange={handleInputChange}
-                      className="mr-3 mt-0.5 w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                    />
-                    <span className="leading-relaxed">
-                      Mark as deleted (will not appear in dropdown lists)
-                    </span>
-                  </label>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 font-medium rounded-lg"
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Saving...
-                      </span>
-                    ) : (
-                      formData.doctorId ? 'Update Doctor' : 'Add Doctor'
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={handleClear}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 font-medium rounded-lg"
-                  >
-                    Clear
-                  </Button>
-                </div>
-
-                {message && (
-                  <div
-                    className={`p-4 rounded-lg text-center font-medium ${
-                      message.includes('success')
-                        ? 'bg-green-50 text-green-800 border border-green-200'
-                        : 'bg-red-50 text-red-800 border border-red-200'
-                    }`}
-                  >
-                    {message}
-                  </div>
-                )}
-              </div>
-            </div>
+              </FormSection>
+            </Card>
           </div>
 
           {/* Right side - Doctors List */}
-          <div className="col-span-12 lg:col-span-7">
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="lg:col-span-7">
+            <Card>
               {/* Search Header */}
               <div className="bg-gray-50 p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-3">
@@ -267,11 +255,11 @@ export const DoctorForm: React.FC = () => {
                     {filteredDoctors.length} of {doctors.length} doctors
                   </span>
                 </div>
-                <input
-                  type="text"
+                <InputField
+                  label="Search Doctors"
+                  name="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                   placeholder="Search doctors by name..."
                 />
               </div>
@@ -337,10 +325,10 @@ export const DoctorForm: React.FC = () => {
                   Deleted: {doctors.filter(d => d.isDeleted === 1).length}
                 </span>
               </div>
-            </div>
+            </Card>
           </div>
-        </div>
-      </div>
+        </FormGrid>
+      </Card>
     </div>
   );
 };

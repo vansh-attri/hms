@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { 
+  Button, 
+  Card, 
+  InputField, 
+  SelectField, 
+  Alert, 
+  LoadingSpinner,
+  FormGrid,
+  FormSection 
+} from '@/components/ui/FormElements';
 import { api } from '@/utils/api';
 
 interface TestFormData {
@@ -201,137 +210,108 @@ export const TestForm: React.FC = () => {
     .sort((a, b) => b.ID - a.ID); // Sort by ID in descending order
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-xl p-6 text-white">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
-          <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">🧪</span>
-          Test Management
-        </h2>
-        <p className="mt-2 text-purple-100">Add, edit, and manage medical tests and diagnostic procedures</p>
-      </div>
+    <div className="max-w-7xl mx-auto p-6">
+      <Card>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-xl p-6 text-white">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
+            <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">🧪</span>
+            Test Management
+          </h2>
+          <p className="mt-2 text-purple-100">Add, edit, and manage medical tests and diagnostic procedures</p>
+        </div>
 
-      <div className="bg-white rounded-b-xl shadow-lg border border-gray-200">
-        <div className="grid grid-cols-12 gap-8 p-6">
+        <FormGrid>
           {/* Left side - Test Form */}
-          <div className="col-span-12 xl:col-span-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-6 h-6 bg-purple-600 rounded-lg flex items-center justify-center text-white text-sm">
-                  {formData.testId ? '✏️' : '➕'}
-                </span>
-                {formData.testId ? 'Edit Test' : 'Add New Test'}
-              </h3>
-              
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Test Name *
-                  </label>
-                  <input
-                    type="text"
+          <div className="xl:col-span-4">
+            <Card className="bg-gray-50">
+              <FormSection 
+                title={`${formData.testId ? '✏️ Edit Test' : '➕ Add New Test'}`}
+              >
+                <div className="space-y-6">
+                  <InputField
+                    label="Test Name"
                     name="testName"
                     value={formData.testName}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     placeholder="Enter test name"
+                    required
                   />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category *
-                  </label>
-                  <select
+                  <SelectField
+                    label="Category"
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                  >
-                    <option value="">Select Category</option>
-                    {testCategories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
+                    options={testCategories.map(cat => ({ value: cat, label: cat }))}
+                    required
+                  />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price (₹) *
-                  </label>
-                  <input
-                    type="number"
+                  <InputField
+                    label="Price (₹)"
                     name="price"
+                    type="number"
                     value={formData.price || ''}
                     onChange={handleInputChange}
-                    min="0"
-                    step="1"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     placeholder="Enter price"
+                    required
                   />
-                </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <label className="flex items-start text-sm font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      name="isDeleted"
-                      checked={formData.isDeleted}
-                      onChange={handleInputChange}
-                      className="mr-3 mt-0.5 w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                    />
-                    <span className="leading-relaxed">
-                      Mark as deleted (will not appear in dropdown lists)
-                    </span>
-                  </label>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 font-medium rounded-lg"
-                  >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Saving...
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <label className="flex items-start text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        name="isDeleted"
+                        checked={formData.isDeleted}
+                        onChange={handleInputChange}
+                        className="mr-3 mt-0.5 w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                      />
+                      <span className="leading-relaxed">
+                        Mark as deleted (will not appear in dropdown lists)
                       </span>
-                    ) : (
-                      formData.testId ? 'Update Test' : 'Add Test'
-                    )}
-                  </Button>
-                </div>
-
-                <Button
-                  onClick={handleClear}
-                  className="w-full bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 font-medium rounded-lg"
-                >
-                  Clear Form
-                </Button>
-
-                {message && (
-                  <div
-                    className={`p-4 rounded-lg text-center font-medium text-sm ${
-                      message.includes('success')
-                        ? 'bg-green-50 text-green-800 border border-green-200'
-                        : 'bg-red-50 text-red-800 border border-red-200'
-                    }`}
-                  >
-                    {message}
+                    </label>
                   </div>
-                )}
-              </div>
-            </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      onClick={handleSave}
+                      disabled={loading}
+                      variant="primary"
+                      className="flex-1 bg-purple-600 hover:bg-purple-700"
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <LoadingSpinner size="sm" />
+                          Saving...
+                        </span>
+                      ) : (
+                        formData.testId ? 'Update Test' : 'Add Test'
+                      )}
+                    </Button>
+                  </div>
+
+                  <Button
+                    onClick={handleClear}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Clear Form
+                  </Button>
+
+                  {message && (
+                    <Alert
+                      type={message.includes('success') ? 'success' : 'error'}
+                      message={message}
+                    />
+                  )}
+                </div>
+              </FormSection>
+            </Card>
           </div>
 
           {/* Right side - Tests List */}
-          <div className="col-span-12 xl:col-span-8">
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="xl:col-span-8">
+            <Card>
               {/* Search Header */}
               <div className="bg-gray-50 p-4 border-b border-gray-200 space-y-4">
                 <div className="flex items-center justify-between">
@@ -431,10 +411,10 @@ export const TestForm: React.FC = () => {
                   Deleted: {tests.filter(t => t.isDeleted).length}
                 </span>
               </div>
-            </div>
+            </Card>
           </div>
-        </div>
-      </div>
+        </FormGrid>
+      </Card>
     </div>
   );
 };

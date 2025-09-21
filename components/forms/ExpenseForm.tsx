@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/FormElements';
+import { 
+  Button, 
+  Card, 
+  InputField, 
+  TextAreaField,
+  Alert, 
+  LoadingSpinner,
+  FormGrid,
+  FormSection 
+} from '@/components/ui/FormElements';
 import { api } from '@/utils/api';
 
 interface ExpenseFormData {
@@ -188,27 +197,26 @@ export const ExpenseForm: React.FC = () => {
       .reduce((sum, expense) => sum + expense.Amount, 0) : 0;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-t-xl p-6 text-white">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
-          <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">💰</span>
-          Daily Expense Management
-        </h2>
-        <p className="mt-2 text-orange-100">Track and manage daily expenses and expenditures</p>
-        <div className="mt-4 flex gap-6 text-sm">
-          <div className="bg-white/20 rounded-lg px-3 py-2">
-            <span className="font-medium">Today&apos;s Total: ₹{todayTotal}</span>
-          </div>
-          {selectedDateTotal > 0 && (
+    <div className="max-w-7xl mx-auto p-6">
+      <Card>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-t-xl p-6 text-white">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
+            <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">💰</span>
+            Daily Expense Management
+          </h2>
+          <p className="mt-2 text-orange-100">Track and manage daily expenses and expenditures</p>
+          <div className="mt-4 flex gap-6 text-sm">
             <div className="bg-white/20 rounded-lg px-3 py-2">
-              <span className="font-medium">Selected Date Total: ₹{selectedDateTotal}</span>
+              <span className="font-medium">Today&apos;s Total: ₹{todayTotal}</span>
             </div>
-          )}
+            {selectedDateTotal > 0 && (
+              <div className="bg-white/20 rounded-lg px-3 py-2">
+                <span className="font-medium">Selected Date Total: ₹{selectedDateTotal}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-      <div className="bg-white rounded-b-xl shadow-lg border border-gray-200">
         <div className="grid grid-cols-12 gap-8 p-6">
           {/* Left side - Expense Form */}
           <div className="col-span-12 xl:col-span-4">
@@ -425,7 +433,7 @@ export const ExpenseForm: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

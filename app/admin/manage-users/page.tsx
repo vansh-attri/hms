@@ -49,7 +49,7 @@ export default function ManageUsersPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('hms_token');
-      const response = await fetch('http://localhost:5000/api/users', {
+      const response = await fetch('https://hms-back-rosy.vercel.app/api/users', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -78,7 +78,7 @@ export default function ManageUsersPage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('hms_token');
-      const url = editingUser ? `http://localhost:5000/api/users/${editingUser.UserName}` : 'http://localhost:5000/api/users';
+      const url = editingUser ? `https://hms-back-rosy.vercel.app/api/users/${editingUser.UserName}` : 'https://hms-back-rosy.vercel.app/api/users';
       const method = editingUser ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -131,7 +131,7 @@ export default function ManageUsersPage() {
 
     try {
       const token = localStorage.getItem('hms_token');
-      const response = await fetch(`http://localhost:5000/api/users/${userName}`, {
+      const response = await fetch(`https://hms-back-rosy.vercel.app/api/users/${userName}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

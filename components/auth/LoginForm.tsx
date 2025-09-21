@@ -23,7 +23,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://hms-back-rosy.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

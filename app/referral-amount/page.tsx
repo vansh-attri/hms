@@ -89,7 +89,7 @@ export default function ReferralAmountPage() {
         items: existingReceipt.items || []
       };
       
-      console.log('API call URL will be:', `http://localhost:5000/api/receipts/${id}`);
+      console.log('API call URL will be:', `https://hms-back-rosy.vercel.app/api/receipts/${id}`);
       console.log('API call payload:', updatePayload);
       
       // Call the API to update the receipt

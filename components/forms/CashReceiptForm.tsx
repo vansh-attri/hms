@@ -664,12 +664,6 @@ export const CashReceiptForm: React.FC = () => {
             <span>Discount:</span>
             <span>₹${formData.discount}</span>
           </div>
-          ${formData.refAmount > 0 ? `
-          <div class="summary-row">
-            <span>Referral Amount:</span>
-            <span>₹${formData.refAmount}</span>
-          </div>
-          ` : ''}
           <div class="summary-row summary-total">
             <span>Net Amount:</span>
             <span>₹${formData.netAmount}</span>

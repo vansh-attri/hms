@@ -413,22 +413,25 @@ export const PatientRegistrationForm: React.FC = () => {
                   {/* Relation Type Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">Relation Type</label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-6">
                       {(['W/o', 'D/o', 'S/o'] as const).map((type) => (
-                        <label key={type} className="flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            name="relationType"
-                            value={type}
-                            checked={formData.relationType === type}
-                            onChange={handleInputChange}
-                            className="w-4 h-4 text-blue-600 bg-white border-gray-300 focus:ring-blue-500 focus:ring-2"
-                          />
-                          <span className="ml-2 text-sm font-medium text-gray-700 select-none">
+                        <label key={type} className="flex items-center cursor-pointer group">
+                          <div className="relative flex items-center">
+                            <input
+                              type="radio"
+                              name="relationType"
+                              value={type}
+                              checked={formData.relationType === type}
+                              onChange={handleInputChange}
+                              className="w-5 h-5 text-blue-600 bg-white border-2 border-gray-300 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 transition-all duration-200"
+                            />
+                            <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-blue-200 pointer-events-none transition-colors duration-200"></div>
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-gray-700 select-none group-hover:text-blue-700 transition-colors duration-200">
                             {type === 'W/o' && 'Wife of'}
                             {type === 'D/o' && 'Daughter of'} 
                             {type === 'S/o' && 'Son of'}
-                            <span className="text-gray-500 ml-1">({type})</span>
+                            <span className="text-gray-500 ml-1 font-normal">({type})</span>
                           </span>
                         </label>
                       ))}

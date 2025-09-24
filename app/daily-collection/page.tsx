@@ -123,33 +123,126 @@ export default function DailyCollectionPage() {
     }
   };
 
-  const exportToCSV = () => {
-    const csvContent = [
-      ['BillID', 'BillDate', 'PatientName', 'TestName', 'DoctorName', 'NetAmount', 'RefAmount', 'Age', 'Address', 'Gender', 'UserName', 'isRefPaid', 'ExpenseAmount'],
-      ...collections.map(item => [
-        item.BillID.toString(),
-        item.BillDate,
-        item.PatientName,
-        item.TestName,
-        item.DoctorName,
-        item.NetAmount.toString(),
-        item.RefAmount.toString(),
-        item.Age,
-        item.Address,
-        item.Gender,
-        item.UserName,
-        item.isRefPaid ? 'Yes' : 'No',
-        item.ExpenseAmount.toString()
-      ])
-    ].map(row => row.join(',')).join('\n');
+  const handlePrint = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Daily Collection Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .header h1 { margin: 0; font-size: 24px; color: #2563eb; }
+            .header p { margin: 5px 0; color: #666; }
+            .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+            .stat-card { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
+            .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: #666; }
+            .stat-card p { margin: 0; font-size: 18px; font-weight: bold; }
+            .stat-card.blue p { color: #2563eb; }
+            .stat-card.green p { color: #16a34a; }
+            .stat-card.red p { color: #dc2626; }
+            .stat-card.purple p { color: #9333ea; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f9fafb; font-weight: bold; }
+            tbody tr:nth-child(even) { background-color: #f9fafb; }
+            tfoot { background-color: #f3f4f6; font-weight: bold; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Daily Collection Report</h1>
+            <p>Date Range: ${fromDate === toDate ? 
+              new Date(fromDate).toLocaleDateString() : 
+              `${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}`
+            }</p>
+            <p>Total Records: ${collections.length} | Generated: ${new Date().toLocaleString()}</p>
+          </div>
+          
+          <div class="stats">
+            <div class="stat-card blue">
+              <h3>Total Net Amount</h3>
+              <p>₹${stats.totalNetAmount.toLocaleString()}</p>
+            </div>
+            <div class="stat-card green">
+              <h3>Total Ref Amount</h3>
+              <p>₹${stats.totalRefAmount.toLocaleString()}</p>
+            </div>
+            <div class="stat-card red">
+              <h3>Total Expenses</h3>
+              <p>₹${stats.totalExpenseAmount.toLocaleString()}</p>
+            </div>
+            <div class="stat-card purple">
+              <h3>Net Collection</h3>
+              <p>₹${stats.netCollection.toLocaleString()}</p>
+            </div>
+          </div>
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `daily-collection-${fromDate}-to-${toDate}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+          <table>
+            <thead>
+              <tr>
+                <th>Bill ID</th>
+                <th>Date</th>
+                <th>Patient Name</th>
+                <th>Test Name</th>
+                <th>Doctor</th>
+                <th class="text-right">Net Amount</th>
+                <th class="text-right">Ref Amount</th>
+                <th class="text-center">Age</th>
+                <th>Address</th>
+                <th class="text-center">Gender</th>
+                <th>User</th>
+                <th class="text-center">Ref Paid</th>
+                <th class="text-right">Expense</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${collections.map(record => `
+                <tr>
+                  <td>${record.BillID}</td>
+                  <td>${record.BillDate}</td>
+                  <td>${record.PatientName}</td>
+                  <td>${record.TestName}</td>
+                  <td>${record.DoctorName}</td>
+                  <td class="text-right">₹${record.NetAmount}</td>
+                  <td class="text-right">₹${record.RefAmount}</td>
+                  <td class="text-center">${record.Age}</td>
+                  <td>${record.Address}</td>
+                  <td class="text-center">${record.Gender}</td>
+                  <td>${record.UserName}</td>
+                  <td class="text-center">${record.isRefPaid ? 'Yes' : 'No'}</td>
+                  <td class="text-right">₹${record.ExpenseAmount}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5" class="text-right"><strong>Total:</strong></td>
+                <td class="text-right"><strong>₹${stats.totalNetAmount}</strong></td>
+                <td class="text-right"><strong>₹${stats.totalRefAmount}</strong></td>
+                <td colspan="5"></td>
+                <td class="text-right"><strong>₹${stats.totalExpenseAmount}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }
   };
 
   if (loading) {
@@ -214,10 +307,10 @@ export default function DailyCollectionPage() {
           </div>
           <div>
             <Button
-              onClick={exportToCSV}
+              onClick={handlePrint}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm"
             >
-              Export CSV
+              Print Report
             </Button>
           </div>
         </div>

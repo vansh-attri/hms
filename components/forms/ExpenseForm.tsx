@@ -58,8 +58,8 @@ export const ExpenseForm: React.FC = () => {
       }));
       
       setExpenses(convertedExpenses);
-    } catch (error) {
-      console.error('Failed to load expenses:', error);
+    } catch {
+      // Failed to load expenses
       setMessage('Failed to load expenses from server');
       
       // Fallback to empty array if API fails
@@ -144,9 +144,9 @@ export const ExpenseForm: React.FC = () => {
       
       // Reset form
       handleClear();
-    } catch (error) {
-      console.error('Save failed:', error);
-      setMessage(`Error saving expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch {
+      // Save failed
+      setMessage('Error saving expense data');
     } finally {
       setLoading(false);
     }
@@ -155,7 +155,7 @@ export const ExpenseForm: React.FC = () => {
   const handleDelete = async () => {
     if (!formData.expenseId) return;
 
-    if (!confirm('Are you sure you want to delete this expense?')) return;
+    if (!window.confirm('Are you sure you want to delete this expense?')) return;
 
     setLoading(true);
     try {
@@ -166,9 +166,9 @@ export const ExpenseForm: React.FC = () => {
       await loadExpenses();
       
       handleClear();
-    } catch (error) {
-      console.error('Delete failed:', error);
-      setMessage(`Error deleting expense: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch {
+      // Delete failed
+      setMessage('Error deleting expense');
     } finally {
       setLoading(false);
     }

@@ -91,8 +91,8 @@ export const ServiceForm: React.FC = () => {
         isActive: service.isActive !== false
       }));
       setServices(serviceRecords);
-    } catch (error) {
-      console.error('Failed to load services:', error);
+    } catch {
+      // Failed to load services
       setMessage('Failed to load services');
     }
   };
@@ -189,8 +189,8 @@ export const ServiceForm: React.FC = () => {
       
       // Reset form
       handleClear();
-    } catch (error) {
-      console.error('Save failed:', error);
+    } catch {
+      // Save failed
       setMessage('Error saving service data');
     } finally {
       setLoading(false);
@@ -200,7 +200,7 @@ export const ServiceForm: React.FC = () => {
   const handleDelete = async () => {
     if (!formData.serviceId) return;
 
-    if (!confirm('Are you sure you want to delete this service?')) return;
+    if (!window.confirm('Are you sure you want to delete this service?')) return;
 
     setLoading(true);
     try {
@@ -211,8 +211,8 @@ export const ServiceForm: React.FC = () => {
       await loadServices();
       
       handleClear();
-    } catch (error) {
-      console.error('Delete failed:', error);
+    } catch {
+      // Delete failed
       setMessage('Error deleting service');
     } finally {
       setLoading(false);

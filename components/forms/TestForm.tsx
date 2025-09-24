@@ -82,8 +82,8 @@ export const TestForm: React.FC = () => {
       }));
       
       setTests(convertedTests);
-    } catch (error) {
-      console.error('Failed to load tests:', error);
+    } catch {
+      // Failed to load tests
       setMessage('Failed to load tests from server');
     } finally {
       setLoading(false);
@@ -150,17 +150,16 @@ export const TestForm: React.FC = () => {
         isDeleted: Boolean(formData.isDeleted) // Convert to boolean to match backend validation
       };
 
-      console.log('Attempting to save test with data:', testData);
-      console.log('Test ID:', formData.testId);
+      // Attempting to save test
 
       if (formData.testId) {
         // Update existing test
-        console.log('Updating test with ID:', formData.testId);
+        // Updating test
         await api.tests.update(formData.testId, testData);
         setMessage('Test updated successfully!');
       } else {
         // Create new test
-        console.log('Creating new test');
+        // Creating new test
         await api.tests.create(testData);
         setMessage('Test added successfully!');
       }
@@ -171,15 +170,11 @@ export const TestForm: React.FC = () => {
       // Reset form
       handleClear();
     } catch (error) {
-      console.error('Save failed:', error);
+      // Save failed
       let errorMessage = 'Error saving test data';
       
       if (error instanceof Error) {
-        console.error('Error details:', {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        });
+        // Error handling
         
         // Check for specific error types
         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {

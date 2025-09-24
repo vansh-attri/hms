@@ -47,7 +47,7 @@ export const DoctorForm: React.FC = () => {
     try {
       // Load real data from API
       const doctorsData = await api.doctors.getAll();
-      console.log('Loaded doctors from API:', doctorsData.length);
+      // Loaded doctors from API
       
       // Convert API data to match DoctorRecord interface
       const convertedDoctors: DoctorRecord[] = doctorsData.map((doctor: DoctorSummary) => ({
@@ -57,10 +57,9 @@ export const DoctorForm: React.FC = () => {
       }));
       
       setDoctors(convertedDoctors);
-      console.log('Total doctors loaded:', convertedDoctors.length);
-      console.log('Active doctors:', convertedDoctors.filter(d => d.isDeleted === 0).length);
-    } catch (error) {
-      console.error('Failed to load doctors:', error);
+      // Doctors loaded successfully
+    } catch {
+      // Failed to load doctors
       setMessage('Failed to load doctors from API');
       
       // Fallback to empty array if API fails
@@ -150,9 +149,9 @@ export const DoctorForm: React.FC = () => {
       
       // Reset form
       handleClear();
-    } catch (error) {
-      console.error('Save failed:', error);
-      setMessage(`Error saving doctor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch {
+      // Save failed
+      setMessage('Error saving doctor data');
     } finally {
       setLoading(false);
     }

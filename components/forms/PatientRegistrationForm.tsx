@@ -164,8 +164,8 @@ export const PatientRegistrationForm: React.FC = () => {
       if (referred.length === 0) {
         setMessage('No unregistered referrals found. All referrals have been processed.');
       }
-    } catch (error) {
-      console.error('Error loading referred patients:', error);
+    } catch {
+      // Error loading referred patients
       setMessage('Error loading referred patients. Please try again.');
     } finally {
       setLoadingReferred(false);
@@ -178,8 +178,8 @@ export const PatientRegistrationForm: React.FC = () => {
       const referred = await referralAPI.getUnregistered();
       setReferredPatients(referred);
       setMessage(`Refreshed: Found ${referred.length} unregistered referrals`);
-    } catch (error) {
-      console.error('Error refreshing referred patients:', error);
+    } catch {
+      // Error refreshing referred patients
       setMessage('Error refreshing referred patients.');
     } finally {
       setLoadingReferred(false);
@@ -217,9 +217,9 @@ export const PatientRegistrationForm: React.FC = () => {
       
       if (matchingDoctor) {
         matchedDoctorId = String(matchingDoctor.id);
-        console.log(`✅ Doctor matched: "${referredDoctorName}" → "${matchingDoctor.name}" (ID: ${matchingDoctor.id})`);
+        // Doctor matched
       } else {
-        console.log(`❌ No doctor match found for: "${referredDoctorName}"`);
+        // No doctor match found
       }
     }
 
@@ -591,7 +591,7 @@ export const PatientRegistrationForm: React.FC = () => {
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               {referredPatients.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  <div className="text-4xl mb-4">✅</div>
+                  <div className="text-4xl mb-4 text-green-500">✓</div>
                   <p className="text-lg font-medium text-gray-700">All Caught Up!</p>
                   <p className="text-sm mt-2 text-gray-600">
                     All patients from public referrals have been registered in the system.

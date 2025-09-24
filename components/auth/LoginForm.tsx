@@ -49,8 +49,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
       // Redirect to add patient page
       router.push('/add-patient');
 
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch {
+      // Login error
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);

@@ -7,8 +7,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to add-patient page since dashboard is removed
-    router.replace('/add-patient');
+    // Redirect to dashboard as the default landing page
+    router.replace('/dashboard');
   }, [router]);
 
   return (

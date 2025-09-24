@@ -1,11 +1,163 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/FormElements';
+import { api, CashReceiptSummary } from '@/utils/api';
+
+interface DashboardStats {
+  totalPatients: number;
+  todayRevenue: number;
+  totalServices: number;
+  totalTests: number;
+  totalDoctors: number;
+  totalExpenses: number;
+  unpaidReferrals: number;
+  recentTransactions: Array<{
+    id: number;
+    patientName: string;
+    amount: number;
+    date: string;
+    type: string;
+  }>;
+}
+
+
+
+interface DailyCollectionResponse {
+  stats?: {
+    totalNetAmount: number;
+    totalExpenseAmount: number;
+  };
+}
+
+interface Transaction {
+  id: number;
+  patientName: string;
+  amount: number;
+  date: string;
+  type: string;
+}
+
+
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalPatients: 0,
+    todayRevenue: 0,
+    totalServices: 0,
+    totalTests: 0,
+    totalDoctors: 0,
+    totalExpenses: 0,
+    unpaidReferrals: 0,
+    recentTransactions: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Start with basic counts that don't depend on complex APIs
+      let totalPatients = 0;
+      let totalServices = 0;
+      let totalTests = 0;
+      let totalDoctors = 0;
+      let unpaidReferrals = 0;
+      let todayRevenue = 0;
+      let totalExpenses = 0;
+      let recentTransactions: Transaction[] = [];
+
+      // Try to fetch patients
+      try {
+        const patientsData = await api.patients.getAll();
+        totalPatients = patientsData.length;
+      } catch (err) {
+        console.warn('Could not fetch patients:', err);
+      }
+
+      // Try to fetch services
+      try {
+        const servicesData = await api.services.getAll();
+        totalServices = servicesData.length;
+      } catch (err) {
+        console.warn('Could not fetch services:', err);
+      }
+
+      // Try to fetch tests
+      try {
+        const testsData = await api.tests.getAll();
+        totalTests = testsData.length;
+      } catch (err) {
+        console.warn('Could not fetch tests:', err);
+      }
+
+      // Try to fetch doctors
+      try {
+        const doctorsData = await api.doctors.getAll();
+        totalDoctors = (doctorsData as unknown as { isDeleted: number }[]).filter((d) => d.isDeleted === 0).length;
+      } catch (err) {
+        console.warn('Could not fetch doctors:', err);
+      }
+
+      // Try to fetch receipts for referrals and recent transactions
+      try {
+        const receiptsData = await api.receipts.getAll();
+        
+        // Calculate unpaid referrals
+        // Skip referral calculation for now as basic receipts API doesn't have referral data
+        unpaidReferrals = 0;
+
+        // Get recent transactions (last 5) - using CashReceiptSummary type
+        recentTransactions = (receiptsData as CashReceiptSummary[])
+          .sort((a, b) => new Date(b.BillDate).getTime() - new Date(a.BillDate).getTime())
+          .slice(0, 5)
+          .map((r) => ({
+            id: r.ReceiptID,
+            patientName: r.PatientName,
+            amount: r.NetAmount || 0,
+            date: new Date(r.BillDate).toLocaleDateString(),
+            type: 'Receipt'
+          }));
+      } catch (err) {
+        console.warn('Could not fetch receipts:', err);
+      }
+
+      // Try to fetch daily collection (this might not be available)
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const dailyCollectionData = await api.stats.getDailyCollection(today, today);
+        todayRevenue = (dailyCollectionData as DailyCollectionResponse)?.stats?.totalNetAmount || 0;
+        totalExpenses = (dailyCollectionData as DailyCollectionResponse)?.stats?.totalExpenseAmount || 0;
+      } catch (err) {
+        console.warn('Daily collection not available:', err);
+        // This is OK, we'll just show 0 for today's revenue
+      }
+
+      setStats({
+        totalPatients,
+        todayRevenue,
+        totalServices,
+        totalTests,
+        totalDoctors,
+        totalExpenses,
+        unpaidReferrals,
+        recentTransactions
+      });
+    } catch (err) {
+      console.error('Dashboard data fetch error:', err);
+      setError('Failed to load dashboard data. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const navigateTo = (path: string) => {
     router.push(path);
@@ -20,134 +172,210 @@ export default function DashboardPage() {
           <p className="text-gray-600 mt-2">Manage patients, services, and reports efficiently</p>
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* Patient Management */}
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/add-patient')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">👤</span>
-                </div>
-                <span className="text-blue-600 text-sm font-medium">Quick Access</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Patient</h3>
-              <p className="text-gray-600 text-sm">Register new patients to the system</p>
-            </Card>
+        {/* Loading State */}
+        {loading && (
+          <div className="mt-12 text-center">
+            <div className="text-lg text-gray-600">Loading dashboard data...</div>
           </div>
+        )}
 
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/manage-patients')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">📋</span>
-                </div>
-                <span className="text-green-600 text-sm font-medium">Management</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Manage Patients</h3>
-              <p className="text-gray-600 text-sm">View and edit patient information</p>
-            </Card>
+        {/* Error State */}
+        {error && (
+          <div className="mt-12 bg-red-100 text-red-700 p-4 rounded-md">
+            {error}
+            <button 
+              onClick={fetchDashboardData}
+              className="ml-4 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+            >
+              Retry
+            </button>
           </div>
+        )}
 
-          {/* Financial Management */}
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/cash-receipt')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">💰</span>
-                </div>
-                <span className="text-yellow-600 text-sm font-medium">Billing</span>
+        {/* Dashboard Stats */}
+        {!loading && !error && (
+          <>
+            {/* Key Metrics */}
+            <div className="mt-12">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Key Metrics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">{stats.totalPatients}</div>
+                  <div className="text-gray-600">Total Patients</div>
+                </Card>
+                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="text-3xl font-bold text-green-600 mb-2">₹{stats.todayRevenue.toLocaleString()}</div>
+                  <div className="text-gray-600">Today&apos;s Revenue</div>
+                </Card>
+                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="text-3xl font-bold text-purple-600 mb-2">{stats.totalServices + stats.totalTests}</div>
+                  <div className="text-gray-600">Total Services</div>
+                </Card>
+                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="text-3xl font-bold text-orange-600 mb-2">{stats.totalDoctors}</div>
+                  <div className="text-gray-600">Active Doctors</div>
+                </Card>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Cash Receipt</h3>
-              <p className="text-gray-600 text-sm">Generate bills and receipts</p>
-            </Card>
-          </div>
+            </div>
 
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/daily-collection')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <span className="text-purple-600 text-sm font-medium">Reports</span>
+            {/* Financial Overview */}
+            <div className="mt-12">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Financial Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Today&apos;s Collection</h3>
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600 mb-2">₹{stats.todayRevenue.toLocaleString()}</div>
+                  <p className="text-gray-600 text-sm">Revenue collected today</p>
+                </Card>
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Today&apos;s Expenses</h3>
+                    <span className="text-2xl">💸</span>
+                  </div>
+                  <div className="text-2xl font-bold text-red-600 mb-2">₹{stats.totalExpenses.toLocaleString()}</div>
+                  <p className="text-gray-600 text-sm">Expenses incurred today</p>
+                </Card>
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Unpaid Referrals</h3>
+                    <span className="text-2xl">⚠️</span>
+                  </div>
+                  <div className="text-2xl font-bold text-yellow-600 mb-2">₹{stats.unpaidReferrals.toLocaleString()}</div>
+                  <p className="text-gray-600 text-sm">Pending referral payments</p>
+                  <button 
+                    onClick={() => navigateTo('/referral-amount')}
+                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    View Details →
+                  </button>
+                </Card>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Daily Collection</h3>
-              <p className="text-gray-600 text-sm">View daily revenue reports</p>
-            </Card>
-          </div>
+            </div>
 
-          {/* Services Management */}
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/add-doctor')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">👨‍⚕️</span>
-                </div>
-                <span className="text-red-600 text-sm font-medium">Staff</span>
+            {/* Service Statistics */}
+            <div className="mt-12">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Statistics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="p-6 text-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">🧪</span>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600 mb-2">{stats.totalTests}</div>
+                  <div className="text-gray-600">Available Tests</div>
+                  <button 
+                    onClick={() => navigateTo('/add-test')}
+                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Manage Tests
+                  </button>
+                </Card>
+                <Card className="p-6 text-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">⚕️</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600 mb-2">{stats.totalServices}</div>
+                  <div className="text-gray-600">Medical Services</div>
+                  <button 
+                    onClick={() => navigateTo('/add-service')}
+                    className="mt-2 text-green-600 hover:text-green-800 text-sm"
+                  >
+                    Manage Services
+                  </button>
+                </Card>
+                <Card className="p-6 text-center">
+                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">👨‍⚕️</span>
+                  </div>
+                  <div className="text-2xl font-bold text-red-600 mb-2">{stats.totalDoctors}</div>
+                  <div className="text-gray-600">Active Doctors</div>
+                  <button 
+                    onClick={() => navigateTo('/add-doctor')}
+                    className="mt-2 text-red-600 hover:text-red-800 text-sm"
+                  >
+                    Manage Doctors
+                  </button>
+                </Card>
+                <Card className="p-6 text-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600 mb-2">{stats.totalPatients}</div>
+                  <div className="text-gray-600">Registered Patients</div>
+                  <button 
+                    onClick={() => navigateTo('/manage-patients')}
+                    className="mt-2 text-purple-600 hover:text-purple-800 text-sm"
+                  >
+                    View Patients
+                  </button>
+                </Card>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Doctor</h3>
-              <p className="text-gray-600 text-sm">Register new doctors</p>
-            </Card>
-          </div>
+            </div>
 
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/add-test')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">🧪</span>
-                </div>
-                <span className="text-indigo-600 text-sm font-medium">Services</span>
+            {/* Recent Transactions */}
+            <div className="mt-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Transactions</h2>
+                <button 
+                  onClick={() => navigateTo('/daily-collection')}
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View All →
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Test</h3>
-              <p className="text-gray-600 text-sm">Manage test services</p>
-            </Card>
-          </div>
+              <Card className="overflow-hidden">
+                {stats.recentTransactions.length === 0 ? (
+                  <div className="p-6 text-center text-gray-500">
+                    No recent transactions found
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Patient
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {stats.recentTransactions.map((transaction) => (
+                          <tr key={transaction.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {transaction.patientName}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {transaction.date}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {transaction.type}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-green-600">
+                              ₹{transaction.amount.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+            </div>
 
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/add-service')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">⚕️</span>
-                </div>
-                <span className="text-teal-600 text-sm font-medium">Services</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Add Service</h3>
-              <p className="text-gray-600 text-sm">Add medical services</p>
-            </Card>
-          </div>
 
-          <div className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateTo('/daily-expenses')}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">💸</span>
-                </div>
-                <span className="text-orange-600 text-sm font-medium">Finance</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Daily Expenses</h3>
-              <p className="text-gray-600 text-sm">Track daily expenses</p>
-            </Card>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-12">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">---</div>
-              <div className="text-gray-600">Total Patients</div>
-            </Card>
-            <Card className="p-6 text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">---</div>
-              <div className="text-gray-600">Today&apos;s Revenue</div>
-            </Card>
-            <Card className="p-6 text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">---</div>
-              <div className="text-gray-600">Services Available</div>
-            </Card>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

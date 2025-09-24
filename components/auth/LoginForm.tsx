@@ -46,8 +46,8 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
       // Call parent callback
       onLogin(data.token, data.user);
       
-      // Redirect to add patient page
-      router.push('/add-patient');
+      // Redirect to dashboard
+      router.push('/dashboard');
 
     } catch {
       // Login error

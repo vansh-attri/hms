@@ -205,7 +205,7 @@ export const Navigation: React.FC = () => {
       {/* Navigation modules */}
       <nav className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 xl:grid-cols-9 gap-2 py-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 xl:grid-cols-10 gap-2 py-4">
             {allNavItems.map((item) => (
               <Link
                 key={item.id}

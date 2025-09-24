@@ -15,6 +15,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: iconChart() },
   { id: 'add-patient', label: 'Add Patient', href: '/add-patient', icon: iconUserPlus() },
   { id: 'cash-receipt', label: 'Cash Receipt', href: '/cash-receipt', icon: iconReceipt() },
   { id: 'add-test', label: 'Add Test', href: '/add-test', icon: iconBeaker() },

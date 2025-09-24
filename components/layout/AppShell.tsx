@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'daily-expenses', label: 'Daily Expenses', href: '/daily-expenses', icon: iconCurrency() },
   { id: 'referral-amount', label: 'Referral Amount', href: '/referral-amount', icon: iconReferral() },
   { id: 'daily-collection', label: 'Daily Collection', href: '/daily-collection', icon: iconChart() },
+  { id: 'form-f', label: 'Form F', href: '/form-f', icon: iconDocument() },
   { id: 'manage-users', label: 'Manage Users', href: '/admin/manage-users', icon: iconAdminUsers(), adminOnly: true },
   { id: 'run-scripts', label: 'Run Scripts', href: '/admin/scripts', icon: iconScript(), adminOnly: true },
 ];
@@ -228,6 +229,14 @@ function iconScript() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+    </svg>
+  );
+}
+
+function iconDocument() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
   );
 }

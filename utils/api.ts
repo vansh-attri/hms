@@ -134,6 +134,58 @@ export type CashReceiptWithDetails = CashReceiptSearchResult & {
   }>;
 };
 
+export type FormF = {
+  BillNo: number;
+  txt1: string | null;
+  txt2: string | null;
+  txt3: string | null; // Patient Name
+  txt3a: string | null; // Age  
+  txt4: string | null; // Total children
+  txt4a: string | null; // Living sons age
+  txt4b: string | null; // Living daughters age
+  txt5: string | null; // Husband/Father name
+  txt6: string | null; // Address with contact
+  txt7a: string | null; // Referred by doctor
+  txt7b: string | null; // Self referral
+  txt8: string | null; // Last menstrual period
+  txt9: string | null; // Doctor performing procedure
+  txt10: string | null; // Indication for diagnosis
+  txt11a: boolean; // Ultrasound checkbox
+  txt11b: boolean; // Any other checkbox
+  txt11c: string | null; // Other specify
+  txt12: string | null; // Declaration date
+  txt13: string | null; // Procedure date
+  txt14: string | null; // Result
+  txt15: string | null; // Result conveyed to
+  txt16: string | null; // MTP indication
+};
+
+export type FormFCreateData = {
+  BillNo: number;
+  txt1?: string;
+  txt2?: string;
+  txt3?: string; // Patient Name
+  txt3a?: string; // Age  
+  txt4?: string; // Total children
+  txt4a?: string; // Living sons age
+  txt4b?: string; // Living daughters age
+  txt5?: string; // Husband/Father name
+  txt6?: string; // Address with contact
+  txt7a?: string; // Referred by doctor
+  txt7b?: string; // Self referral
+  txt8?: string; // Last menstrual period
+  txt9?: string; // Doctor performing procedure
+  txt10?: string; // Indication for diagnosis
+  txt11a?: boolean; // Ultrasound checkbox
+  txt11b?: boolean; // Any other checkbox
+  txt11c?: string; // Other specify
+  txt12?: string; // Declaration date
+  txt13?: string; // Procedure date
+  txt14?: string; // Result
+  txt15?: string; // Result conveyed to
+  txt16?: string; // MTP indication
+};
+
 export type CashReceiptCreateData = {
   PatientID?: number;
   PatientName: string;
@@ -587,6 +639,36 @@ export const api = {
       const queryParam = params.toString() ? `?${params.toString()}` : '';
       const response = await apiRequest(`/stats/daily-collection${queryParam}`, { method: 'GET' });
       return response;
+    }
+  },
+
+  formf: {
+    getAll: (): Promise<FormF[]> => {
+      return apiRequest<FormF[]>('/formf');
+    },
+
+    getByBillNo: (billNo: string | number): Promise<FormF> => {
+      return apiRequest<FormF>(`/formf/${billNo}`);
+    },
+
+    create: (formData: FormFCreateData): Promise<{ message: string; BillNo: number }> => {
+      return apiRequest<{ message: string; BillNo: number }>('/formf', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+    },
+
+    update: (billNo: string | number, formData: Partial<FormFCreateData>): Promise<{ message: string; BillNo: number }> => {
+      return apiRequest<{ message: string; BillNo: number }>(`/formf/${billNo}`, {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      });
+    },
+
+    delete: (billNo: string | number): Promise<{ message: string }> => {
+      return apiRequest<{ message: string }>(`/formf/${billNo}`, {
+        method: 'DELETE',
+      });
     }
   }
 };

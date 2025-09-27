@@ -2,12 +2,24 @@
 
 import React, { useState } from 'react';
 import { Card, InputField, Button, Alert } from '@/components/ui/FormElements';
-import { api, FormFCreateData } from '@/utils/api';
+import { api, FormFCreateData, FormFReceipt, FormFFetchResponse } from '@/utils/api';
+
+const defaultDateString = () => new Date().toISOString().split('T')[0];
+
+const toDateInput = (value?: string | null) => {
+  if (!value) return defaultDateString();
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return defaultDateString();
+  return date.toISOString().split('T')[0];
+};
 
 export default function FormFPage() {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [receiptInfo, setReceiptInfo] = useState<FormFReceipt | null>(null);
+  const [existingForm, setExistingForm] = useState(false);
   const [formData, setFormData] = useState<FormFCreateData>({
     BillNo: 0,
     txt1: 'SIDDHIVINAYAK ULTRASOUND CENTRE',
@@ -27,17 +39,32 @@ export default function FormFPage() {
     txt11a: true, // Ultrasound checkbox
     txt11b: false, // Any other checkbox
     txt11c: '', // Other specify
-    txt12: new Date().toISOString().split('T')[0], // Declaration date
-    txt13: new Date().toISOString().split('T')[0], // Procedure date
+  txt12: defaultDateString(), // Declaration date
+  txt13: defaultDateString(), // Procedure date
     txt14: 'INTRAUTERINE PREGNANCY OF MEAN GESTATIONAL AGE ________ WKS ________ DAYS', // Result
     txt15: '', // Result conveyed to
     txt16: 'No' // MTP indication
   });
 
+  const formatDisplayDate = (value?: string | null) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString();
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
+
+    if (name === 'BillNo') {
+      const numericValue = Number(value);
+      setFormData(prev => ({
+        ...prev,
+        BillNo: Number.isNaN(numericValue) ? 0 : numericValue
+      }));
+      setReceiptInfo(null);
+      setExistingForm(false);
+    } else if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({
         ...prev,
@@ -49,10 +76,110 @@ export default function FormFPage() {
         [name]: value
       }));
     }
-    
-    // Clear messages when user starts typing
+
     if (error) setError('');
     if (success) setSuccess('');
+  };
+
+  const handleFetchReceipt = async () => {
+    if (!formData.BillNo || formData.BillNo <= 0) {
+      setError('Please enter a valid Bill Number before fetching.');
+      return;
+    }
+
+    setFetching(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response: FormFFetchResponse = await api.formf.getByBillNo(formData.BillNo);
+      const receipt = response.receipt;
+      setReceiptInfo(receipt);
+
+      const coalesce = (current: string | undefined, fallback: string) => {
+        if (!current) return fallback;
+        return current.trim() === '' ? fallback : current;
+      };
+
+      const relationLine = [receipt.RelationType, receipt.Relation].filter(Boolean).join(' ').trim();
+      const addressLine = [receipt.Address, receipt.Mobile ? `Mobile: ${receipt.Mobile}` : null]
+        .filter(Boolean)
+        .join(' - ');
+      const billDateInput = toDateInput(receipt.BillDate);
+
+      if (response.form) {
+        const form = response.form;
+        setExistingForm(true);
+        setFormData(prev => ({
+          ...prev,
+          BillNo: form.BillNo,
+          txt1: coalesce(form.txt1 ?? undefined, prev.txt1 ?? 'SIDDHIVINAYAK ULTRASOUND CENTRE'),
+          txt2: coalesce(form.txt2 ?? undefined, prev.txt2 ?? 'PNDT/PWL/2025/191'),
+          txt3: form.txt3 ?? '',
+          txt3a: form.txt3a ?? '',
+          txt4: form.txt4 ?? '',
+          txt4a: form.txt4a ?? '',
+          txt4b: form.txt4b ?? '',
+          txt5: form.txt5 ?? relationLine,
+          txt6: form.txt6 ?? addressLine,
+          txt7a: form.txt7a ?? receipt.DoctorName ?? 'SELF',
+          txt7b: form.txt7b ?? 'NA',
+          txt8: form.txt8 ?? '',
+          txt9: form.txt9 ?? receipt.DoctorName ?? prev.txt9 ?? '',
+          txt10: form.txt10 ?? 'NA',
+          txt11a: form.txt11a ?? true,
+          txt11b: form.txt11b ?? false,
+          txt11c: form.txt11c ?? '',
+          txt12: toDateInput(form.txt12) ?? billDateInput,
+          txt13: toDateInput(form.txt13) ?? billDateInput,
+          txt14: form.txt14 ?? prev.txt14 ?? '',
+          txt15: form.txt15 ?? receipt.PatientName ?? '',
+          txt16: form.txt16 ?? 'No'
+        }));
+        setSuccess(`Existing Form F loaded for Bill No ${form.BillNo}. Saving will update the record.`);
+      } else {
+        setExistingForm(false);
+        setFormData(prev => ({
+          ...prev,
+          BillNo: receipt.BillNo,
+          txt1: coalesce(prev.txt1, 'SIDDHIVINAYAK ULTRASOUND CENTRE'),
+          txt2: coalesce(prev.txt2, 'PNDT/PWL/2025/191'),
+          txt3: receipt.PatientName ?? prev.txt3 ?? '',
+          txt3a: receipt.Age ?? prev.txt3a ?? '',
+          txt4: prev.txt4 ?? '',
+          txt4a: prev.txt4a ?? '',
+          txt4b: prev.txt4b ?? '',
+          txt5: relationLine || prev.txt5 || '',
+          txt6: addressLine || prev.txt6 || '',
+          txt7a: receipt.DoctorName ?? prev.txt7a ?? 'SELF',
+          txt7b: prev.txt7b ?? 'NA',
+          txt8: prev.txt8 ?? '',
+          txt9: receipt.DoctorName ?? prev.txt9 ?? '',
+          txt10: prev.txt10 ?? 'NA',
+          txt11a: prev.txt11a ?? true,
+          txt11b: prev.txt11b ?? false,
+          txt11c: prev.txt11c ?? '',
+          txt12: billDateInput,
+          txt13: billDateInput,
+          txt14: prev.txt14 ?? 'INTRAUTERINE PREGNANCY OF MEAN GESTATIONAL AGE ________ WKS ________ DAYS',
+          txt15: receipt.PatientName ?? prev.txt15 ?? '',
+          txt16: prev.txt16 ?? 'No'
+        }));
+        setSuccess(`Receipt data loaded. Complete the remaining fields and save Form F.`);
+      }
+    } catch (err: unknown) {
+      console.error('Form F fetch error:', err);
+      const message = err instanceof Error ? err.message : 'Unknown error occurred';
+      if (message.includes('404')) {
+        setError('No cash receipt found for the provided Bill Number.');
+      } else {
+        setError('Failed to load receipt information. Please try again.');
+      }
+      setReceiptInfo(null);
+      setExistingForm(false);
+    } finally {
+      setFetching(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,36 +200,30 @@ export default function FormFPage() {
     setSuccess('');
 
     try {
-      await api.formf.create(formData);
-      setSuccess(`Form F created successfully for Bill No: ${formData.BillNo}`);
-      
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData(prev => ({
-          ...prev,
-          BillNo: 0,
-          txt3: '',
-          txt3a: '',
-          txt4: '',
-          txt4a: '',
-          txt4b: '',
-          txt5: '',
-          txt6: '',
-          txt8: '',
-          txt11c: '',
-          txt15: '',
-          txt12: new Date().toISOString().split('T')[0],
-          txt13: new Date().toISOString().split('T')[0]
-        }));
-        setSuccess('');
-      }, 3000);
+      const payload: FormFCreateData = {
+        ...formData,
+        BillNo: formData.BillNo,
+        txt12: formData.txt12 && formData.txt12 !== '' ? formData.txt12 : defaultDateString(),
+        txt13: formData.txt13 && formData.txt13 !== '' ? formData.txt13 : defaultDateString(),
+        txt11a: formData.txt11a ?? true,
+        txt11b: formData.txt11b ?? false
+      };
+
+      if (existingForm) {
+        await api.formf.update(formData.BillNo, payload);
+        setSuccess(`Form F updated successfully for Bill No: ${formData.BillNo}`);
+      } else {
+        await api.formf.create(payload);
+        setExistingForm(true);
+        setSuccess(`Form F created successfully for Bill No: ${formData.BillNo}`);
+      }
     } catch (err: unknown) {
-      console.error('Form F creation error:', err);
+      console.error('Form F save error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       if (errorMessage.includes('already exists')) {
         setError('Form F with this Bill Number already exists');
       } else {
-        setError(errorMessage || 'Failed to create Form F. Please try again.');
+        setError(errorMessage || 'Failed to save Form F. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -156,23 +277,39 @@ export default function FormFPage() {
                 </svg>
                 Clinic Information
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                <InputField
-                  label="1. Name and complete address of Genetic Clinic/Ultrasound Clinic/Imaging centre"
-                  name="txt1"
-                  value={formData.txt1 || ''}
-                  onChange={handleChange}
-                  required
-                />
-                <InputField
-                  label="Bill No"
-                  name="BillNo"
-                  type="number"
-                  value={formData.BillNo || ''}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter Bill Number"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-4">
+                <div className="md:col-span-6">
+                  <InputField
+                    label="1. Name and complete address of Genetic Clinic/Ultrasound Clinic/Imaging centre"
+                    name="txt1"
+                    value={formData.txt1 || ''}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <InputField
+                    label="Bill No"
+                    name="BillNo"
+                    type="number"
+                    value={formData.BillNo || ''}
+                    onChange={handleChange}
+                    required
+                    placeholder="Enter Bill Number"
+                  />
+                </div>
+                <div className="md:col-span-3 flex md:items-end">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleFetchReceipt}
+                    loading={fetching}
+                    disabled={fetching || !formData.BillNo}
+                    className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold"
+                  >
+                    {existingForm ? 'Reload Receipt' : 'Fetch Receipt'}
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-1">
                 <InputField
@@ -183,6 +320,35 @@ export default function FormFPage() {
                   required
                 />
               </div>
+
+              {receiptInfo && (
+                <div className="mt-6 bg-white border border-blue-100 rounded-lg p-4 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Cash Receipt Summary</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium text-gray-800">Patient:</span> {receiptInfo.PatientName || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Bill Date:</span> {formatDisplayDate(receiptInfo.BillDate)}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Doctor:</span> {receiptInfo.DoctorName || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Age:</span> {receiptInfo.Age || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Contact:</span> {receiptInfo.Mobile || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-800">Net Amount:</span> {receiptInfo.NetAmount != null ? `₹${receiptInfo.NetAmount}` : 'N/A'}
+                    </div>
+                  </div>
+                  {existingForm && (
+                    <p className="mt-3 text-xs text-indigo-600 font-medium">Existing Form F data found. Any changes will update the saved record.</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Patient Information Section */}

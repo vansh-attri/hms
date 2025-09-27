@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/FormElements';
-import { api, CashReceiptSummary } from '@/utils/api';
+import { api, CashReceiptSummary, DashboardStats } from '@/utils/api';
 
-interface DashboardStats {
+interface LocalDashboardStats {
   totalPatients: number;
   todayRevenue: number;
-  totalServices: number;
   totalTests: number;
   totalDoctors: number;
   totalExpenses: number;
   unpaidReferrals: number;
+  paidReferrals: number;
+  todaysNetCollection: number;
   recentTransactions: Array<{
     id: number;
     patientName: string;
@@ -24,12 +25,7 @@ interface DashboardStats {
 
 
 
-interface DailyCollectionResponse {
-  stats?: {
-    totalNetAmount: number;
-    totalExpenseAmount: number;
-  };
-}
+
 
 interface Transaction {
   id: number;
@@ -43,14 +39,15 @@ interface Transaction {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState<LocalDashboardStats>({
     totalPatients: 0,
     todayRevenue: 0,
-    totalServices: 0,
     totalTests: 0,
     totalDoctors: 0,
     totalExpenses: 0,
     unpaidReferrals: 0,
+    paidReferrals: 0,
+    todaysNetCollection: 0,
     recentTransactions: []
   });
   const [loading, setLoading] = useState(true);
@@ -65,56 +62,14 @@ export default function DashboardPage() {
       setLoading(true);
       setError('');
       
-      // Start with basic counts that don't depend on complex APIs
-      let totalPatients = 0;
-      let totalServices = 0;
-      let totalTests = 0;
-      let totalDoctors = 0;
-      let unpaidReferrals = 0;
-      let todayRevenue = 0;
-      let totalExpenses = 0;
+      // Fetch dashboard stats from the backend API
+      const dashboardStats: DashboardStats = await api.stats.getDashboardStats();
+      
+      // Get recent transactions
       let recentTransactions: Transaction[] = [];
-
-      // Try to fetch patients
-      try {
-        const patientsData = await api.patients.getAll();
-        totalPatients = patientsData.length;
-      } catch (err) {
-        console.warn('Could not fetch patients:', err);
-      }
-
-      // Try to fetch services
-      try {
-        const servicesData = await api.services.getAll();
-        totalServices = servicesData.length;
-      } catch (err) {
-        console.warn('Could not fetch services:', err);
-      }
-
-      // Try to fetch tests
-      try {
-        const testsData = await api.tests.getAll();
-        totalTests = testsData.length;
-      } catch (err) {
-        console.warn('Could not fetch tests:', err);
-      }
-
-      // Try to fetch doctors
-      try {
-        const doctorsData = await api.doctors.getAll();
-        totalDoctors = (doctorsData as unknown as { isDeleted: number }[]).filter((d) => d.isDeleted === 0).length;
-      } catch (err) {
-        console.warn('Could not fetch doctors:', err);
-      }
-
-      // Try to fetch receipts for referrals and recent transactions
       try {
         const receiptsData = await api.receipts.getAll();
         
-        // Calculate unpaid referrals
-        // Skip referral calculation for now as basic receipts API doesn't have referral data
-        unpaidReferrals = 0;
-
         // Get recent transactions (last 5) - using CashReceiptSummary type
         recentTransactions = (receiptsData as CashReceiptSummary[])
           .sort((a, b) => new Date(b.BillDate).getTime() - new Date(a.BillDate).getTime())
@@ -130,25 +85,15 @@ export default function DashboardPage() {
         console.warn('Could not fetch receipts:', err);
       }
 
-      // Try to fetch daily collection (this might not be available)
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const dailyCollectionData = await api.stats.getDailyCollection(today, today);
-        todayRevenue = (dailyCollectionData as DailyCollectionResponse)?.stats?.totalNetAmount || 0;
-        totalExpenses = (dailyCollectionData as DailyCollectionResponse)?.stats?.totalExpenseAmount || 0;
-      } catch (err) {
-        console.warn('Daily collection not available:', err);
-        // This is OK, we'll just show 0 for today's revenue
-      }
-
       setStats({
-        totalPatients,
-        todayRevenue,
-        totalServices,
-        totalTests,
-        totalDoctors,
-        totalExpenses,
-        unpaidReferrals,
+        totalPatients: dashboardStats.totalPatients,
+        todayRevenue: dashboardStats.todaysRevenue,
+        totalTests: dashboardStats.totalTests,
+        totalDoctors: dashboardStats.totalDoctors,
+        totalExpenses: dashboardStats.todaysExpenseAmount || 0,
+        unpaidReferrals: dashboardStats.pendingReferralAmount,
+        paidReferrals: dashboardStats.paidReferralAmount || 0,
+        todaysNetCollection: dashboardStats.todaysNetCollection || 0,
         recentTransactions
       });
     } catch (err) {
@@ -208,8 +153,8 @@ export default function DashboardPage() {
                   <div className="text-gray-600">Today&apos;s Revenue</div>
                 </Card>
                 <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">{stats.totalServices + stats.totalTests}</div>
-                  <div className="text-gray-600">Total Services</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-2">{stats.totalTests}</div>
+                  <div className="text-gray-600">Total Tests</div>
                 </Card>
                 <Card className="p-6 text-center hover:shadow-lg transition-shadow">
                   <div className="text-3xl font-bold text-orange-600 mb-2">{stats.totalDoctors}</div>
@@ -221,14 +166,14 @@ export default function DashboardPage() {
             {/* Financial Overview */}
             <div className="mt-12">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Financial Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">Today&apos;s Collection</h3>
                     <span className="text-2xl">💰</span>
                   </div>
-                  <div className="text-2xl font-bold text-green-600 mb-2">₹{stats.todayRevenue.toLocaleString()}</div>
-                  <p className="text-gray-600 text-sm">Revenue collected today</p>
+                  <div className="text-2xl font-bold text-green-600 mb-2">₹{stats.todaysNetCollection.toLocaleString()}</div>
+                  <p className="text-gray-600 text-sm">Net collection</p>
                 </Card>
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -236,7 +181,15 @@ export default function DashboardPage() {
                     <span className="text-2xl">💸</span>
                   </div>
                   <div className="text-2xl font-bold text-red-600 mb-2">₹{stats.totalExpenses.toLocaleString()}</div>
-                  <p className="text-gray-600 text-sm">Expenses incurred today</p>
+                  <p className="text-gray-600 text-sm">Daily expenses</p>
+                </Card>
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Paid Referrals</h3>
+                    <span className="text-2xl">✅</span>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600 mb-2">₹{stats.paidReferrals.toLocaleString()}</div>
+                  <p className="text-gray-600 text-sm">Referrals paid today</p>
                 </Card>
                 <Card className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -250,65 +203,6 @@ export default function DashboardPage() {
                     className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     View Details →
-                  </button>
-                </Card>
-              </div>
-            </div>
-
-            {/* Service Statistics */}
-            <div className="mt-12">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Statistics</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="p-6 text-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🧪</span>
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600 mb-2">{stats.totalTests}</div>
-                  <div className="text-gray-600">Available Tests</div>
-                  <button 
-                    onClick={() => navigateTo('/add-test')}
-                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
-                  >
-                    Manage Tests
-                  </button>
-                </Card>
-                <Card className="p-6 text-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">⚕️</span>
-                  </div>
-                  <div className="text-2xl font-bold text-green-600 mb-2">{stats.totalServices}</div>
-                  <div className="text-gray-600">Medical Services</div>
-                  <button 
-                    onClick={() => navigateTo('/add-service')}
-                    className="mt-2 text-green-600 hover:text-green-800 text-sm"
-                  >
-                    Manage Services
-                  </button>
-                </Card>
-                <Card className="p-6 text-center">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">👨‍⚕️</span>
-                  </div>
-                  <div className="text-2xl font-bold text-red-600 mb-2">{stats.totalDoctors}</div>
-                  <div className="text-gray-600">Active Doctors</div>
-                  <button 
-                    onClick={() => navigateTo('/add-doctor')}
-                    className="mt-2 text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Manage Doctors
-                  </button>
-                </Card>
-                <Card className="p-6 text-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">👥</span>
-                  </div>
-                  <div className="text-2xl font-bold text-purple-600 mb-2">{stats.totalPatients}</div>
-                  <div className="text-gray-600">Registered Patients</div>
-                  <button 
-                    onClick={() => navigateTo('/manage-patients')}
-                    className="mt-2 text-purple-600 hover:text-purple-800 text-sm"
-                  >
-                    View Patients
                   </button>
                 </Card>
               </div>

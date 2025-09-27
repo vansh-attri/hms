@@ -139,7 +139,7 @@ export type FormF = {
   txt1: string | null;
   txt2: string | null;
   txt3: string | null; // Patient Name
-  txt3a: string | null; // Age  
+  txt3a: string | null; // Age
   txt4: string | null; // Total children
   txt4a: string | null; // Living sons age
   txt4b: string | null; // Living daughters age
@@ -153,37 +153,63 @@ export type FormF = {
   txt11a: boolean; // Ultrasound checkbox
   txt11b: boolean; // Any other checkbox
   txt11c: string | null; // Other specify
-  txt12: string | null; // Declaration date
-  txt13: string | null; // Procedure date
+  txt12: string | null; // Declaration date (ISO string)
+  txt13: string | null; // Procedure date (ISO string)
   txt14: string | null; // Result
   txt15: string | null; // Result conveyed to
   txt16: string | null; // MTP indication
+  PatientName?: string | null;
+  Age?: string | null;
+  Address?: string | null;
+  Mobile?: string | null;
+  RelationType?: string | null;
+  Relation?: string | null;
+  BillDate?: string | null;
+  DoctorID?: number | null;
+  DoctorName_Old?: string | null;
+  ReferringDoctor?: string | null;
+  TotalAmount?: number | null;
+  Discount?: number | null;
+  NetAmount?: number | null;
 };
 
-export type FormFCreateData = {
+export type FormFReceipt = {
+  id: number;
   BillNo: number;
-  txt1?: string;
-  txt2?: string;
-  txt3?: string; // Patient Name
-  txt3a?: string; // Age  
-  txt4?: string; // Total children
-  txt4a?: string; // Living sons age
-  txt4b?: string; // Living daughters age
-  txt5?: string; // Husband/Father name
-  txt6?: string; // Address with contact
-  txt7a?: string; // Referred by doctor
-  txt7b?: string; // Self referral
-  txt8?: string; // Last menstrual period
-  txt9?: string; // Doctor performing procedure
-  txt10?: string; // Indication for diagnosis
-  txt11a?: boolean; // Ultrasound checkbox
-  txt11b?: boolean; // Any other checkbox
-  txt11c?: string; // Other specify
-  txt12?: string; // Declaration date
-  txt13?: string; // Procedure date
-  txt14?: string; // Result
-  txt15?: string; // Result conveyed to
-  txt16?: string; // MTP indication
+  PatientName: string | null;
+  Age: string | null;
+  Address: string | null;
+  Mobile: string | null;
+  RelationType: string | null;
+  Relation: string | null;
+  BillDate: string | null;
+  DoctorID: number | null;
+  DoctorName: string | null;
+  DoctorName_Old: string | null;
+  ReferringDoctor: string | null;
+  TotalAmount: number | null;
+  Discount: number | null;
+  NetAmount: number | null;
+  isRefPaid: boolean;
+};
+
+export type FormFFetchResponse = {
+  receipt: FormFReceipt;
+  form: FormF | null;
+};
+
+export type DashboardStats = {
+  totalPatients: number;
+  totalDoctors: number;
+  totalTests: number;
+  todaysRevenue: number;
+  todaysTransactions: number;
+  monthlyTotalRevenue: number;
+  pendingReferralAmount: number;
+  paidReferralAmount: number;
+  todaysExpenseAmount: number;
+  todaysNetCollection: number;
+  recentPatientsCount: number;
 };
 
 export type CashReceiptCreateData = {
@@ -488,7 +514,7 @@ export const expenseAPI = {
     if (opts.category) params.set('category', opts.category);
     if (opts.limit) params.set('limit', String(opts.limit));
     const q = params.toString();
-    return apiRequest<ExpenseSummary[]>(`/expenses${q ? `?${q}` : ''}`);
+  return apiRequest<ExpenseSummary[]>(`/expenses${q ? `?${q}` : ''}`);
   },
 
   // Get expense by ID
@@ -532,7 +558,7 @@ export const receiptAPI = {
     const params = new URLSearchParams();
     params.set('query', query);
     if (limit) params.set('limit', String(limit));
-    return apiRequest<CashReceiptSearchResult[]>(`/receipts/search?${params.toString()}`);
+  return apiRequest<CashReceiptSearchResult[]>(`/receipts/search?${params.toString()}`);
   },
 
   // Get receipt by ID (with details)
@@ -626,6 +652,10 @@ export const api = {
   health: healthAPI,
   
   stats: {
+    getDashboardStats: (): Promise<DashboardStats> => {
+      return apiRequest<DashboardStats>('/stats/dashboard', { method: 'GET' });
+    },
+
     getRecentActivities: async (limit = 10) => {
       const response = await fetch(`${API_BASE_URL}/stats/recent-activities?limit=${limit}`);
       if (!response.ok) throw new Error('Failed to fetch recent activities');
@@ -647,8 +677,8 @@ export const api = {
       return apiRequest<FormF[]>('/formf');
     },
 
-    getByBillNo: (billNo: string | number): Promise<FormF> => {
-      return apiRequest<FormF>(`/formf/${billNo}`);
+    getByBillNo: (billNo: string | number): Promise<FormFFetchResponse> => {
+      return apiRequest<FormFFetchResponse>(`/formf/${billNo}`);
     },
 
     create: (formData: FormFCreateData): Promise<{ message: string; BillNo: number }> => {
@@ -674,3 +704,29 @@ export const api = {
 };
 
 export default api;
+
+export type FormFCreateData = {
+  BillNo: number;
+  txt1?: string;
+  txt2?: string;
+  txt3?: string;
+  txt3a?: string;
+  txt4?: string;
+  txt4a?: string;
+  txt4b?: string;
+  txt5?: string;
+  txt6?: string;
+  txt7a?: string;
+  txt7b?: string;
+  txt8?: string;
+  txt9?: string;
+  txt10?: string;
+  txt11a?: boolean;
+  txt11b?: boolean;
+  txt11c?: string;
+  txt12?: string;
+  txt13?: string;
+  txt14?: string;
+  txt15?: string;
+  txt16?: string;
+};

@@ -9,6 +9,7 @@ interface ReferralRecord {
   amount: number;
   patientName: string;
   date: string;
+  originalDate: string;
   isPaid: boolean;
 }
 
@@ -47,14 +48,27 @@ export default function ReferralAmountPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const referralData: ReferralRecord[] = (receiptsData as any[])
         .filter((r) => r.RefAmount && r.RefAmount > 0 && r.DoctorID)
-        .map((r) => ({
-          id: r.id, // Use lowercase 'id' as returned by backend
-          doctorName: doctorMap.get(r.DoctorID) || 'Unknown Doctor',
-          amount: Number(r.RefAmount),
-          patientName: r.PatientName,
-          date: new Date(r.BillDate).toLocaleDateString(),
-          isPaid: r.isRefPaid === 1
-        }));
+        .map((r) => {
+          const billDate = new Date(r.BillDate);
+          console.log('Processing referral:', {
+            id: r.id,
+            patientName: r.PatientName,
+            originalBillDate: r.BillDate,
+            parsedBillDate: billDate.toString(),
+            formattedDate: billDate.toLocaleDateString(),
+            isoDate: billDate.toISOString().split('T')[0]
+          });
+          
+          return {
+            id: r.id, // Use lowercase 'id' as returned by backend
+            doctorName: doctorMap.get(r.DoctorID) || 'Unknown Doctor',
+            amount: Number(r.RefAmount),
+            patientName: r.PatientName,
+            date: billDate.toLocaleDateString(), // Keep original for display
+            originalDate: r.BillDate, // Store original date for filtering
+            isPaid: r.isRefPaid === 1
+          };
+        });
 
       setReferrals(referralData);
     } catch {
@@ -138,11 +152,32 @@ export default function ReferralAmountPage() {
       if (filter === 'paid' && !r.isPaid) return false;
       if (filter === 'unpaid' && r.isPaid) return false;
       
-      // Date filter
+      // Date filter - fix inclusive date range filtering
       if (fromDate || toDate) {
-        const referralDate = new Date(r.date);
-        if (fromDate && referralDate < new Date(fromDate)) return false;
-        if (toDate && referralDate > new Date(toDate)) return false;
+        // Use the original date from backend for accurate comparison
+        const referralDate = new Date(r.originalDate);
+        const referralDateStr = referralDate.toISOString().split('T')[0]; // Get YYYY-MM-DD format
+        
+        // Debug logging
+        console.log('Date comparison debug:', {
+          displayDate: r.date,
+          originalDate: r.originalDate,
+          referralDate: referralDate.toString(),
+          referralDateStr,
+          fromDate,
+          toDate,
+          isValidFromDate: fromDate ? referralDateStr >= fromDate : true,
+          isValidToDate: toDate ? referralDateStr <= toDate : true,
+          passesFilter: (!fromDate || referralDateStr >= fromDate) && (!toDate || referralDateStr <= toDate)
+        });
+        
+        if (fromDate) {
+          if (referralDateStr < fromDate) return false;
+        }
+        
+        if (toDate) {
+          if (referralDateStr > toDate) return false;
+        }
       }
       
       // Doctor filter

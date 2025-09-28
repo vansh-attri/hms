@@ -176,58 +176,129 @@ export default function DailyCollectionPage() {
             </div>
             <div class="stat-card red">
               <h3>Total Expenses</h3>
-              <p>₹${stats.totalExpenseAmount.toLocaleString()}</p>
+              <p>₹${(() => {
+                // Calculate total expense by counting each day only once
+                const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+                collections.forEach((record: CollectionRecord) => {
+                  const date = record.BillDate.split(' ')[0];
+                  if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                  }
+                  groupedByDate[date].push(record);
+                });
+                
+                return Object.keys(groupedByDate).reduce((total: number, date: string) => {
+                  const dayRecords = groupedByDate[date];
+                  const dayExpense = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+                  return total + dayExpense;
+                }, 0).toLocaleString();
+              })()}</p>
             </div>
             <div class="stat-card purple">
               <h3>Net Collection</h3>
-              <p>₹${stats.netCollection.toLocaleString()}</p>
+              <p>₹${(stats.totalNetAmount - stats.totalRefAmount - stats.totalExpenseAmount).toLocaleString()}</p>
             </div>
           </div>
 
           <table>
             <thead>
               <tr>
-                <th>Bill ID</th>
-                <th>Date</th>
+                <th>Day Wise</th>
+                <th>Expense</th>
+                <th>#</th>
+                <th>Doctor Name</th>
                 <th>Patient Name</th>
-                <th>Test Name</th>
-                <th>Doctor</th>
+                <th>Bill Date</th>
+                <th class="text-center">Age</th>
+                <th class="text-center">Gender</th>
                 <th class="text-right">Net Amount</th>
                 <th class="text-right">Ref Amount</th>
-                <th class="text-center">Age</th>
-                <th>Address</th>
-                <th class="text-center">Gender</th>
-                <th>User</th>
+                <th>User Name</th>
                 <th class="text-center">Ref Paid</th>
-                <th class="text-right">Expense</th>
+                <th>Category</th>
               </tr>
             </thead>
             <tbody>
-              ${collections.map(record => `
-                <tr>
-                  <td>${record.BillID}</td>
-                  <td>${record.BillDate}</td>
-                  <td>${record.PatientName}</td>
-                  <td>${record.TestName}</td>
-                  <td>${record.DoctorName}</td>
-                  <td class="text-right">₹${record.NetAmount}</td>
-                  <td class="text-right">₹${record.RefAmount}</td>
-                  <td class="text-center">${record.Age}</td>
-                  <td>${record.Address}</td>
-                  <td class="text-center">${record.Gender}</td>
-                  <td>${record.UserName}</td>
-                  <td class="text-center">${record.isRefPaid ? 'Yes' : 'No'}</td>
-                  <td class="text-right">₹${record.ExpenseAmount}</td>
-                </tr>
-              `).join('')}
+              ${(() => {
+                // Group collections by date
+                const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+                collections.forEach(record => {
+                  const date = record.BillDate.split(' ')[0];
+                  if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                  }
+                  groupedByDate[date].push(record);
+                });
+
+                let tableRows = '';
+                let serialNumber = 1;
+
+                Object.keys(groupedByDate).sort().forEach(date => {
+                  const dayRecords = groupedByDate[date];
+                  const dayNetTotal = dayRecords.reduce((sum, record) => sum + (record.NetAmount || 0), 0);
+                  const dayRefTotal = dayRecords.reduce((sum, record) => sum + (record.RefAmount || 0), 0);
+                  // Get expense amount from first record only (should be same for all records of the day)
+                  const dayExpenseTotal = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+
+                  dayRecords.forEach((record, index) => {
+                    tableRows += 
+                      '<tr>' +
+                        '<td>' + (index === 0 ? new Date(date).toLocaleDateString() : '') + '</td>' +
+                        '<td>' + (index === 0 ? dayExpenseTotal : '') + '</td>' +
+                        '<td>' + serialNumber + '</td>' +
+                        '<td>' + record.DoctorName + '</td>' +
+                        '<td>' + record.PatientName + '</td>' +
+                        '<td>' + record.BillDate + '</td>' +
+                        '<td class="text-center">' + record.Age + '</td>' +
+                        '<td class="text-center">' + record.Gender + '</td>' +
+                        '<td class="text-right">' + record.NetAmount + '</td>' +
+                        '<td class="text-right">' + record.RefAmount + '</td>' +
+                        '<td>' + record.UserName + '</td>' +
+                        '<td class="text-center">' + (record.isRefPaid ? 'Paid' : 'Unpaid') + '</td>' +
+                        '<td>' + record.TestName + '</td>' +
+                      '</tr>';
+                    serialNumber++;
+                  });
+
+                  // Add day subtotal row
+                  if (dayRecords.length > 1) {
+                    tableRows += 
+                      '<tr style="background-color: #fff3cd; font-weight: bold;">' +
+                        '<td colspan="8" class="text-right">Day Total:</td>' +
+                        '<td class="text-right">' + dayNetTotal + '</td>' +
+                        '<td class="text-right">' + dayRefTotal + '</td>' +
+                        '<td colspan="3"></td>' +
+                      '</tr>';
+                  }
+                });
+
+                return tableRows;
+              })()}
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="5" class="text-right"><strong>Total:</strong></td>
-                <td class="text-right"><strong>₹${stats.totalNetAmount}</strong></td>
-                <td class="text-right"><strong>₹${stats.totalRefAmount}</strong></td>
-                <td colspan="5"></td>
-                <td class="text-right"><strong>₹${stats.totalExpenseAmount}</strong></td>
+                <td colspan="1" class="text-right"><strong>Grand Total</strong></td>
+                <td class="text-right"><strong>${(() => {
+                  // Calculate total expense by counting each day only once
+                  const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+                  collections.forEach(record => {
+                    const date = record.BillDate.split(' ')[0];
+                    if (!groupedByDate[date]) {
+                      groupedByDate[date] = [];
+                    }
+                    groupedByDate[date].push(record);
+                  });
+                  
+                  return Object.keys(groupedByDate).reduce((total, date) => {
+                    const dayRecords = groupedByDate[date];
+                    const dayExpense = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+                    return total + dayExpense;
+                  }, 0);
+                })()}</strong></td>
+                <td colspan="6"></td>
+                <td class="text-right"><strong>${stats.totalNetAmount}</strong></td>
+                <td class="text-right"><strong>${stats.totalRefAmount}</strong></td>
+                <td colspan="3"></td>
               </tr>
             </tfoot>
           </table>
@@ -328,7 +399,23 @@ export default function DailyCollectionPage() {
         </div>
         <div className="bg-white rounded-lg shadow p-4 text-center">
           <p className="text-sm text-gray-600">Total Expenses</p>
-          <p className="text-xl font-bold text-red-600">₹{stats.totalExpenseAmount.toLocaleString()}</p>
+          <p className="text-xl font-bold text-red-600">₹{(() => {
+            // Calculate total expense by counting each day only once
+            const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+            collections.forEach((record: CollectionRecord) => {
+              const date = record.BillDate.split(' ')[0];
+              if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+              }
+              groupedByDate[date].push(record);
+            });
+            
+            return Object.keys(groupedByDate).reduce((total: number, date: string) => {
+              const dayRecords = groupedByDate[date];
+              const dayExpense = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+              return total + dayExpense;
+            }, 0).toLocaleString();
+          })()}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 text-center">
           <p className="text-sm text-gray-600">Net Collection</p>
@@ -357,49 +444,107 @@ export default function DailyCollectionPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-700">BillID</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-700">BillDate</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-700">PatientName</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-700">TestName</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-700">DoctorName</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-700">NetAmount</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-700">RefAmount</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">Day Wise</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">Expense</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">#</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">Doctor Name</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">Patient Name</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">Bill Date</th>
                   <th className="px-3 py-2 text-center font-medium text-gray-700">Age</th>
-                  <th className="px-3 py-2 text-left font-medium text-gray-700">Address</th>
                   <th className="px-3 py-2 text-center font-medium text-gray-700">Gender</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-700">UserName</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-700">isRefPaid</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-700">ExpenseAmount</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-700">Net Amount</th>
+                  <th className="px-3 py-2 text-right font-medium text-gray-700">Ref Amount</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-700">User Name</th>
+                  <th className="px-3 py-2 text-center font-medium text-gray-700">Ref Paid</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-700">Category</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {collections.map((record, index) => (
-                  <tr key={record.BillID} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-3 py-2 font-medium text-blue-600">{record.BillID}</td>
-                    <td className="px-3 py-2">{record.BillDate}</td>
-                    <td className="px-3 py-2 font-medium">{record.PatientName}</td>
-                    <td className="px-3 py-2">{record.TestName}</td>
-                    <td className="px-3 py-2">{record.DoctorName}</td>
-                    <td className="px-3 py-2 text-right font-semibold">{record.NetAmount}</td>
-                    <td className="px-3 py-2 text-right">{record.RefAmount}</td>
-                    <td className="px-3 py-2 text-center">{record.Age}</td>
-                    <td className="px-3 py-2 truncate max-w-32" title={record.Address}>{record.Address}</td>
-                    <td className="px-3 py-2 text-center">{record.Gender}</td>
-                    <td className="px-3 py-2 text-center font-medium">{record.UserName}</td>
-                    <td className="px-3 py-2 text-center">
-                      {record.isRefPaid ? '☑' : '☐'}
-                    </td>
-                    <td className="px-3 py-2 text-right font-medium">{record.ExpenseAmount}</td>
-                  </tr>
-                ))}
+                {(() => {
+                  // Group collections by date
+                  const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+                  collections.forEach(record => {
+                    const date = record.BillDate.split(' ')[0];
+                    if (!groupedByDate[date]) {
+                      groupedByDate[date] = [];
+                    }
+                    groupedByDate[date].push(record);
+                  });
+
+                  const rows: React.ReactNode[] = [];
+                  let serialNumber = 1;
+                  let globalIndex = 0;
+
+                  Object.keys(groupedByDate).sort().forEach(date => {
+                    const dayRecords = groupedByDate[date];
+                    const dayNetTotal = dayRecords.reduce((sum, record) => sum + (record.NetAmount || 0), 0);
+                    const dayRefTotal = dayRecords.reduce((sum, record) => sum + (record.RefAmount || 0), 0);
+                    const dayExpenseTotal = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+
+                    dayRecords.forEach((record, index) => {
+                      rows.push(
+                        <tr key={record.BillID} className={globalIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-3 py-2">{index === 0 ? new Date(date).toLocaleDateString() : ''}</td>
+                          <td className="px-3 py-2">{index === 0 ? dayExpenseTotal : ''}</td>
+                          <td className="px-3 py-2 font-medium text-blue-600">{serialNumber}</td>
+                          <td className="px-3 py-2">{record.DoctorName}</td>
+                          <td className="px-3 py-2 font-medium">{record.PatientName}</td>
+                          <td className="px-3 py-2">{record.BillDate}</td>
+                          <td className="px-3 py-2 text-center">{record.Age}</td>
+                          <td className="px-3 py-2 text-center">{record.Gender}</td>
+                          <td className="px-3 py-2 text-right font-semibold">{record.NetAmount}</td>
+                          <td className="px-3 py-2 text-right">{record.RefAmount}</td>
+                          <td className="px-3 py-2 text-center font-medium">{record.UserName}</td>
+                          <td className="px-3 py-2 text-center">
+                            {record.isRefPaid ? 'Paid' : 'Unpaid'}
+                          </td>
+                          <td className="px-3 py-2">{record.TestName}</td>
+                        </tr>
+                      );
+                      serialNumber++;
+                      globalIndex++;
+                    });
+
+                    // Add day subtotal row
+                    if (dayRecords.length > 1) {
+                      rows.push(
+                        <tr key={`subtotal-${date}`} className="bg-yellow-100 font-bold">
+                          <td colSpan={8} className="px-3 py-2 text-right">Day Total:</td>
+                          <td className="px-3 py-2 text-right">{dayNetTotal}</td>
+                          <td className="px-3 py-2 text-right">{dayRefTotal}</td>
+                          <td colSpan={3}></td>
+                        </tr>
+                      );
+                      globalIndex++;
+                    }
+                  });
+
+                  return rows;
+                })()}
               </tbody>
               <tfoot className="bg-gray-100 font-semibold">
                 <tr>
-                  <td colSpan={5} className="px-3 py-2 text-right">Total:</td>
+                  <td colSpan={1} className="px-3 py-2 text-right">Grand Total:</td>
+                  <td className="px-3 py-2 text-right font-bold">{(() => {
+                    const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+                    collections.forEach((record: CollectionRecord) => {
+                      const date = record.BillDate.split(' ')[0];
+                      if (!groupedByDate[date]) {
+                        groupedByDate[date] = [];
+                      }
+                      groupedByDate[date].push(record);
+                    });
+                    
+                    return Object.keys(groupedByDate).reduce((total: number, date: string) => {
+                      const dayRecords = groupedByDate[date];
+                      const dayExpense = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+                      return total + dayExpense;
+                    }, 0);
+                  })()}</td>
+                  <td colSpan={6}></td>
                   <td className="px-3 py-2 text-right font-bold">{stats.totalNetAmount}</td>
                   <td className="px-3 py-2 text-right font-bold">{stats.totalRefAmount}</td>
-                  <td colSpan={5}></td>
-                  <td className="px-3 py-2 text-right font-bold">{stats.totalExpenseAmount}</td>
+                  <td colSpan={3}></td>
                 </tr>
               </tfoot>
             </table>

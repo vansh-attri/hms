@@ -18,10 +18,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedToken && storedUser) {
       try {
         const userData = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(userData);
+        
+        // Check if token is expired (simple JWT decode)
+        const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        
+        if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+          // Token is expired, clear it
+          console.log('Token expired, clearing authentication');
+          localStorage.removeItem('hms_token');
+          localStorage.removeItem('hms_user');
+        } else {
+          // Token is valid
+          setToken(storedToken);
+          setUser(userData);
+        }
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
+        console.error('Error parsing stored auth data:', error);
         localStorage.removeItem('hms_token');
         localStorage.removeItem('hms_user');
       }

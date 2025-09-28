@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/api';
 
 interface ReferralRecord {
@@ -11,6 +11,14 @@ interface ReferralRecord {
   date: string;
   originalDate: string;
   isPaid: boolean;
+  age?: string | null;
+  address?: string | null;
+  gender?: string | null;
+  netAmount?: number | null;
+  testName?: string | null;
+  userName?: string | null;
+  totalAmount?: number | null;
+  discount?: number | null;
 }
 
 export default function ReferralAmountPage() {
@@ -23,60 +31,77 @@ export default function ReferralAmountPage() {
   const [toDate, setToDate] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [doctors, setDoctors] = useState<Array<{id: number, name: string}>>([]);
+  
+  // Separate state for applied filters (used for API calls)
+  const [appliedFromDate, setAppliedFromDate] = useState('');
+  const [appliedToDate, setAppliedToDate] = useState('');
+  const [appliedDoctor, setAppliedDoctor] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      // Fetch referral data from receipts
-      const [receiptsData, doctorsData] = await Promise.all([
-        api.receipts.getAll(),
+      
+      // Prepare API filters using applied filter state
+      const filters: { doctorId?: number; from?: string; to?: string } = {};
+      if (appliedFromDate) filters.from = appliedFromDate;
+      if (appliedToDate) filters.to = appliedToDate;
+      if (appliedDoctor) {
+        const doctor = doctors.find(d => d.name === appliedDoctor);
+        if (doctor) filters.doctorId = doctor.id;
+      }
+
+      // Fetch referral data using the referrals API with date filtering
+      const [referralsData, doctorsData] = await Promise.all([
+        api.referrals.getAll(filters),
         api.doctors.getAll()
       ]);
 
-      // Store doctors list for filter dropdown
-      setDoctors(doctorsData.map(d => ({ id: d.id, name: d.name })));
+      // Store doctors list for filter dropdown (only if not already set)
+      if (doctors.length === 0) {
+        setDoctors(doctorsData.map((d: { id: number; name: string }) => ({ id: d.id, name: d.name })));
+      }
 
-      // Create doctor lookup map
-      const doctorMap = new Map(doctorsData.map((d) => [d.id, d.name]));
-
-      // Process receipts to extract referral information
-      // Note: Backend returns more fields than defined in CashReceiptSummary type
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const referralData: ReferralRecord[] = (receiptsData as any[])
-        .filter((r) => r.RefAmount && r.RefAmount > 0 && r.DoctorID)
-        .map((r) => {
-          const billDate = new Date(r.BillDate);
-          console.log('Processing referral:', {
-            id: r.id,
-            patientName: r.PatientName,
-            originalBillDate: r.BillDate,
-            parsedBillDate: billDate.toString(),
-            formattedDate: billDate.toLocaleDateString(),
-            isoDate: billDate.toISOString().split('T')[0]
-          });
-          
-          return {
-            id: r.id, // Use lowercase 'id' as returned by backend
-            doctorName: doctorMap.get(r.DoctorID) || 'Unknown Doctor',
-            amount: Number(r.RefAmount),
-            patientName: r.PatientName,
-            date: billDate.toLocaleDateString(), // Keep original for display
-            originalDate: r.BillDate, // Store original date for filtering
-            isPaid: r.isRefPaid === 1
-          };
-        });
+      // Process referrals data
+      const referralData: ReferralRecord[] = referralsData.map((r) => {
+        const billDate = new Date(r.BillDate);
+        
+        return {
+          id: r.ReceiptID, // Use ReceiptID as returned by referrals API
+          doctorName: r.DoctorName || 'Unknown Doctor',
+          amount: Number(r.RefAmount || 0),
+          patientName: r.PatientName || 'Unknown Patient',
+          date: billDate.toLocaleDateString(), // Keep original for display
+          originalDate: r.BillDate, // Store original date for filtering
+          isPaid: r.isRefPaid === 1,
+          age: r.Age || null,
+          address: r.Address || null,
+          gender: r.Gender || null,
+          netAmount: r.NetAmount ? Number(r.NetAmount) : null, // Now calculated as TotalAmount - Discount - RefAmount
+          testName: r.TestName || null,
+          userName: r.UserName || null,
+          totalAmount: r.TotalAmount ? Number(r.TotalAmount) : null,
+          discount: r.Discount ? Number(r.Discount) : null
+        };
+      });
 
       setReferrals(referralData);
-    } catch {
-      // Error fetching referral data
+    } catch (error) {
+      console.error('Error fetching referral data:', error);
       setError('Failed to load referral data');
     } finally {
       setLoading(false);
     }
+  }, [appliedFromDate, appliedToDate, appliedDoctor, doctors]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]); // Re-fetch when applied filters change
+
+  const applyFilters = () => {
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+    setAppliedDoctor(selectedDoctor);
+    // fetchData will be called automatically due to useEffect dependency on applied filters
   };
 
   const markAsPaid = async (id: number) => {
@@ -148,40 +173,9 @@ export default function ReferralAmountPage() {
 
   const getFilteredReferrals = () => {
     return referrals.filter(r => {
-      // Status filter
+      // Status filter (only client-side filtering needed now)
       if (filter === 'paid' && !r.isPaid) return false;
       if (filter === 'unpaid' && r.isPaid) return false;
-      
-      // Date filter - fix inclusive date range filtering
-      if (fromDate || toDate) {
-        // Use the original date from backend for accurate comparison
-        const referralDate = new Date(r.originalDate);
-        const referralDateStr = referralDate.toISOString().split('T')[0]; // Get YYYY-MM-DD format
-        
-        // Debug logging
-        console.log('Date comparison debug:', {
-          displayDate: r.date,
-          originalDate: r.originalDate,
-          referralDate: referralDate.toString(),
-          referralDateStr,
-          fromDate,
-          toDate,
-          isValidFromDate: fromDate ? referralDateStr >= fromDate : true,
-          isValidToDate: toDate ? referralDateStr <= toDate : true,
-          passesFilter: (!fromDate || referralDateStr >= fromDate) && (!toDate || referralDateStr <= toDate)
-        });
-        
-        if (fromDate) {
-          if (referralDateStr < fromDate) return false;
-        }
-        
-        if (toDate) {
-          if (referralDateStr > toDate) return false;
-        }
-      }
-      
-      // Doctor filter
-      if (selectedDoctor && r.doctorName !== selectedDoctor) return false;
       
       return true;
     });
@@ -193,11 +187,21 @@ export default function ReferralAmountPage() {
       .reduce((sum, r) => sum + r.amount, 0);
   };
 
+  const getTotalNetAmount = (isPaid = false) => {
+    return getFilteredReferrals()
+      .filter(r => r.isPaid === isPaid)
+      .reduce((sum, r) => sum + (r.netAmount || 0), 0);
+  };
+
   const clearFilters = () => {
     setFromDate('');
     setToDate('');
     setSelectedDoctor('');
     setFilter('all');
+    // Clear applied filters to trigger API call
+    setAppliedFromDate('');
+    setAppliedToDate('');
+    setAppliedDoctor('');
   };
 
   const handlePrint = () => {
@@ -205,6 +209,9 @@ export default function ReferralAmountPage() {
     const totalPaid = getTotalAmount(true);
     const totalUnpaid = getTotalAmount(false);
     const totalAmount = totalPaid + totalUnpaid;
+    const totalNetPaid = getTotalNetAmount(true);
+    const totalNetUnpaid = getTotalNetAmount(false);
+    const totalNetAmount = totalNetPaid + totalNetUnpaid;
 
     const printContent = `
       <!DOCTYPE html>
@@ -226,10 +233,11 @@ export default function ReferralAmountPage() {
             .filters-info { background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
             .filters-info h3 { margin: 0 0 10px 0; font-size: 16px; color: #374151; }
             .filters-info p { margin: 0; color: #6b7280; font-size: 14px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f9fafb; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10px; }
+            th, td { border: 1px solid #ddd; padding: 4px; text-align: left; white-space: nowrap; }
+            th { background-color: #f9fafb; font-weight: bold; font-size: 11px; }
             tbody tr:nth-child(even) { background-color: #f9fafb; }
+            .address-col { max-width: 120px; white-space: normal; word-wrap: break-word; }
             .text-right { text-align: right; }
             .text-center { text-align: center; }
             .status-paid { color: #16a34a; font-weight: bold; }
@@ -250,8 +258,8 @@ export default function ReferralAmountPage() {
           <div class="filters-info">
             <h3>Applied Filters</h3>
             <p>
-              ${fromDate || toDate ? `Date Range: ${fromDate || 'All'} to ${toDate || 'All'}` : 'Date Range: All dates'} | 
-              Doctor: ${selectedDoctor || 'All doctors'} | 
+              ${appliedFromDate || appliedToDate ? `Date Range: ${appliedFromDate || 'All'} to ${appliedToDate || 'All'}` : 'Date Range: All dates'} | 
+              Doctor: ${appliedDoctor || 'All doctors'} | 
               Status: ${filter === 'all' ? 'All statuses' : filter.charAt(0).toUpperCase() + filter.slice(1)} | 
               Total Records: ${filteredData.length}
             </p>
@@ -275,20 +283,32 @@ export default function ReferralAmountPage() {
           <table>
             <thead>
               <tr>
-                <th>Date</th>
                 <th>Doctor Name</th>
+                <th>Ref Amount</th>
                 <th>Patient Name</th>
-                <th class="text-right">Amount</th>
-                <th class="text-center">Status</th>
+                <th>Bill Date</th>
+                <th>Age</th>
+                <th>Address</th>
+                <th>Gender</th>
+                <th>Net Amount</th>
+                <th>Test Name</th>
+                <th>User Name</th>
+                <th>Ref Paid</th>
               </tr>
             </thead>
             <tbody>
               ${filteredData.map(record => `
                 <tr>
-                  <td>${record.date}</td>
                   <td>${record.doctorName}</td>
-                  <td>${record.patientName}</td>
                   <td class="text-right">₹${record.amount.toLocaleString()}</td>
+                  <td>${record.patientName}</td>
+                  <td>${record.date}</td>
+                  <td class="text-center">${record.age || '-'}</td>
+                  <td class="address-col">${record.address || '-'}</td>
+                  <td class="text-center">${record.gender || '-'}</td>
+                  <td class="text-right">₹${record.netAmount ? record.netAmount.toLocaleString() : '-'}</td>
+                  <td>${record.testName || '-'}</td>
+                  <td>${record.userName || '-'}</td>
                   <td class="text-center ${record.isPaid ? 'status-paid' : 'status-unpaid'}">
                     ${record.isPaid ? 'Paid' : 'Unpaid'}
                   </td>
@@ -297,19 +317,11 @@ export default function ReferralAmountPage() {
             </tbody>
             <tfoot style="background-color: #f3f4f6; font-weight: bold;">
               <tr>
-                <td colspan="3" class="text-right"><strong>Total Amount:</strong></td>
+                <td class="text-right"><strong>Grand Total:</strong></td>
                 <td class="text-right"><strong>₹${totalAmount.toLocaleString()}</strong></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="3" class="text-right">Paid:</td>
-                <td class="text-right status-paid">₹${totalPaid.toLocaleString()}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="3" class="text-right">Unpaid:</td>
-                <td class="text-right status-unpaid">₹${totalUnpaid.toLocaleString()}</td>
-                <td></td>
+                <td colspan="5"></td>
+                <td class="text-right"><strong>₹${totalNetAmount.toLocaleString()}</strong></td>
+                <td colspan="3"></td>
               </tr>
             </tfoot>
           </table>
@@ -374,10 +386,34 @@ export default function ReferralAmountPage() {
 
           {/* Filters */}
           <div className="mb-6 space-y-4">
+            {/* Applied Filters Display */}
+            {(appliedFromDate || appliedToDate || appliedDoctor) && (
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">Active Filters:</h4>
+                <div className="flex flex-wrap gap-2 text-sm text-blue-700">
+                  {appliedFromDate && (
+                    <span className="bg-blue-100 px-2 py-1 rounded">
+                      From: {appliedFromDate}
+                    </span>
+                  )}
+                  {appliedToDate && (
+                    <span className="bg-blue-100 px-2 py-1 rounded">
+                      To: {appliedToDate}
+                    </span>
+                  )}
+                  {appliedDoctor && (
+                    <span className="bg-blue-100 px-2 py-1 rounded">
+                      Doctor: {appliedDoctor}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Date and Doctor Filters */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Filter Options</h3>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     From Date
@@ -419,8 +455,16 @@ export default function ReferralAmountPage() {
                 </div>
                 <div>
                   <button
+                    onClick={applyFilters}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+                <div>
+                  <button
                     onClick={clearFilters}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
+                    className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
                   >
                     Clear Filters
                   </button>
@@ -428,7 +472,7 @@ export default function ReferralAmountPage() {
                 <div>
                   <button
                     onClick={handlePrint}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                    className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
                   >
                     Print Report
                   </button>

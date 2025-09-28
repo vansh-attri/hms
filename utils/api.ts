@@ -78,7 +78,8 @@ export type DoctorCreateData = {
 
 // Expense types
 export type ExpenseSummary = {
-  ID: number;
+  id?: number;      // Backend returns lowercase 'id'
+  ID?: number;      // Keep uppercase for backward compatibility
   ExpenseDate: string;
   Amount: number;
   Remarks?: string | null;
@@ -235,15 +236,21 @@ export type CashReceiptCreateData = {
 
 // Referral types
 export type ReferralSummary = {
-  ID: number;
-  DoctorID: number;
   ReceiptID: number;
-  ReferralAmount: number;
-  PaidDate?: string | null;
-  IsPaid: boolean;
-  PaymentMethod?: string | null;
-  Notes?: string | null;
-  isDeleted: boolean;
+  DoctorID: number;
+  RefAmount: number;
+  PatientName: string;
+  BillDate: string;
+  Age?: string | null;
+  Address?: string | null;
+  Gender?: string | null;
+  NetAmount?: number | null;
+  isRefPaid: number; // 0 or 1
+  UserName?: string | null;
+  TestName?: string | null;
+  DoctorName: string;
+  TotalAmount?: number | null;
+  Discount?: number | null;
 };
 
 export type UnregisteredReferral = {
@@ -301,6 +308,24 @@ async function apiRequest<T>(
 
   try {
     const response = await fetch(url, config);
+    
+    // Handle authentication errors
+    if (response.status === 401 || response.status === 403) {
+      const errorData = await response.json().catch(() => ({ error: 'Authentication failed' }));
+      
+      // Clear invalid token and redirect to login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('hms_token');
+        localStorage.removeItem('hms_user');
+        
+        // Reload the page to trigger the login form
+        if (window.location.pathname !== '/') {
+          window.location.reload();
+        }
+      }
+      
+      throw new Error(errorData.error || 'Authentication required');
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -592,9 +617,19 @@ export const receiptAPI = {
 
 // Referral API
 export const referralAPI = {
-  // Get all referrals
-  getAll: (): Promise<ReferralSummary[]> => {
-    return apiRequest<ReferralSummary[]>('/referrals');
+  // Get all referrals with optional filtering
+  getAll: (filters: {
+    doctorId?: number;
+    from?: string; // Date as YYYY-MM-DD
+    to?: string;   // Date as YYYY-MM-DD
+  } = {}): Promise<ReferralSummary[]> => {
+    const params = new URLSearchParams();
+    if (filters.doctorId) params.append('doctorId', filters.doctorId.toString());
+    if (filters.from) params.append('from', filters.from);
+    if (filters.to) params.append('to', filters.to);
+    
+    const queryString = params.toString();
+    return apiRequest<ReferralSummary[]>(`/referrals${queryString ? `?${queryString}` : ''}`);
   },
 
   // Get unregistered referrals (from public referral form)

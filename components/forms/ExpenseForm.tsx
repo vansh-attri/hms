@@ -23,6 +23,15 @@ interface ExpenseRecord {
   UserName: string;
 }
 
+interface RawExpenseApiResponse {
+  id?: number;
+  ID?: number;
+  ExpenseDate: string;
+  Amount: number;
+  Remarks?: string | null;
+  UserName?: string | null;
+}
+
 export const ExpenseForm: React.FC = () => {
   const [formData, setFormData] = useState<ExpenseFormData>({
     expenseDate: new Date().toISOString().split('T')[0],
@@ -49,17 +58,21 @@ export const ExpenseForm: React.FC = () => {
       const expensesData = await api.expenses.getAll();
       
       // Convert API response to match our ExpenseRecord interface
-      const convertedExpenses: ExpenseRecord[] = expensesData.map(expense => ({
-        ID: expense.ID,
-        ExpenseDate: expense.ExpenseDate,
-        Amount: expense.Amount,
-        Remarks: expense.Remarks || '',
-        UserName: expense.UserName || ''
-      }));
+      // Backend returns 'id' (lowercase) but we need 'ID' (uppercase)
+      const convertedExpenses: ExpenseRecord[] = expensesData.map((expense: RawExpenseApiResponse) => {
+        console.log('Raw expense from API:', expense);
+        return {
+          ID: expense.id || expense.ID || 0, // Handle both formats
+          ExpenseDate: expense.ExpenseDate,
+          Amount: expense.Amount,
+          Remarks: expense.Remarks || '',
+          UserName: expense.UserName || ''
+        };
+      });
       
       setExpenses(convertedExpenses);
-    } catch {
-      // Failed to load expenses
+    } catch (error) {
+      console.error('Failed to load expenses:', error);
       setMessage('Failed to load expenses from server');
       
       // Fallback to empty array if API fails
@@ -72,16 +85,30 @@ export const ExpenseForm: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? Number(value) : value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'number' ? Number(value) : value
+      };
+      console.log('Form data after input change:', newData);
+      return newData;
+    });
   };
 
   const handleExpenseSelect = (expense: ExpenseRecord, index: number) => {
+    // Convert date to YYYY-MM-DD format for HTML date input
+    const expenseDate = new Date(expense.ExpenseDate);
+    const formattedDate = expenseDate.toISOString().split('T')[0];
+    
+    console.log('Selecting expense for editing:', {
+      expense,
+      expenseId: expense.ID,
+      stringId: String(expense.ID)
+    });
+    
     setFormData({
       expenseId: String(expense.ID),
-      expenseDate: expense.ExpenseDate,
+      expenseDate: formattedDate,
       amount: expense.Amount,
       remarks: expense.Remarks,
       userName: expense.UserName,
@@ -129,12 +156,22 @@ export const ExpenseForm: React.FC = () => {
         UserName: formData.userName.trim() || 'admin'
       };
 
-      if (formData.expenseId) {
+      console.log('Current form data before save:', formData);
+      console.log('Expense ID value:', formData.expenseId, 'Type:', typeof formData.expenseId);
+      console.log('Selected expense index:', selectedExpenseIndex);
+
+      // Determine if this is an update or create operation
+      const isUpdate = formData.expenseId || selectedExpenseIndex >= 0;
+      const expenseId = formData.expenseId || (selectedExpenseIndex >= 0 ? String(expenses[selectedExpenseIndex]?.ID) : null);
+
+      if (isUpdate && expenseId) {
         // Update existing expense
-        await api.expenses.update(formData.expenseId, expenseData);
+        console.log('Updating expense with ID:', expenseId, 'Data:', expenseData);
+        await api.expenses.update(expenseId, expenseData);
         setMessage('Expense updated successfully!');
       } else {
         // Create new expense
+        console.log('Creating new expense with data:', expenseData);
         await api.expenses.create(expenseData);
         setMessage('Expense added successfully!');
       }

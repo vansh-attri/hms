@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Button, 
   Card, 
@@ -68,6 +69,7 @@ interface DoctorOption {
 
 export const CashReceiptForm: React.FC = () => {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState<CashReceiptFormData>({
     patientName: '',
     billDate: new Date().toISOString().slice(0, 16),
@@ -465,6 +467,30 @@ export const CashReceiptForm: React.FC = () => {
     setShowBillSearch(false);
   };
 
+  const handleFormFRedirect = () => {
+    if (!formData.patientID) {
+      setMessage('Please select a patient first to proceed to Form F');
+      return;
+    }
+
+    // Create URL with patient details as query parameters
+    const params = new URLSearchParams({
+      patientId: String(formData.patientID),
+      patientName: formData.patientName,
+      mobile: formData.mobile,
+      age: formData.age,
+      gender: formData.gender,
+      address: formData.address,
+      relationType: formData.relationType,
+      relation: formData.relation,
+      doctorId: String(formData.doctorID),
+      receiptId: formData.receiptId || ''
+    });
+
+    // Navigate to Form F page with patient details
+    router.push(`/form-f?${params.toString()}`);
+  };
+
   const handlePrintBill = (showPreview = false) => {
     // Check if there's data to print
     if (!formData.patientName.trim()) {
@@ -487,15 +513,47 @@ export const CashReceiptForm: React.FC = () => {
             line-height: 1.4;
           }
           .header {
-            text-align: center;
             border-bottom: 2px solid #333;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
             margin-bottom: 20px;
+          }
+          .clinic-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+          }
+          .logo-section {
+            margin-right: 20px;
+          }
+          .clinic-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+          }
+          .clinic-info {
+            text-align: center;
+          }
+          .clinic-info h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #0891b2;
+            font-weight: bold;
+          }
+          .clinic-subtitle {
+            margin: 5px 0 0 0;
+            color: #0891b2;
+            font-size: 14px;
+          }
+          .receipt-info {
+            text-align: center;
+            margin-top: 15px;
           }
           .receipt-title {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 5px;
+            color: #333;
           }
           .receipt-id {
             font-size: 14px;
@@ -602,8 +660,19 @@ export const CashReceiptForm: React.FC = () => {
         ` : ''}
 
         <div class="header">
-          <div class="receipt-title">CASH RECEIPT</div>
-          <div class="receipt-id">Receipt ID: ${formData.receiptId || 'Not Saved'}</div>
+          <div class="clinic-header">
+            <div class="logo-section">
+              <img src="/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
+            </div>
+            <div class="clinic-info">
+              <h1>Siddhivinayak Ultrasound Centre</h1>
+              <p class="clinic-subtitle">Diagnostic Ultrasound Imaging</p>
+            </div>
+          </div>
+          <div class="receipt-info">
+            <div class="receipt-title">CASH RECEIPT</div>
+            <div class="receipt-id">Receipt ID: ${formData.receiptId || 'Not Saved'}</div>
+          </div>
         </div>
 
         <div class="patient-info">
@@ -862,6 +931,14 @@ export const CashReceiptForm: React.FC = () => {
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
                 >
                   {showBillSearch ? 'Hide Bill Search' : 'Search Bills'}
+                </Button>
+                <Button
+                  onClick={handleFormFRedirect}
+                  disabled={!formData.patientID}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <span>📋</span>
+                  Form F
                 </Button>
                 <Button
                   onClick={handleClear}

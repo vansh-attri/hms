@@ -123,7 +123,21 @@ export default function DailyCollectionPage() {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    // Convert logo to base64
+    let logoBase64 = '';
+    try {
+      const response = await fetch('/logo.png');
+      const blob = await response.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Could not load logo:', error);
+    }
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -131,9 +145,16 @@ export default function DailyCollectionPage() {
           <title>Daily Collection Report</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .header h1 { margin: 0; font-size: 24px; color: #2563eb; }
-            .header p { margin: 5px 0; color: #666; }
+            .header { margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .clinic-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+            .logo-section { margin-right: 20px; }
+            .clinic-logo { width: 60px; height: 60px; object-fit: contain; }
+            .clinic-info { text-align: center; }
+            .clinic-info h1 { margin: 0; font-size: 28px; color: #0891b2; font-weight: bold; }
+            .clinic-subtitle { margin: 5px 0 0 0; color: #0891b2; font-size: 14px; }
+            .report-info { text-align: center; margin-top: 15px; }
+            .report-info h2 { margin: 0 0 10px 0; font-size: 20px; color: #333; }
+            .report-info p { margin: 5px 0; color: #666; }
             .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
             .stat-card { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
             .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: #666; }
@@ -157,12 +178,23 @@ export default function DailyCollectionPage() {
         </head>
         <body>
           <div class="header">
-            <h1>Daily Collection Report</h1>
-            <p>Date Range: ${fromDate === toDate ? 
-              new Date(fromDate).toLocaleDateString() : 
-              `${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}`
-            }</p>
-            <p>Total Records: ${collections.length} | Generated: ${new Date().toLocaleString()}</p>
+            <div class="clinic-header">
+              <div class="logo-section">
+                <img src="${window.location.origin}/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
+              </div>
+              <div class="clinic-info">
+                <h1>Siddhivinayak Ultrasound Centre</h1>
+                <p class="clinic-subtitle">Diagnostic Ultrasound Imaging</p>
+              </div>
+            </div>
+            <div class="report-info">
+              <h2>Daily Collection Report</h2>
+              <p>Date Range: ${fromDate === toDate ? 
+                new Date(fromDate).toLocaleDateString() : 
+                `${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}`
+              }</p>
+              <p>Total Records: ${collections.length} | Generated: ${new Date().toLocaleString()}</p>
+            </div>
           </div>
           
           <div class="stats">

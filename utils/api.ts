@@ -76,6 +76,24 @@ export type DoctorCreateData = {
   isDeleted?: boolean;
 };
 
+// FormF Doctor types
+export type FormFDoctorSummary = {
+  id: number;
+  name: string;
+  registration_no?: string | null;
+  specialization?: string | null;
+  qualification?: string | null;
+  is_deleted: number; // 0 = active, 1 = deleted
+};
+
+export type FormFDoctorCreateData = {
+  name: string;
+  registration_no?: string;
+  specialization?: string;
+  qualification?: string;
+  is_deleted?: boolean;
+};
+
 // Expense types
 export type ExpenseSummary = {
   id?: number;      // Backend returns lowercase 'id'
@@ -734,6 +752,11 @@ export const api = {
       return apiRequest<{ message: string }>(`/formf/${billNo}`, {
         method: 'DELETE',
       });
+    },
+
+    // FormF Doctors APIs
+    getDoctors: (): Promise<FormFDoctorSummary[]> => {
+      return apiRequest<FormFDoctorSummary[]>('/formf/doctors');
     }
   }
 };

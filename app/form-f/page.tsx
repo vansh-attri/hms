@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, InputField, Button, Alert } from '@/components/ui/FormElements';
-import { api, FormFCreateData, FormFReceipt, FormFFetchResponse } from '@/utils/api';
+import { api, FormFCreateData, FormFReceipt, FormFFetchResponse, FormFDoctorSummary } from '@/utils/api';
 
 const defaultDateString = () => new Date().toISOString().split('T')[0];
 
@@ -14,12 +15,14 @@ const toDateInput = (value?: string | null) => {
 };
 
 export default function FormFPage() {
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [receiptInfo, setReceiptInfo] = useState<FormFReceipt | null>(null);
   const [existingForm, setExistingForm] = useState(false);
+  const [formFDoctors, setFormFDoctors] = useState<FormFDoctorSummary[]>([]);
   const [formData, setFormData] = useState<FormFCreateData>({
     BillNo: 0,
     txt1: 'SIDDHIVINAYAK ULTRASOUND CENTRE',
@@ -45,6 +48,61 @@ export default function FormFPage() {
     txt15: '', // Result conveyed to
     txt16: 'No' // MTP indication
   });
+
+  // Handle URL parameters from cash receipt redirection
+  useEffect(() => {
+    const patientId = searchParams.get('patientId');
+    const patientName = searchParams.get('patientName');
+    const mobile = searchParams.get('mobile');
+    const age = searchParams.get('age');
+    const gender = searchParams.get('gender');
+    const address = searchParams.get('address');
+    const relationType = searchParams.get('relationType');
+    const relation = searchParams.get('relation');
+    const doctorId = searchParams.get('doctorId');
+    const receiptId = searchParams.get('receiptId');
+
+    // If we have patient details from URL parameters, auto-fill the form
+    if (patientId && patientName) {
+      const relationLine = [relationType, relation].filter(Boolean).join(' ').trim();
+      const addressLine = [address, mobile ? `Mobile: ${mobile}` : null]
+        .filter(Boolean)
+        .join(' - ');
+
+      setFormData(prev => ({
+        ...prev,
+        BillNo: receiptId ? Number(receiptId) : prev.BillNo,
+        txt3: patientName || prev.txt3,
+        txt3a: age || prev.txt3a,
+        txt5: relationLine || prev.txt5,
+        txt6: addressLine || prev.txt6,
+        txt15: patientName || prev.txt15,
+      }));
+
+      // Show success message that patient details have been auto-filled
+      setSuccess(`Patient details auto-filled from cash receipt. Patient: ${patientName} (${gender}, Age: ${age})${receiptId ? ` - Bill #${receiptId}` : ''}${doctorId ? ` - Doctor ID: ${doctorId}` : ''}`);
+
+      // If we have a receipt ID, we can also set up for potential auto-fetch
+      if (receiptId && Number(receiptId) > 0) {
+        setFormData(prev => ({ ...prev, BillNo: Number(receiptId) }));
+      }
+    }
+  }, [searchParams]);
+
+  // Load FormF doctors on component mount
+  useEffect(() => {
+    const loadFormFDoctors = async () => {
+      try {
+        const doctors = await api.formf.getDoctors();
+        setFormFDoctors(doctors);
+      } catch (error) {
+        console.error('Error loading FormF doctors:', error);
+        // Silently fail, user can still enter doctor name manually if needed
+      }
+    };
+
+    loadFormFDoctors();
+  }, []);
 
   const formatDisplayDate = (value?: string | null) => {
     if (!value) return 'N/A';
@@ -231,7 +289,321 @@ export default function FormFPage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open('', '_blank', 'width=800,height=1000');
+    const printContent = generatePrintHTML();
+    
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+    }
+  };
+
+  const generatePrintHTML = () => {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form F - ${formData.txt3 || 'Patient'}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 11px;
+            line-height: 1.3;
+            color: black;
+            background: white;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-container {
+            position: relative;
+            border: 2px solid black;
+            padding: 15px;
+            background: white;
+        }
+        
+        .form-header {
+            text-align: center;
+            border: 2px solid black;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .section-header {
+            font-size: 11px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 10px 0 8px 0;
+        }
+        
+        .clinic-location {
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .bill-info {
+            position: absolute;
+            top: 90px;
+            right: 30px;
+            border: 1px solid black;
+            padding: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            background: white;
+        }
+        
+        .field-row {
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        
+        .field-row.indent {
+            margin-left: 25px;
+        }
+        
+        .underline-field {
+            border-bottom: 1px solid black;
+            display: inline-block;
+            min-width: 80px;
+            padding: 0 3px 1px 3px;
+            margin-left: 3px;
+        }
+        
+        .checkbox-row {
+            margin: 8px 0;
+            font-size: 11px;
+        }
+        
+        .checkbox-row input[type="checkbox"] {
+            margin-right: 8px;
+            width: 14px;
+            height: 14px;
+            vertical-align: middle;
+        }
+        
+        .procedures-section {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid black;
+        }
+        
+        .result-section {
+            margin: 10px 0;
+            min-height: 60px;
+        }
+        
+        .result-text {
+            border: 1px solid black;
+            padding: 8px;
+            min-height: 50px;
+            margin-top: 5px;
+        }
+        
+        .signature-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .signature-left {
+            font-size: 11px;
+        }
+        
+        .signature-left div {
+            margin-bottom: 15px;
+        }
+        
+        .signature-right {
+            text-align: right;
+            font-size: 11px;
+        }
+        
+        .doctor-signature div {
+            margin-bottom: 5px;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            background: #0056b3;
+        }
+        
+        @media print {
+            .print-button {
+                display: none;
+            }
+            
+            body {
+                padding: 0;
+            }
+            
+            .form-container {
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">Print Form</button>
+    
+    <div class="form-container">
+        <div class="form-header">
+            <div class="form-title">FORM F [See Proviso to section 4(3), Rule 9(4) and Rule 10(1A)] FORM FOR MAINTENANCE OF RECORD IN CASE OF PRENATAL DIAGNOSTIC TEST/PROCEDURE BY GENETIC CLINIC/ULTRASOUND CLINIC/IMAGING CENTRE</div>
+        </div>
+        
+        <div class="section-header">
+            Section A : To be filled in for all Diagnostic Procedures/Tests
+            <div class="clinic-location">SIDDHIVINAYAK ULTRASOUND CENTRE</div>
+        </div>
+        
+        <div class="bill-info">
+            Form No: <span class="underline-field">${formData.BillNo || ''}</span><br>
+            Age: ${formData.txt3a || ''} Years
+        </div>
+        
+        <div class="field-row">
+            <strong>1. Name and complete address of Genetic Clinic/Ultrasound Clinic/Imaging centre:</strong>
+        </div>
+        
+        <div class="field-row">
+            <strong>2. Registration No (Under PC & PNDT ACT, 1994):</strong> <span class="underline-field">${formData.txt2 || 'PNDT/PWL/2025/191'}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>3. Patient's Name :</strong> <span class="underline-field">${formData.txt3 || ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>4. Total Number of Living children:</strong> <span class="underline-field">${formData.txt4 || ''}</span>
+        </div>
+        
+        <div class="field-row indent">
+            <strong>(a) Number of Living sons with age of each living son (in years or months):</strong> <span class="underline-field">${formData.txt4a || ''}</span>
+        </div>
+        
+        <div class="field-row indent">
+            <strong>(b) Number of living Daughters with age of each living daughter (in years or months):</strong> <span class="underline-field">${formData.txt4b || ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>5. Husband's/Wife's/Father's/Mother's Name :</strong> <span class="underline-field">${formData.txt5 || ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>6. Full postal address of the patient with Contact Number, if any:</strong> <span class="underline-field">${formData.txt6 || ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>7. (a) Referred by (Full Name and address of Doctor(s)/Genetic counselling Centre) :</strong> <span class="underline-field">${formData.txt7a || ''}</span>
+        </div>
+        
+        <div class="field-row indent">
+            <strong>(b) Self-Referral by Gynaecologist/Radiologist/Registered Medical Practitioner conducting the diagnostic procedures:</strong> <span class="underline-field">${formData.txt7b || ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>8. Last menstrual period/weeks of pregnancy:</strong> <span class="underline-field">${formData.txt8 || ''}</span>
+        </div>
+        
+        <div class="section-header">
+            Section B : (To be filled in for performing non-invasive diagnostic Procedures/Tests only)
+        </div>
+        
+        <div class="field-row">
+            <strong>9. Name of the doctor performing the procedure/s:</strong> <span class="underline-field">${formData.txt9 || ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>10. Indication/s for diagnostic procedure:</strong> <span class="underline-field">${formData.txt10 || ''}</span>
+        </div>
+        
+        <div class="procedures-section">
+            <div class="field-row">
+                <strong>11. Procedures carried out (Non-Invasive) (Put a "Tick" on the appropriate procedure)</strong>
+            </div>
+            
+            <div class="checkbox-row">
+                <input type="checkbox" ${formData.txt11a ? 'checked' : ''}> 
+                <strong>i. Ultrasound</strong> (Important Note: Ultrasound is not indicated/advised/performed to determine the sex of fetus except for diagnosis of sex-linked diseases such as Duchene Muscular Dystrophy, Hemophilia A & B etc.)
+            </div>
+            
+            <div class="checkbox-row">
+                <input type="checkbox" ${formData.txt11b ? 'checked' : ''}> 
+                <strong>ii. Any other (specify):</strong> <span class="underline-field">${formData.txt11c || ''}</span>
+            </div>
+        </div>
+        
+        <div class="field-row">
+            <strong>12. Date on which declaration of pregnant woman/person was obtained :</strong> <span class="underline-field">${formData.txt12 ? new Date(formData.txt12).toLocaleDateString() : ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>13. Date on which procedures carried out :</strong> <span class="underline-field">${formData.txt13 ? new Date(formData.txt13).toLocaleDateString() : ''}</span>
+        </div>
+        
+        <div class="result-section">
+            <div class="field-row">
+                <strong>14. Result of the non-invasive procedure carried out (report in brief of the test including ultrasound carried out):</strong>
+            </div>
+            <div class="result-text">${formData.txt14 || 'INTRAUTERINE PREGNANCY OF MEAN GESTATIONAL AGE ___3___ WKS ___4___ DAYS'}</div>
+        </div>
+        
+        <div class="field-row">
+            <strong>15. The result of pre-natal diagnostic procedures was conveyed to :</strong> <span class="underline-field">${formData.txt15 || ''}</span> &nbsp;&nbsp;&nbsp;&nbsp; <strong>on :</strong> <span class="underline-field">${formData.txt13 ? new Date(formData.txt13).toLocaleDateString() : ''}</span>
+        </div>
+        
+        <div class="field-row">
+            <strong>16. Any indication for MTP as per the abnormality detected in the diagnostic procedures/tests :</strong> <span class="underline-field">${formData.txt16 || 'No'}</span>
+        </div>
+        
+        <div class="signature-section">
+            <div class="signature-left">
+                <div><strong>Date :</strong> <span class="underline-field">${formData.txt13 ? new Date(formData.txt13).toLocaleDateString() : ''}</span></div>
+                <div><strong>Place :</strong> <span class="underline-field">HODAL</span></div>
+            </div>
+            <div class="signature-right">
+                <div class="doctor-signature">
+                    <div>${formData.txt9 && formData.txt9.includes('REG.NO.') ? formData.txt9.split('REG.NO.')[0].trim() : (formData.txt9 || 'DR. VRENDER KUMAR')}</div>
+                    <div>REG.NO. ${formData.txt9 && formData.txt9.includes('REG.NO.') ? formData.txt9.split('REG.NO.')[1].trim() : 'HN.008346'}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `;
   };
 
   return (
@@ -474,14 +846,22 @@ export default function FormFPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   9. Name of the doctor performing the procedure/s
                 </label>
-                <textarea
+                <select
                   name="txt9"
                   value={formData.txt9 || ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  rows={2}
-                  placeholder="Enter doctor details"
-                />
+                >
+                  <option value="">Select a doctor</option>
+                  {formFDoctors.map((doctor) => (
+                    <option key={doctor.id} value={`${doctor.name}${doctor.registration_no ? ` REG.NO. ${doctor.registration_no}` : ''}${doctor.qualification ? ` (${doctor.qualification})` : ''}`}>
+                      {doctor.name} {doctor.registration_no && `- REG.NO. ${doctor.registration_no}`} {doctor.specialization && `(${doctor.specialization})`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formFDoctors.length} doctors available. Contact admin to add more doctors.
+                </p>
               </div>
 
               <div className="mb-6">
@@ -631,73 +1011,7 @@ export default function FormFPage() {
         </form>
       </div>
 
-      {/* Print Styles */}
-      <style jsx>{`
-        @media print {
-          .container {
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 10px !important;
-          }
-          
-          button {
-            display: none !important;
-          }
-          
-          .bg-gradient-to-br {
-            background: white !important;
-          }
-          
-          .bg-blue-50, .bg-green-50, .bg-purple-50, .bg-orange-50 {
-            background: white !important;
-            border: 1px solid #ccc !important;
-          }
-          
-          .border-l-4 {
-            border-left: 4px solid #666 !important;
-          }
-          
-          .text-2xl, .text-3xl {
-            font-size: 18px !important;
-            font-weight: bold !important;
-          }
-          
-          .text-xl {
-            font-size: 16px !important;
-            font-weight: bold !important;
-          }
-          
-          .text-lg {
-            font-size: 14px !important;
-          }
-          
-          .text-sm {
-            font-size: 12px !important;
-          }
-          
-          input, textarea {
-            border: 1px solid #000 !important;
-            background: white !important;
-            print-color-adjust: exact !important;
-          }
-          
-          .grid {
-            display: block !important;
-          }
-          
-          .grid > * {
-            margin-bottom: 10px !important;
-          }
-          
-          .shadow-xl {
-            box-shadow: none !important;
-          }
-          
-          .backdrop-blur-sm {
-            backdrop-filter: none !important;
-          }
-        }
-      `}</style>
+
     </div>
   );
 }

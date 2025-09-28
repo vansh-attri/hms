@@ -123,21 +123,7 @@ export default function DailyCollectionPage() {
     }
   };
 
-  const handlePrint = async () => {
-    // Convert logo to base64
-    let logoBase64 = '';
-    try {
-      const response = await fetch('/logo.png');
-      const blob = await response.blob();
-      logoBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.warn('Could not load logo:', error);
-    }
-
+  const handlePrint = () => {
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -180,7 +166,7 @@ export default function DailyCollectionPage() {
           <div class="header">
             <div class="clinic-header">
               <div class="logo-section">
-                <img src="${window.location.origin}/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
+                <img src="/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
               </div>
               <div class="clinic-info">
                 <h1>Siddhivinayak Ultrasound Centre</h1>

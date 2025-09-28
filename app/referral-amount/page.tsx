@@ -259,7 +259,7 @@ export default function ReferralAmountPage() {
           <div class="header">
             <div class="clinic-header">
               <div class="logo-section">
-                <img src="${window.location.origin}/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
+                <img src="/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
               </div>
               <div class="clinic-info">
                 <h1>Siddhivinayak Ultrasound Centre</h1>

@@ -562,15 +562,6 @@ export const CashReceiptForm: React.FC = () => {
           .patient-info {
             margin-bottom: 20px;
           }
-          .patient-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-          }
-          .patient-info-left,
-          .patient-info-right {
-            min-width: 0;
-          }
           .info-row {
             display: flex;
             margin-bottom: 8px;
@@ -582,7 +573,6 @@ export const CashReceiptForm: React.FC = () => {
           }
           .info-value {
             flex: 1;
-            word-wrap: break-word;
           }
           .tests-table {
             width: 100%;
@@ -687,48 +677,42 @@ export const CashReceiptForm: React.FC = () => {
 
         <div class="patient-info">
           <h3>Patient Information</h3>
-          <div class="patient-info-grid">
-            <div class="patient-info-left">
-              <div class="info-row">
-                <span class="info-label">Patient Name:</span>
-                <span class="info-value">${formData.patientName}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Date & Time:</span>
-                <span class="info-value">${new Date(formData.billDate).toLocaleString()}</span>
-              </div>
-              ${formData.mobile ? `
-              <div class="info-row">
-                <span class="info-label">Mobile:</span>
-                <span class="info-value">${formData.mobile}</span>
-              </div>
-              ` : ''}
-              ${formData.age ? `
-              <div class="info-row">
-                <span class="info-label">Age:</span>
-                <span class="info-value">${formData.age} years</span>
-              </div>
-              ` : ''}
-            </div>
-            <div class="patient-info-right">
-              <div class="info-row">
-                <span class="info-label">Gender:</span>
-                <span class="info-value">${formData.gender}</span>
-              </div>
-              ${formData.relation ? `
-              <div class="info-row">
-                <span class="info-label">Relation:</span>
-                <span class="info-value">${formData.relationType} ${formData.relation}</span>
-              </div>
-              ` : ''}
-              ${formData.address ? `
-              <div class="info-row">
-                <span class="info-label">Address:</span>
-                <span class="info-value">${formData.address}</span>
-              </div>
-              ` : ''}
-            </div>
+          <div class="info-row">
+            <span class="info-label">Patient Name:</span>
+            <span class="info-value">${formData.patientName}</span>
           </div>
+          <div class="info-row">
+            <span class="info-label">Date & Time:</span>
+            <span class="info-value">${new Date(formData.billDate).toLocaleString()}</span>
+          </div>
+          ${formData.mobile ? `
+          <div class="info-row">
+            <span class="info-label">Mobile:</span>
+            <span class="info-value">${formData.mobile}</span>
+          </div>
+          ` : ''}
+          ${formData.age ? `
+          <div class="info-row">
+            <span class="info-label">Age:</span>
+            <span class="info-value">${formData.age} years</span>
+          </div>
+          ` : ''}
+          <div class="info-row">
+            <span class="info-label">Gender:</span>
+            <span class="info-value">${formData.gender}</span>
+          </div>
+          ${formData.relation ? `
+          <div class="info-row">
+            <span class="info-label">Relation:</span>
+            <span class="info-value">${formData.relationType} ${formData.relation}</span>
+          </div>
+          ` : ''}
+          ${formData.address ? `
+          <div class="info-row">
+            <span class="info-label">Address:</span>
+            <span class="info-value">${formData.address}</span>
+          </div>
+          ` : ''}
         </div>
 
         <div class="tests-section">

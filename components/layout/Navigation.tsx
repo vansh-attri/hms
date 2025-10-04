@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatDate } from '@/utils/dateFormat';
 
 export const Navigation: React.FC = () => {
   const pathname = usePathname();
@@ -167,7 +168,7 @@ export const Navigation: React.FC = () => {
                   Welcome, {user?.firstName} {user?.lastName}
                   {isAdmin && <span className="ml-2 px-2 py-1 bg-blue-500 text-xs rounded">Admin</span>}
                 </p>
-                <p className="text-sm text-blue-200">{new Date().toLocaleDateString()}</p>
+                <p className="text-sm text-blue-200">{formatDate(new Date())}</p>
               </div>
               
               {/* User menu */}

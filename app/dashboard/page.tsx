@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/FormElements';
 import { api, CashReceiptSummary, DashboardStats } from '@/utils/api';
+import { formatDate } from '@/utils/dateFormat';
 
 interface LocalDashboardStats {
   totalPatients: number;
@@ -78,7 +79,7 @@ export default function DashboardPage() {
             id: r.ReceiptID,
             patientName: r.PatientName,
             amount: r.NetAmount || 0,
-            date: new Date(r.BillDate).toLocaleDateString(),
+            date: formatDate(r.BillDate),
             type: 'Receipt'
           }));
       } catch (err) {

@@ -6,6 +6,7 @@ import {
   Card
 } from '@/components/ui/FormElements';
 import { api } from '@/utils/api';
+import { formatDate } from '@/utils/dateFormat';
 
 interface ExpenseFormData {
   expenseId?: string;
@@ -432,7 +433,7 @@ export const ExpenseForm: React.FC = () => {
                           {isSelected ? '►' : ''}
                         </div>
                         <div className="col-span-2 font-medium text-gray-900">
-                          {new Date(expense.ExpenseDate).toLocaleDateString()}
+                          {formatDate(expense.ExpenseDate)}
                         </div>
                         <div className="col-span-4 text-gray-900">
                           {expense.Remarks}

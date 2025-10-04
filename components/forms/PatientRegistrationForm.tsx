@@ -12,6 +12,7 @@ import {
   FormSection 
 } from '@/components/ui/FormElements';
 import { doctorAPI, patientAPI, referralAPI, type UnregisteredReferral } from '@/utils/api';
+import { formatDate } from '@/utils/dateFormat';
 
 interface DoctorOption { id: number; name: string }
 type PatientSearchRow = Awaited<ReturnType<typeof patientAPI.search>>[number];
@@ -646,7 +647,7 @@ export const PatientRegistrationForm: React.FC = () => {
                           )}
                           
                           <div className="mt-2 text-xs text-gray-500">
-                            Referred on: {new Date(referred.CreatedDate).toLocaleDateString()} 
+                            Referred on: {formatDate(new Date(referred.CreatedDate))} 
                             {referred.CreatedBy && ` by ${referred.CreatedBy}`}
                           </div>
                         </div>

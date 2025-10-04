@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatDate } from '@/utils/dateFormat';
 
 interface User {
   UserName: string;
@@ -419,7 +420,7 @@ export default function ManageUsersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.date_created).toLocaleDateString()}
+                      {formatDate(new Date(user.date_created))}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">

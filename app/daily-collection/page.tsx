@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/FormElements';
 import { api } from '@/utils/api';
+import { formatDate } from '@/utils/dateFormat';
 
 interface ApiResponse {
   receipts: CollectionRecord[];
@@ -60,6 +61,7 @@ export default function DailyCollectionPage() {
   const [error, setError] = useState('');
   const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
   const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Only load data on initial mount with today's date
   useEffect(() => {
@@ -68,20 +70,68 @@ export default function DailyCollectionPage() {
         setLoading(true);
         setError('');
         const data = await api.stats.getDailyCollection(fromDate, toDate) as ApiResponse;
-        setCollections(data.receipts || []);
-        setStats(data.stats || {
-          totalNetAmount: 0,
-          totalRefAmount: 0,
-          totalExpenseAmount: 0,
+        let filteredReceipts = data.receipts || [];
+        
+        // Apply category filter if not "All"
+        if (selectedCategory !== 'All') {
+          filteredReceipts = filteredReceipts.filter(record => {
+            const testName = record.TestName?.toLowerCase() || '';
+            switch (selectedCategory) {
+              case 'USG':
+                return testName.includes('usg') || testName.includes('ultrasound') || testName.includes('sonography');
+              case 'X Ray':
+                return testName.includes('x-ray') || testName.includes('xray') || testName.includes('x ray');
+              case 'Lab':
+                return testName.includes('lab') || testName.includes('blood') || testName.includes('urine') || 
+                       testName.includes('test') || testName.includes('pathology');
+              case 'IPD':
+                return testName.includes('ipd') || testName.includes('inpatient');
+              case 'OPD':
+                return testName.includes('opd') || testName.includes('outpatient') || testName.includes('consultation');
+              default:
+                return true;
+            }
+          });
+        }
+        
+        setCollections(filteredReceipts);
+        
+        // Calculate stats for filtered data
+        // Calculate total expense by counting each day only once
+        const groupedByDateInitial: { [key: string]: CollectionRecord[] } = {};
+        filteredReceipts.forEach(record => {
+          const date = record.BillDate.split(' ')[0];
+          if (!groupedByDateInitial[date]) {
+            groupedByDateInitial[date] = [];
+          }
+          groupedByDateInitial[date].push(record);
+        });
+        
+        const totalExpenseAmountInitial = Object.keys(groupedByDateInitial).reduce((total, date) => {
+          const dayRecords = groupedByDateInitial[date];
+          const dayExpense = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+          return total + dayExpense;
+        }, 0);
+        
+        const filteredStats = {
+          totalNetAmount: filteredReceipts.reduce((sum, record) => sum + (record.NetAmount || 0), 0),
+          totalRefAmount: filteredReceipts.reduce((sum, record) => sum + (record.RefAmount || 0), 0),
+          totalExpenseAmount: totalExpenseAmountInitial,
           netCollection: 0,
-          totalTransactions: 0,
+          totalTransactions: filteredReceipts.length,
           avgTransactionValue: 0,
           totalCollection: 0,
           cashAmount: 0,
           cardAmount: 0,
           upiAmount: 0,
           chequeAmount: 0
-        });
+        };
+        
+        filteredStats.netCollection = filteredStats.totalNetAmount - filteredStats.totalRefAmount - filteredStats.totalExpenseAmount;
+        filteredStats.avgTransactionValue = filteredStats.totalTransactions > 0 ? 
+          filteredStats.totalNetAmount / filteredStats.totalTransactions : 0;
+        
+        setStats(filteredStats);
       } catch (error) {
         console.error('Error fetching daily collection:', error);
         setError('Failed to load daily collection data');
@@ -95,25 +145,81 @@ export default function DailyCollectionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array for initial load only
 
+  // Refresh data when category changes
+  useEffect(() => {
+    if (collections.length > 0) {
+      fetchDailyCollection();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
+
   const fetchDailyCollection = async () => {
     try {
       setLoading(true);
       setError('');
       const data = await api.stats.getDailyCollection(fromDate, toDate) as ApiResponse;
-      setCollections(data.receipts || []);
-      setStats(data.stats || {
-        totalNetAmount: 0,
-        totalRefAmount: 0,
-        totalExpenseAmount: 0,
-        netCollection: 0,
-        totalTransactions: 0,
-        avgTransactionValue: 0,
+      let filteredReceipts = data.receipts || [];
+      
+      // Apply category filter if not "All"
+      if (selectedCategory !== 'All') {
+        filteredReceipts = filteredReceipts.filter(record => {
+          const testName = record.TestName?.toLowerCase() || '';
+          switch (selectedCategory) {
+            case 'USG':
+              return testName.includes('usg') || testName.includes('ultrasound') || testName.includes('sonography');
+            case 'X Ray':
+              return testName.includes('x-ray') || testName.includes('xray') || testName.includes('x ray');
+            case 'Lab':
+              return testName.includes('lab') || testName.includes('blood') || testName.includes('urine') || 
+                     testName.includes('test') || testName.includes('pathology');
+            case 'IPD':
+              return testName.includes('ipd') || testName.includes('inpatient');
+            case 'OPD':
+              return testName.includes('opd') || testName.includes('outpatient') || testName.includes('consultation');
+            default:
+              return true;
+          }
+        });
+      }
+      
+      setCollections(filteredReceipts);
+      
+      // Recalculate stats for filtered data
+      // Calculate total expense by counting each day only once
+      const groupedByDate: { [key: string]: CollectionRecord[] } = {};
+      filteredReceipts.forEach(record => {
+        const date = record.BillDate.split(' ')[0];
+        if (!groupedByDate[date]) {
+          groupedByDate[date] = [];
+        }
+        groupedByDate[date].push(record);
+      });
+      
+      const totalExpenseAmount = Object.keys(groupedByDate).reduce((total, date) => {
+        const dayRecords = groupedByDate[date];
+        const dayExpense = dayRecords.length > 0 ? (dayRecords[0].ExpenseAmount || 0) : 0;
+        return total + dayExpense;
+      }, 0);
+      
+      const filteredStats = {
+        totalNetAmount: filteredReceipts.reduce((sum, record) => sum + (record.NetAmount || 0), 0),
+        totalRefAmount: filteredReceipts.reduce((sum, record) => sum + (record.RefAmount || 0), 0),
+        totalExpenseAmount: totalExpenseAmount,
+        netCollection: 0, // Will be calculated
+        totalTransactions: filteredReceipts.length,
+        avgTransactionValue: 0, // Will be calculated
         totalCollection: 0,
         cashAmount: 0,
         cardAmount: 0,
         upiAmount: 0,
         chequeAmount: 0
-      });
+      };
+      
+      filteredStats.netCollection = filteredStats.totalNetAmount - filteredStats.totalRefAmount - filteredStats.totalExpenseAmount;
+      filteredStats.avgTransactionValue = filteredStats.totalTransactions > 0 ? 
+        filteredStats.totalNetAmount / filteredStats.totalTransactions : 0;
+      
+      setStats(filteredStats);
     } catch (error) {
       console.error('Error fetching daily collection:', error);
       setError('Failed to load daily collection data');
@@ -128,7 +234,6 @@ export default function DailyCollectionPage() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Daily Collection Report</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
             .header { margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
@@ -174,12 +279,11 @@ export default function DailyCollectionPage() {
               </div>
             </div>
             <div class="report-info">
-              <h2>Daily Collection Report</h2>
               <p>Date Range: ${fromDate === toDate ? 
-                new Date(fromDate).toLocaleDateString() : 
-                `${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}`
+                formatDate(fromDate) : 
+                `${formatDate(fromDate)} to ${formatDate(toDate)}`
               }</p>
-              <p>Total Records: ${collections.length} | Generated: ${new Date().toLocaleString()}</p>
+              <p>Test Category: ${selectedCategory} | Total Records: ${collections.length} | Generated: ${formatDate(new Date().toISOString())}</p>
             </div>
           </div>
           
@@ -261,12 +365,12 @@ export default function DailyCollectionPage() {
                   dayRecords.forEach((record, index) => {
                     tableRows += 
                       '<tr>' +
-                        '<td>' + (index === 0 ? new Date(date).toLocaleDateString() : '') + '</td>' +
+                        '<td>' + (index === 0 ? formatDate(date) : '') + '</td>' +
                         '<td>' + (index === 0 ? dayExpenseTotal : '') + '</td>' +
                         '<td>' + serialNumber + '</td>' +
                         '<td>' + record.DoctorName + '</td>' +
                         '<td>' + record.PatientName + '</td>' +
-                        '<td>' + record.BillDate + '</td>' +
+                        '<td>' + formatDate(record.BillDate) + '</td>' +
                         '<td class="text-center">' + record.Age + '</td>' +
                         '<td class="text-center">' + record.Gender + '</td>' +
                         '<td class="text-right">' + record.NetAmount + '</td>' +
@@ -362,45 +466,72 @@ export default function DailyCollectionPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              From Date
-            </label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-            />
+        <div className="space-y-4">
+          {/* Date Range Filters */}
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                From Date
+              </label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            <div className="flex-1 min-w-48">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                To Date
+              </label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+              />
+            </div>
+            <div>
+              <Button
+                onClick={fetchDailyCollection}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-sm"
+              >
+                {loading ? 'Loading...' : 'Search'}
+              </Button>
+            </div>
+            <div>
+              <Button
+                onClick={handlePrint}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm"
+              >
+                Print Report
+              </Button>
+            </div>
           </div>
-          <div className="flex-1 min-w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              To Date
-            </label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-            />
-          </div>
-          <div>
-            <Button
-              onClick={fetchDailyCollection}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 text-sm"
-            >
-              {loading ? 'Loading...' : 'Apply Filter'}
-            </Button>
-          </div>
-          <div>
-            <Button
-              onClick={handlePrint}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 text-sm"
-            >
-              Print Report
-            </Button>
+
+          {/* Test Category Filter */}
+          <div className="border-t pt-4">
+            <div className="bg-yellow-100 px-4 py-2 rounded-md mb-3">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                Select Test Category
+              </label>
+              <div className="flex flex-wrap gap-4">
+                {['USG', 'X Ray', 'Lab', 'IPD', 'OPD', 'All'].map((category) => (
+                  <label key={category} className="flex items-center">
+                    <input
+                      type="radio"
+                      name="testCategory"
+                      value={category}
+                      checked={selectedCategory === category}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="mr-2 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">{category}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -447,9 +578,9 @@ export default function DailyCollectionPage() {
           <h3 className="text-lg font-semibold text-gray-900">Daily Collection Report</h3>
           <p className="text-sm text-gray-600">
             {fromDate === toDate ? 
-              `${new Date(fromDate).toLocaleDateString()}` : 
-              `${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}`
-            } • {collections.length} records
+              `${formatDate(fromDate)}` : 
+              `${formatDate(fromDate)} to ${formatDate(toDate)}`
+            } • Category: {selectedCategory} • {collections.length} records
           </p>
         </div>
 
@@ -502,12 +633,12 @@ export default function DailyCollectionPage() {
                     dayRecords.forEach((record, index) => {
                       rows.push(
                         <tr key={record.BillID} className={globalIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="px-3 py-2">{index === 0 ? new Date(date).toLocaleDateString() : ''}</td>
+                          <td className="px-3 py-2">{index === 0 ? formatDate(date) : ''}</td>
                           <td className="px-3 py-2">{index === 0 ? dayExpenseTotal : ''}</td>
                           <td className="px-3 py-2 font-medium text-blue-600">{serialNumber}</td>
                           <td className="px-3 py-2">{record.DoctorName}</td>
                           <td className="px-3 py-2 font-medium">{record.PatientName}</td>
-                          <td className="px-3 py-2">{record.BillDate}</td>
+                          <td className="px-3 py-2">{formatDate(record.BillDate)}</td>
                           <td className="px-3 py-2 text-center">{record.Age}</td>
                           <td className="px-3 py-2 text-center">{record.Gender}</td>
                           <td className="px-3 py-2 text-right font-semibold">{record.NetAmount}</td>

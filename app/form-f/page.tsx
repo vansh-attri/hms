@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, InputField, Button, Alert } from '@/components/ui/FormElements';
 import { api, FormFCreateData, FormFReceipt, FormFFetchResponse, FormFDoctorSummary } from '@/utils/api';
+import { formatDate } from '@/utils/dateFormat';
 
 const defaultDateString = () => new Date().toISOString().split('T')[0];
 
@@ -82,12 +83,95 @@ export default function FormFPage() {
       // Show success message that patient details have been auto-filled
       setSuccess(`Patient details auto-filled from cash receipt. Patient: ${patientName} (${gender}, Age: ${age})${receiptId ? ` - Bill #${receiptId}` : ''}${doctorId ? ` - Doctor ID: ${doctorId}` : ''}`);
 
-      // If we have a receipt ID, we can also set up for potential auto-fetch
+      // If we have a receipt ID, automatically create receipt info for display
       if (receiptId && Number(receiptId) > 0) {
         setFormData(prev => ({ ...prev, BillNo: Number(receiptId) }));
+        
+        // Create receipt info from URL params for Cash Receipt Summary display
+        const receiptData: FormFReceipt = {
+          id: 0, // Placeholder ID
+          BillNo: Number(receiptId),
+          PatientName: patientName || null,
+          Age: age || null,
+          Mobile: mobile || null,
+          Address: address || null,
+          RelationType: relationType || null,
+          Relation: relation || null,
+          DoctorName: null, // Will be filled when fetched
+          DoctorName_Old: null,
+          ReferringDoctor: null,
+          BillDate: new Date().toISOString(), // Current date as placeholder
+          DoctorID: doctorId ? Number(doctorId) : null,
+          TotalAmount: null,
+          Discount: null,
+          NetAmount: null, // Will be filled when fetched
+          isRefPaid: false
+        };
+        setReceiptInfo(receiptData);
       }
     }
   }, [searchParams]);
+
+  // Auto-fetch complete receipt data when coming from Cash Receipt
+  useEffect(() => {
+    const receiptId = searchParams.get('receiptId');
+    const patientId = searchParams.get('patientId');
+    
+    // Only auto-fetch if we have both receiptId and patientId (indicating we came from Cash Receipt)
+    // and if the BillNo matches the receiptId (form data has been set)
+    if (receiptId && patientId && formData.BillNo === Number(receiptId) && formData.BillNo > 0) {
+      const timer = setTimeout(async () => {
+        try {
+          const response: FormFFetchResponse = await api.formf.getByBillNo(formData.BillNo);
+          const receipt = response.receipt;
+          setReceiptInfo(receipt);
+
+          // If there's an existing form, load it
+          if (response.form) {
+            const form = response.form;
+            setExistingForm(true);
+            
+            const coalesce = (current: string | undefined, fallback: string) => {
+              if (!current) return fallback;
+              return current.trim() === '' ? fallback : current;
+            };
+
+            setFormData(prev => ({
+              ...prev,
+              BillNo: form.BillNo,
+              txt1: coalesce(form.txt1 ?? undefined, prev.txt1 ?? 'SIDDHIVINAYAK ULTRASOUND CENTRE'),
+              txt2: coalesce(form.txt2 ?? undefined, prev.txt2 ?? 'PNDT/PWL/2025/191'),
+              txt3: form.txt3 ?? prev.txt3,
+              txt3a: form.txt3a ?? prev.txt3a,
+              txt4: form.txt4 ?? prev.txt4,
+              txt4a: form.txt4a ?? prev.txt4a,
+              txt4b: form.txt4b ?? prev.txt4b,
+              txt5: form.txt5 ?? prev.txt5,
+              txt6: form.txt6 ?? prev.txt6,
+              txt7a: form.txt7a ?? prev.txt7a,
+              txt7b: form.txt7b ?? prev.txt7b,
+              txt8: form.txt8 ?? prev.txt8,
+              txt9: form.txt9 ?? prev.txt9,
+              txt10: form.txt10 ?? prev.txt10,
+              txt11a: form.txt11a ?? prev.txt11a,
+              txt11b: form.txt11b ?? prev.txt11b,
+              txt11c: form.txt11c ?? prev.txt11c,
+              txt12: form.txt12 ? toDateInput(form.txt12) : prev.txt12,
+              txt13: form.txt13 ? toDateInput(form.txt13) : prev.txt13,
+              txt14: form.txt14 ?? prev.txt14,
+              txt15: form.txt15 ?? prev.txt15,
+              txt16: form.txt16 ?? prev.txt16
+            }));
+          }
+        } catch (error) {
+          console.error('Error auto-fetching Form F data:', error);
+          // Silently fail, user can manually fetch if needed
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [formData.BillNo, searchParams]);
 
   // Load FormF doctors on component mount
   useEffect(() => {
@@ -108,7 +192,7 @@ export default function FormFPage() {
     if (!value) return 'N/A';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleDateString();
+    return formatDate(date);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -240,9 +324,10 @@ export default function FormFPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+
+
+  const handleSaveAndPrint = async () => {
+    // First validate the form
     if (!formData.BillNo || formData.BillNo <= 0) {
       setError('Please enter a valid Bill Number');
       return;
@@ -253,11 +338,32 @@ export default function FormFPage() {
       return;
     }
 
+    if (!formData.txt4?.trim()) {
+      setError('Please enter Total Number of Living children');
+      return;
+    }
+
+    if (!formData.txt4a?.trim()) {
+      setError('Please enter Number of Living sons with age');
+      return;
+    }
+
+    if (!formData.txt4b?.trim()) {
+      setError('Please enter Number of living Daughters with age');
+      return;
+    }
+
+    if (!formData.txt9?.trim()) {
+      setError('Please select the doctor performing the procedure');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
+      // Save the form first
       const payload: FormFCreateData = {
         ...formData,
         BillNo: formData.BillNo,
@@ -268,13 +374,40 @@ export default function FormFPage() {
       };
 
       if (existingForm) {
+        // Form F already exists - only allow updates, not new creation
         await api.formf.update(formData.BillNo, payload);
-        setSuccess(`Form F updated successfully for Bill No: ${formData.BillNo}`);
+        setSuccess(`Form F updated and printed successfully for Bill No: ${formData.BillNo}`);
       } else {
+        // Check if Form F already exists before creating a new one
+        try {
+          const response: FormFFetchResponse = await api.formf.getByBillNo(formData.BillNo);
+          if (response.form) {
+            setError('Form F already exists for this Cash Receipt. Each receipt can only have one Form F.');
+            setExistingForm(true);
+            return;
+          }
+        } catch {
+          // If fetch fails (404), it means no Form F exists, so we can create one
+          console.log('No existing Form F found, proceeding with creation');
+        }
+        
         await api.formf.create(payload);
         setExistingForm(true);
-        setSuccess(`Form F created successfully for Bill No: ${formData.BillNo}`);
+        setSuccess(`Form F created and printed successfully for Bill No: ${formData.BillNo}`);
       }
+
+      // Then print the form
+      setTimeout(() => {
+        const printWindow = window.open('', '_blank', 'width=800,height=1000');
+        const printContent = generatePrintHTML();
+        
+        if (printWindow) {
+          printWindow.document.write(printContent);
+          printWindow.document.close();
+          printWindow.focus();
+        }
+      }, 500); // Small delay to ensure success message is shown
+
     } catch (err: unknown) {
       console.error('Form F save error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -285,17 +418,6 @@ export default function FormFPage() {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank', 'width=800,height=1000');
-    const printContent = generatePrintHTML();
-    
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.focus();
     }
   };
 
@@ -566,11 +688,11 @@ export default function FormFPage() {
         </div>
         
         <div class="field-row">
-            <strong>12. Date on which declaration of pregnant woman/person was obtained :</strong> <span class="underline-field">${formData.txt12 ? new Date(formData.txt12).toLocaleDateString() : ''}</span>
+            <strong>12. Date on which declaration of pregnant woman/person was obtained :</strong> <span class="underline-field">${formData.txt12 ? formatDate(formData.txt12) : ''}</span>
         </div>
         
         <div class="field-row">
-            <strong>13. Date on which procedures carried out :</strong> <span class="underline-field">${formData.txt13 ? new Date(formData.txt13).toLocaleDateString() : ''}</span>
+                        <strong>13. Date on which procedures carried out :</strong> <span class="underline-field">${formData.txt13 ? formatDate(formData.txt13) : ''}</span>
         </div>
         
         <div class="result-section">
@@ -581,7 +703,7 @@ export default function FormFPage() {
         </div>
         
         <div class="field-row">
-            <strong>15. The result of pre-natal diagnostic procedures was conveyed to :</strong> <span class="underline-field">${formData.txt15 || ''}</span> &nbsp;&nbsp;&nbsp;&nbsp; <strong>on :</strong> <span class="underline-field">${formData.txt13 ? new Date(formData.txt13).toLocaleDateString() : ''}</span>
+            <strong>15. The result of pre-natal diagnostic procedures was conveyed to :</strong> <span class="underline-field">${formData.txt15 || ''}</span> &nbsp;&nbsp;&nbsp;&nbsp; <strong>on :</strong> <span class="underline-field">${formData.txt13 ? formatDate(formData.txt13) : ''}</span>
         </div>
         
         <div class="field-row">
@@ -590,7 +712,7 @@ export default function FormFPage() {
         
         <div class="signature-section">
             <div class="signature-left">
-                <div><strong>Date :</strong> <span class="underline-field">${formData.txt13 ? new Date(formData.txt13).toLocaleDateString() : ''}</span></div>
+                <div><strong>Date :</strong> <span class="underline-field">${formData.txt13 ? formatDate(formData.txt13) : ''}</span></div>
                 <div><strong>Place :</strong> <span class="underline-field">HODAL</span></div>
             </div>
             <div class="signature-right">
@@ -639,7 +761,7 @@ export default function FormFPage() {
           />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="space-y-8">
           <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm p-8">
             {/* Clinic Information Section */}
             <div className="mb-8 bg-blue-50 p-6 rounded-lg border-l-4 border-blue-400">
@@ -717,7 +839,14 @@ export default function FormFPage() {
                     </div>
                   </div>
                   {existingForm && (
-                    <p className="mt-3 text-xs text-indigo-600 font-medium">Existing Form F data found. Any changes will update the saved record.</p>
+                    <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                      <p className="text-xs text-amber-800 font-medium flex items-center">
+                        <svg className="w-4 h-4 mr-1 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        Form F already exists for this receipt. Only updates are allowed - each receipt can have only one Form F.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -749,26 +878,32 @@ export default function FormFPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+              <div className="mb-4">
                 <InputField
-                  label="4. Total Number of Living children"
+                  label="4. Total Number of Living children *"
                   name="txt4"
                   value={formData.txt4 || ''}
                   onChange={handleChange}
+                  required
                   placeholder="Enter total children"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <InputField
-                  label="(a) Number of Living sons with age of each living son (in years or months)"
+                  label="(a) Number of Living sons with age of each living son (in years or months) *"
                   name="txt4a"
                   value={formData.txt4a || ''}
                   onChange={handleChange}
+                  required
                   placeholder="Sons age details"
                 />
                 <InputField
-                  label="(b) Number of living Daughters with age of each living daughter (in years or months)"
+                  label="(b) Number of living Daughters with age of each living daughter (in years or months) *"
                   name="txt4b"
                   value={formData.txt4b || ''}
                   onChange={handleChange}
+                  required
                   placeholder="Daughters age details"
                 />
               </div>
@@ -844,12 +979,13 @@ export default function FormFPage() {
               
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  9. Name of the doctor performing the procedure/s
+                  9. Name of the doctor performing the procedure/s *
                 </label>
                 <select
                   name="txt9"
                   value={formData.txt9 || ''}
                   onChange={handleChange}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="">Select a doctor</option>
@@ -974,41 +1110,38 @@ export default function FormFPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 pt-6 border-t print:hidden">
+            <div className="flex justify-center pt-6 border-t print:hidden">
               <Button
-                type="submit"
+                type="button"
                 variant="primary"
                 loading={loading}
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 font-semibold shadow-lg"
+                onClick={handleSaveAndPrint}
+                className="w-full max-w-md bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white py-3 font-semibold shadow-lg"
               >
                 {loading ? (
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Saving...
+                    Saving & Preparing Print...
                   </div>
                 ) : (
-                  'Save Form F'
+                  <div className="flex items-center justify-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    {existingForm ? 'Update and Print Form F' : 'Save and Print Form F'}
+                  </div>
                 )}
-              </Button>
-              
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handlePrint}
-                className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 font-semibold shadow-lg"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Print Form
               </Button>
             </div>
           </Card>
-        </form>
+        </div>
       </div>
 
 

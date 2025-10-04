@@ -1,4 +1,5 @@
 import { Service, ServiceFormData } from '@/types';
+import { User } from '@/types/auth';
 
 // Shape returned by /api/patients list/search endpoints
 type PatientSummary = {
@@ -757,6 +758,29 @@ export const api = {
     // FormF Doctors APIs
     getDoctors: (): Promise<FormFDoctorSummary[]> => {
       return apiRequest<FormFDoctorSummary[]>('/formf/doctors');
+    }
+  },
+
+  // User Profile APIs
+  users: {
+    updateProfile: (profileData: { firstName: string; lastName: string }): Promise<{ message: string; user: User }> => {
+      return apiRequest<{ message: string; user: User }>('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(profileData),
+      });
+    },
+
+    changePassword: (passwordData: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<{ message: string }> => {
+      return apiRequest<{ message: string }>('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify(passwordData),
+      });
+    },
+
+    getProfile: (): Promise<{ user: User }> => {
+      return apiRequest<{ user: User }>('/auth/profile', {
+        method: 'GET',
+      });
     }
   }
 };

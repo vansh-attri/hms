@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/utils/api';
+import { formatDate } from '@/utils/dateFormat';
 
 interface ReferralRecord {
   id: number;
@@ -70,7 +71,7 @@ export default function ReferralAmountPage() {
           doctorName: r.DoctorName || 'Unknown Doctor',
           amount: Number(r.RefAmount || 0),
           patientName: r.PatientName || 'Unknown Patient',
-          date: billDate.toLocaleDateString(), // Keep original for display
+          date: formatDate(billDate), // Keep original for display
           originalDate: r.BillDate, // Store original date for filtering
           isPaid: r.isRefPaid === 1,
           age: r.Age || null,
@@ -181,6 +182,38 @@ export default function ReferralAmountPage() {
     });
   };
 
+  const getGroupedReferrals = () => {
+    const filtered = getFilteredReferrals();
+    const grouped: { [key: string]: ReferralRecord[] } = {};
+    
+    filtered.forEach(referral => {
+      const doctorName = referral.doctorName || 'Unknown Doctor';
+      if (!grouped[doctorName]) {
+        grouped[doctorName] = [];
+      }
+      grouped[doctorName].push(referral);
+    });
+    
+    // Sort each doctor's referrals by date (newest first)
+    Object.keys(grouped).forEach(doctor => {
+      grouped[doctor].sort((a, b) => new Date(b.originalDate).getTime() - new Date(a.originalDate).getTime());
+    });
+    
+    return grouped;
+  };
+
+  const getDoctorTotals = (referrals: ReferralRecord[]) => {
+    return {
+      totalAmount: referrals.reduce((sum, r) => sum + r.amount, 0),
+      totalNetAmount: referrals.reduce((sum, r) => sum + (r.netAmount || 0), 0),
+      paidAmount: referrals.filter(r => r.isPaid).reduce((sum, r) => sum + r.amount, 0),
+      unpaidAmount: referrals.filter(r => !r.isPaid).reduce((sum, r) => sum + r.amount, 0),
+      totalRecords: referrals.length,
+      paidRecords: referrals.filter(r => r.isPaid).length,
+      unpaidRecords: referrals.filter(r => !r.isPaid).length,
+    };
+  };
+
   const getTotalAmount = (isPaid = false) => {
     return getFilteredReferrals()
       .filter(r => r.isPaid === isPaid)
@@ -205,7 +238,7 @@ export default function ReferralAmountPage() {
   };
 
   const handlePrint = () => {
-    const filteredData = getFilteredReferrals();
+    const groupedData = getGroupedReferrals();
     const totalPaid = getTotalAmount(true);
     const totalUnpaid = getTotalAmount(false);
     const totalAmount = totalPaid + totalUnpaid;
@@ -217,7 +250,6 @@ export default function ReferralAmountPage() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Referral Amount Report</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
             .header { margin-bottom: 30px; border-bottom: 2px solid #16a34a; padding-bottom: 20px; }
@@ -240,7 +272,10 @@ export default function ReferralAmountPage() {
             .filters-info { background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
             .filters-info h3 { margin: 0 0 10px 0; font-size: 16px; color: #374151; }
             .filters-info p { margin: 0; color: #6b7280; font-size: 14px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10px; }
+            .doctor-section { margin-bottom: 30px; }
+            .doctor-header { background-color: #e5e7eb; padding: 10px; font-weight: bold; font-size: 16px; border: 1px solid #d1d5db; }
+            .doctor-subtotals { background-color: #f3f4f6; padding: 8px; font-size: 12px; border: 1px solid #d1d5db; border-top: none; }
+            table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 10px; }
             th, td { border: 1px solid #ddd; padding: 4px; text-align: left; white-space: nowrap; }
             th { background-color: #f9fafb; font-weight: bold; font-size: 11px; }
             tbody tr:nth-child(even) { background-color: #f9fafb; }
@@ -249,6 +284,7 @@ export default function ReferralAmountPage() {
             .text-center { text-align: center; }
             .status-paid { color: #16a34a; font-weight: bold; }
             .status-unpaid { color: #dc2626; font-weight: bold; }
+            .grand-total { background-color: #1f2937; color: white; font-weight: bold; padding: 15px; margin-top: 20px; text-align: center; font-size: 16px; }
             @media print {
               body { margin: 0; }
               .no-print { display: none; }
@@ -266,11 +302,6 @@ export default function ReferralAmountPage() {
                 <p class="clinic-subtitle">Diagnostic Ultrasound Imaging</p>
               </div>
             </div>
-            <div class="report-info">
-              <h2>Referral Amount Report</h2>
-              <p>Doctor Referral Commissions Management</p>
-              <p>Generated: ${new Date().toLocaleString()}</p>
-            </div>
           </div>
           
           <div class="filters-info">
@@ -279,7 +310,7 @@ export default function ReferralAmountPage() {
               ${appliedFromDate || appliedToDate ? `Date Range: ${appliedFromDate || 'All'} to ${appliedToDate || 'All'}` : 'Date Range: All dates'} | 
               Doctor: ${appliedDoctor || 'All doctors'} | 
               Status: ${filter === 'all' ? 'All statuses' : filter.charAt(0).toUpperCase() + filter.slice(1)} | 
-              Total Records: ${filteredData.length}
+              Total Records: ${Object.values(groupedData).flat().length}
             </p>
           </div>
           
@@ -298,51 +329,65 @@ export default function ReferralAmountPage() {
             </div>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Doctor Name</th>
-                <th>Ref Amount</th>
-                <th>Patient Name</th>
-                <th>Bill Date</th>
-                <th>Age</th>
-                <th>Address</th>
-                <th>Gender</th>
-                <th>Net Amount</th>
-                <th>Test Name</th>
-                <th>User Name</th>
-                <th>Ref Paid</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData.map(record => `
-                <tr>
-                  <td>${record.doctorName}</td>
-                  <td class="text-right">₹${record.amount.toLocaleString()}</td>
-                  <td>${record.patientName}</td>
-                  <td>${record.date}</td>
-                  <td class="text-center">${record.age || '-'}</td>
-                  <td class="address-col">${record.address || '-'}</td>
-                  <td class="text-center">${record.gender || '-'}</td>
-                  <td class="text-right">₹${record.netAmount ? record.netAmount.toLocaleString() : '-'}</td>
-                  <td>${record.testName || '-'}</td>
-                  <td>${record.userName || '-'}</td>
-                  <td class="text-center ${record.isPaid ? 'status-paid' : 'status-unpaid'}">
-                    ${record.isPaid ? 'Paid' : 'Unpaid'}
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot style="background-color: #f3f4f6; font-weight: bold;">
-              <tr>
-                <td class="text-right"><strong>Grand Total:</strong></td>
-                <td class="text-right"><strong>₹${totalAmount.toLocaleString()}</strong></td>
-                <td colspan="5"></td>
-                <td class="text-right"><strong>₹${totalNetAmount.toLocaleString()}</strong></td>
-                <td colspan="3"></td>
-              </tr>
-            </tfoot>
-          </table>
+          ${Object.keys(groupedData).sort().map(doctorName => {
+            const doctorReferrals = groupedData[doctorName];
+            const doctorTotals = getDoctorTotals(doctorReferrals);
+            
+            return `
+              <div class="doctor-section">
+                <div class="doctor-header">
+                  ${doctorName}
+                </div>
+                <div class="doctor-subtotals">
+                  Records: ${doctorTotals.totalRecords} | 
+                  Ref Amount: ₹${doctorTotals.totalAmount.toLocaleString()} | 
+                  Net Amount: ₹${doctorTotals.totalNetAmount.toLocaleString()} | 
+                  Paid: ₹${doctorTotals.paidAmount.toLocaleString()} (${doctorTotals.paidRecords}) | 
+                  Unpaid: ₹${doctorTotals.unpaidAmount.toLocaleString()} (${doctorTotals.unpaidRecords})
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Ref Amount</th>
+                      <th>Patient Name</th>
+                      <th>Bill Date</th>
+                      <th>Age</th>
+                      <th>Address</th>
+                      <th>Gender</th>
+                      <th>Net Amount (Total-Discount-Referral)</th>
+                      <th>Test Name</th>
+                      <th>User Name</th>
+                      <th>Ref Paid</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${doctorReferrals.map((record, index) => `
+                      <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td class="text-right">₹${record.amount.toLocaleString()}</td>
+                        <td>${record.patientName}</td>
+                        <td>${record.date}</td>
+                        <td class="text-center">${record.age || '-'}</td>
+                        <td class="address-col">${record.address || '-'}</td>
+                        <td class="text-center">${record.gender || '-'}</td>
+                        <td class="text-right">₹${record.netAmount ? record.netAmount.toLocaleString() : '-'}</td>
+                        <td>${record.testName || '-'}</td>
+                        <td>${record.userName || '-'}</td>
+                        <td class="text-center ${record.isPaid ? 'status-paid' : 'status-unpaid'}">
+                          ${record.isPaid ? 'Paid' : 'Unpaid'}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="grand-total">
+            Grand Total: ₹${totalAmount.toLocaleString()}
+          </div>
         </body>
       </html>
     `;
@@ -533,82 +578,151 @@ export default function ReferralAmountPage() {
             </div>
           </div>
 
-          {/* Referral List */}
+          {/* Grouped Referral List */}
           {getFilteredReferrals().length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">No referrals found for the selected filter.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Doctor
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Patient
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {getFilteredReferrals().map((referral) => (
-                    <tr key={referral.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {referral.date}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {referral.doctorName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {referral.patientName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        ₹{referral.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          referral.isPaid 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {referral.isPaid ? 'Paid' : 'Unpaid'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {!referral.isPaid && (
-                          <button
-                            onClick={() => markAsPaid(referral.id)}
-                            disabled={updatingIds.has(referral.id)}
-                            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                              updatingIds.has(referral.id)
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'text-green-600 hover:text-white hover:bg-green-600 border border-green-600'
-                            }`}
-                          >
-                            {updatingIds.has(referral.id) ? 'Updating...' : 'Mark as Paid'}
-                          </button>
-                        )}
-                        {referral.isPaid && (
-                          <span className="text-gray-400 text-sm">Paid ✓</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-6">
+              {Object.keys(getGroupedReferrals()).sort().map((doctorName) => {
+                const doctorReferrals = getGroupedReferrals()[doctorName];
+                const doctorTotals = getDoctorTotals(doctorReferrals);
+                
+                return (
+                  <div key={doctorName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Doctor Header */}
+                    <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900">{doctorName}</h3>
+                        <div className="mt-2 sm:mt-0 flex flex-wrap gap-4 text-sm text-gray-600">
+                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            Records: {doctorTotals.totalRecords}
+                          </span>
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                            Total: ₹{doctorTotals.totalAmount.toLocaleString()}
+                          </span>
+                          <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                            Unpaid: ₹{doctorTotals.unpaidAmount.toLocaleString()} ({doctorTotals.unpaidRecords})
+                          </span>
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                            Paid: ₹{doctorTotals.paidAmount.toLocaleString()} ({doctorTotals.paidRecords})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Doctor's Referrals Table */}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              #
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Ref Amount
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Patient Name
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Bill Date
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Age
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Address
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Gender
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Net Amount
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Test Name
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              User Name
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Ref Paid
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {doctorReferrals.map((referral, index) => (
+                            <tr key={referral.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {index + 1}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                ₹{referral.amount.toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                {referral.patientName}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                {referral.date}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                {referral.age || '-'}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                                {referral.address || '-'}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                {referral.gender || '-'}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                ₹{referral.netAmount ? referral.netAmount.toLocaleString() : '-'}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                                {referral.testName || '-'}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                {referral.userName || '-'}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                  referral.isPaid 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {referral.isPaid ? 'Paid' : 'Unpaid'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                {!referral.isPaid && (
+                                  <button
+                                    onClick={() => markAsPaid(referral.id)}
+                                    disabled={updatingIds.has(referral.id)}
+                                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                                      updatingIds.has(referral.id)
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'text-green-600 hover:text-white hover:bg-green-600 border border-green-600'
+                                    }`}
+                                  >
+                                    {updatingIds.has(referral.id) ? 'Updating...' : 'Mark as Paid'}
+                                  </button>
+                                )}
+                                {referral.isPaid && (
+                                  <span className="text-gray-400 text-sm">Paid ✓</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

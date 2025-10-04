@@ -270,9 +270,6 @@ export default function DailyCollectionPage() {
         <body>
           <div class="header">
             <div class="clinic-header">
-              <div class="logo-section">
-                <img src="/logo.png" alt="Siddhivinayak Logo" class="clinic-logo">
-              </div>
               <div class="clinic-info">
                 <h1>Siddhivinayak Ultrasound Centre</h1>
                 <p class="clinic-subtitle">Diagnostic Ultrasound Imaging</p>

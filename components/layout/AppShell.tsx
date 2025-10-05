@@ -48,8 +48,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return availableNavItems.filter(n => n.label.toLowerCase().includes(q) || n.href.toLowerCase().includes(q));
   }, [query, availableNavItems]);
 
-  // If on landing page, render without shell
-  if (pathname === '/') {
+  // If on public pages, render without shell
+  if (pathname === '/' || pathname === '/refer-patient') {
     return <>{children}</>;
   }
 

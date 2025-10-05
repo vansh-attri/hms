@@ -656,6 +656,24 @@ export const referralAPI = {
     return apiRequest<UnregisteredReferral[]>('/referrals/unregistered');
   },
 
+  // Create unregistered referral (from public referral form)
+  createUnregistered: (referralData: {
+    PatientName: string;
+    RelationType?: string;
+    Relation?: string;
+    Mobile?: string;
+    Age?: string;
+    Gender?: string;
+    Address?: string;
+    DoctorName?: string;
+    CreatedBy?: string;
+  }): Promise<UnregisteredReferral> => {
+    return apiRequest<UnregisteredReferral>('/referrals/unregistered', {
+      method: 'POST',
+      body: JSON.stringify(referralData),
+    });
+  },
+
   // Create new referral
   create: (referralData: ReferralCreateData): Promise<ReferralSummary> => {
     return apiRequest<ReferralSummary>('/referrals', {

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HMS Admin Panel",
-  description: "Hospital Management System - Admin Panel",
+  title: "Siddhivinayak Ultrasound Centre - Advanced Healthcare Management",
+  description: "Leading healthcare management system for diagnostic ultrasound imaging and comprehensive patient care solutions.",
 };
 
 export default function RootLayout({

@@ -28,10 +28,13 @@ export default function ReferralAmountPage() {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
   const [updatingIds, setUpdatingIds] = useState<Set<number>>(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [doctors, setDoctors] = useState<Array<{id: number, name: string}>>([]);
+  const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
+  const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
   
   // Separate state for applied filters (used for API calls)
   const [appliedFromDate, setAppliedFromDate] = useState('');
@@ -97,6 +100,11 @@ export default function ReferralAmountPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]); // Re-fetch when applied filters change
+
+  // Sync doctorSearchQuery with selectedDoctor
+  useEffect(() => {
+    setDoctorSearchQuery(selectedDoctor);
+  }, [selectedDoctor]);
 
   const applyFilters = () => {
     setAppliedFromDate(fromDate);
@@ -172,8 +180,105 @@ export default function ReferralAmountPage() {
     }
   };
 
+  const markAllAsPaidForDoctor = async (doctorName: string) => {
+    const doctorReferrals = getGroupedReferrals()[doctorName];
+    const unpaidReferrals = doctorReferrals.filter(r => !r.isPaid);
+    
+    if (unpaidReferrals.length === 0) {
+      setError('No unpaid referrals found for this doctor.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to mark all ${unpaidReferrals.length} unpaid referrals for ${doctorName} as paid?`;
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setBulkUpdating(true);
+    setError('');
+    
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      
+      // Process referrals in parallel for better performance
+      const updatePromises = unpaidReferrals.map(async (referral) => {
+        try {
+          // Fetch existing receipt first
+          const existingReceipt = await api.receipts.getById(referral.id);
+          
+          // Prepare update payload
+          const updatePayload = {
+            PatientID: existingReceipt.PatientID || undefined,
+            PatientName: existingReceipt.PatientName,
+            BillDate: existingReceipt.BillDate,
+            Discount: existingReceipt.Discount || 0,
+            RefAmount: existingReceipt.RefAmount || 0,
+            DoctorID: existingReceipt.DoctorID || undefined,
+            isRefPaid: true,
+            Mobile: existingReceipt.Mobile || undefined,
+            Age: existingReceipt.Age || undefined,
+            Address: existingReceipt.Address || undefined,
+            Gender: existingReceipt.Gender || undefined,
+            RelationType: existingReceipt.RelationType || undefined,
+            Relation: existingReceipt.Relation || undefined,
+            items: existingReceipt.items || []
+          };
+          
+          await api.receipts.update(referral.id, updatePayload);
+          return { success: true, id: referral.id };
+        } catch (error) {
+          console.error(`Error updating referral ${referral.id}:`, error);
+          return { success: false, id: referral.id, error };
+        }
+      });
+
+      const results = await Promise.all(updatePromises);
+      
+      // Count successes and errors
+      results.forEach(result => {
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      });
+
+      // Update local state for successful updates
+      if (successCount > 0) {
+        const successfulIds = results.filter(r => r.success).map(r => r.id);
+        setReferrals(prev => prev.map(r => 
+          successfulIds.includes(r.id) ? { ...r, isPaid: true } : r
+        ));
+      }
+
+      // Show result message
+      if (errorCount === 0) {
+        setError(`✅ Successfully marked all ${successCount} referrals as paid for ${doctorName}.`);
+      } else if (successCount > 0) {
+        setError(`⚠️ Marked ${successCount} referrals as paid, but ${errorCount} failed for ${doctorName}.`);
+      } else {
+        setError(`❌ Failed to mark any referrals as paid for ${doctorName}.`);
+      }
+
+      // Auto-clear message after 5 seconds
+      setTimeout(() => setError(''), 5000);
+
+    } catch (error) {
+      console.error('Bulk update error:', error);
+      setError('An unexpected error occurred during bulk update.');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const getFilteredReferrals = () => {
     return referrals.filter(r => {
+      // Exclude referrals with 0 amount
+      if (r.amount === 0) return false;
+      
       // Status filter (only client-side filtering needed now)
       if (filter === 'paid' && !r.isPaid) return false;
       if (filter === 'unpaid' && r.isPaid) return false;
@@ -220,16 +325,56 @@ export default function ReferralAmountPage() {
       .reduce((sum, r) => sum + r.amount, 0);
   };
 
-  const getTotalNetAmount = (isPaid = false) => {
-    return getFilteredReferrals()
-      .filter(r => r.isPaid === isPaid)
-      .reduce((sum, r) => sum + (r.netAmount || 0), 0);
+  // Filter doctors based on search query
+  const getFilteredDoctors = () => {
+    if (!doctorSearchQuery.trim()) {
+      return doctors;
+    }
+    return doctors.filter(doctor =>
+      doctor.name.toLowerCase().includes(doctorSearchQuery.toLowerCase())
+    );
+  };
+
+  // Handle doctor selection from dropdown
+  const handleDoctorSelect = (doctorName: string) => {
+    setSelectedDoctor(doctorName);
+    setDoctorSearchQuery(doctorName);
+    setShowDoctorDropdown(false);
+  };
+
+  // Handle doctor search input
+  const handleDoctorSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setDoctorSearchQuery(query);
+    setSelectedDoctor(query);
+    setShowDoctorDropdown(true);
+    
+    // If input is cleared, reset selection
+    if (!query.trim()) {
+      setSelectedDoctor('');
+      setShowDoctorDropdown(false);
+    }
+  };
+
+  // Handle keyboard navigation in doctor search
+  const handleDoctorSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setShowDoctorDropdown(false);
+    } else if (e.key === 'Enter' && showDoctorDropdown) {
+      const filteredDocs = getFilteredDoctors();
+      if (filteredDocs.length > 0) {
+        handleDoctorSelect(filteredDocs[0].name);
+      }
+      e.preventDefault();
+    }
   };
 
   const clearFilters = () => {
     setFromDate('');
     setToDate('');
     setSelectedDoctor('');
+    setDoctorSearchQuery('');
+    setShowDoctorDropdown(false);
     setFilter('all');
     // Clear applied filters to trigger API call
     setAppliedFromDate('');
@@ -242,10 +387,6 @@ export default function ReferralAmountPage() {
     const totalPaid = getTotalAmount(true);
     const totalUnpaid = getTotalAmount(false);
     const totalAmount = totalPaid + totalUnpaid;
-    const totalNetPaid = getTotalNetAmount(true);
-    const totalNetUnpaid = getTotalNetAmount(false);
-    const totalNetAmount = totalNetPaid + totalNetUnpaid;
-
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -496,22 +637,78 @@ export default function ReferralAmountPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
                   />
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Doctor
                   </label>
-                  <select
-                    value={selectedDoctor}
-                    onChange={(e) => setSelectedDoctor(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 text-sm"
-                  >
-                    <option value="">All Doctors</option>
-                    {doctors.map((doctor) => (
-                      <option key={doctor.id} value={doctor.name}>
-                        {doctor.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={doctorSearchQuery}
+                      onChange={handleDoctorSearchChange}
+                      onKeyDown={handleDoctorSearchKeyDown}
+                      onFocus={() => setShowDoctorDropdown(true)}
+                      onBlur={() => {
+                        // Delay hiding dropdown to allow click on options
+                        setTimeout(() => setShowDoctorDropdown(false), 200);
+                      }}
+                      placeholder="Search doctors (e.g., 'Rud' for Dr. Rudra Attri)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 text-sm pr-8"
+                    />
+                    
+                    {/* Search/Clear Icon */}
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      {doctorSearchQuery ? (
+                        <button
+                          onClick={() => {
+                            setDoctorSearchQuery('');
+                            setSelectedDoctor('');
+                            setShowDoctorDropdown(false);
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      )}
+                    </div>
+                    
+                    {/* Dropdown */}
+                    {showDoctorDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {/* All Doctors Option */}
+                        <button
+                          onClick={() => handleDoctorSelect('')}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                        >
+                          <span className="font-medium text-gray-900">All Doctors</span>
+                          <span className="text-gray-500 ml-2">({doctors.length} total)</span>
+                        </button>
+                        
+                        {/* Filtered Doctors */}
+                        {getFilteredDoctors().length > 0 ? (
+                          getFilteredDoctors().map((doctor) => (
+                            <button
+                              key={doctor.id}
+                              onClick={() => handleDoctorSelect(doctor.name)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-t border-gray-100"
+                            >
+                              <span className="text-gray-900">{doctor.name}</span>
+                            </button>
+                          ))
+                        ) : doctorSearchQuery ? (
+                          <div className="px-3 py-2 text-sm text-gray-500 border-t border-gray-100">
+                            No doctors found matching &quot;{doctorSearchQuery}&quot;
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <button
@@ -590,22 +787,51 @@ export default function ReferralAmountPage() {
                   <div key={doctorName} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     {/* Doctor Header */}
                     <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">{doctorName}</h3>
-                        <div className="mt-2 sm:mt-0 flex flex-wrap gap-4 text-sm text-gray-600">
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            Records: {doctorTotals.totalRecords}
-                          </span>
-                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                            Total: ₹{doctorTotals.totalAmount.toLocaleString()}
-                          </span>
-                          <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                            Unpaid: ₹{doctorTotals.unpaidAmount.toLocaleString()} ({doctorTotals.unpaidRecords})
-                          </span>
-                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                            Paid: ₹{doctorTotals.paidAmount.toLocaleString()} ({doctorTotals.paidRecords})
-                          </span>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                          <h3 className="text-lg font-semibold text-gray-900">{doctorName}</h3>
+                          <div className="mt-2 sm:mt-0 flex flex-wrap gap-4 text-sm text-gray-600">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              Records: {doctorTotals.totalRecords}
+                            </span>
+                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                              Total: ₹{doctorTotals.totalAmount.toLocaleString()}
+                            </span>
+                            <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                              Unpaid: ₹{doctorTotals.unpaidAmount.toLocaleString()} ({doctorTotals.unpaidRecords})
+                            </span>
+                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                              Paid: ₹{doctorTotals.paidAmount.toLocaleString()} ({doctorTotals.paidRecords})
+                            </span>
+                          </div>
                         </div>
+                        
+                        {/* Mark All as Paid Button - Show only when there are unpaid referrals and a doctor filter is applied */}
+                        {appliedDoctor && doctorTotals.unpaidRecords > 0 && (
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => markAllAsPaidForDoctor(doctorName)}
+                              disabled={bulkUpdating}
+                              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                                bulkUpdating
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                              }`}
+                            >
+                              {bulkUpdating ? (
+                                <span className="flex items-center">
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Updating...
+                                </span>
+                              ) : (
+                                `Mark All ${doctorTotals.unpaidRecords} as Paid`
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 

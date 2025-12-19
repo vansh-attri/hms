@@ -380,21 +380,21 @@ export default function ReferPatientPage() {
               <span className="text-blue-600">📞</span>
               <div>
                 <p className="font-medium text-blue-900">Phone</p>
-                <p className="text-blue-700">(+91) 9896416790</p>
+                <p className="text-blue-700">(+91) 8307233058</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-blue-600">✉️</span>
               <div>
                 <p className="font-medium text-blue-900">Email</p>
-                <p className="text-blue-700">drvirenderultrasoundcentre@gmail.com</p>
+                <p className="text-blue-700">siddhivinayakpalwal@gmail.com</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-blue-600">📍</span>
               <div>
                 <p className="font-medium text-blue-900">Location</p>
-                <p className="text-blue-700">Punhana mode, Palwal, Haryana</p>
+                <p className="text-blue-700">New, Sohna Rd, opposite Civil Hospital, Kalra Colony, Palwal, Haryana 121102</p>
               </div>
             </div>
           </div>

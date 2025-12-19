@@ -770,11 +770,11 @@ export default function Home() {
             <p className="text-base sm:text-lg opacity-90 mb-4 md:mb-6">Expert ultrasound services with transparent pricing and advanced technology</p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a 
-                href="tel:+919896416790" 
+                href="tel:+918307233058" 
                 className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors inline-flex items-center justify-center gap-2"
               >
                 <span>📞</span>
-                Call (+91) 9896416790
+                Call (+91) 8307233058
               </a>
             </div>
           </div>
@@ -889,8 +889,8 @@ export default function Home() {
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">Our Location</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Punhana mode, opp. Tehsil compound,<br />
-                    Palwal, Hodal, Haryana, 121106
+                    New, Sohna Rd, opposite Civil Hospital,<br />
+                    Kalra Colony, Palwal, Haryana 121102
                   </p>
                   <a 
                     href="https://www.google.com/maps/place/DR.VIRENDER+ULTRASOUND+CENTRE/@27.9032685,77.3645594,17z/data=!3m1!4b1!4m6!3m5!1s0x39732d2bb765c6f5:0x7a313507b8813333!8m2!3d27.9032685!4d77.3645594!16s%2Fg%2F11fmd7qxkn" 
@@ -915,9 +915,9 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">Phone Number</h3>
-                  <p className="text-gray-600 mb-2">(+91) 9896416790</p>
+                  <p className="text-gray-600 mb-2">(+91) 8307233058</p>
                   <a 
-                    href="tel:+919896416790" 
+                    href="tel:+918307233058" 
                     className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                   >
                     Call Now
@@ -937,9 +937,9 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">Email Address</h3>
-                  <p className="text-gray-600 mb-2 break-all">drvirenderultrasoundcentre@gmail.com</p>
+                  <p className="text-gray-600 mb-2 break-all">siddhivinayakpalwal@gmail.com</p>
                   <a 
-                    href="mailto:drvirenderultrasoundcentre@gmail.com" 
+                    href="mailto:siddhivinayakpalwal@gmail.com" 
                     className="inline-flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
                   >
                     Send Email

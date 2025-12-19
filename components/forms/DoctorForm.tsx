@@ -164,14 +164,14 @@ export const DoctorForm: React.FC = () => {
     .sort((a, b) => b.id - a.id); // Sort by ID in descending order
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <Card className="mb-6">
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-t-xl p-6 text-white">
-          <h2 className="text-2xl font-bold flex items-center gap-3">
-            <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">👨‍⚕️</span>
+    <div className="max-w-7xl mx-auto p-4 sm:p-6">
+      <Card className="mb-4 sm:mb-6">
+        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-t-xl p-4 sm:p-6 text-white">
+          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-3">
+            <span className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center text-base sm:text-lg">👨‍⚕️</span>
             Doctor Management
           </h2>
-          <p className="mt-2 text-emerald-100">Add, edit, and manage doctors in the system</p>
+          <p className="mt-2 text-sm sm:text-base text-emerald-100">Add, edit, and manage doctors in the system</p>
         </div>
 
         <FormGrid>
@@ -181,7 +181,7 @@ export const DoctorForm: React.FC = () => {
               <FormSection 
                 title={`${formData.doctorId ? '✏️ Edit Doctor' : '➕ Add New Doctor'}`}
               >
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <InputField
                     label="Doctor Name"
                     name="doctorName"
@@ -192,7 +192,7 @@ export const DoctorForm: React.FC = () => {
                     required
                   />
 
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
                     <label className="flex items-start text-sm font-medium text-gray-700">
                       <input
                         type="checkbox"
@@ -207,7 +207,7 @@ export const DoctorForm: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       onClick={handleSave}
                       disabled={loading}
@@ -247,7 +247,7 @@ export const DoctorForm: React.FC = () => {
           <div className="lg:col-span-7">
             <Card>
               {/* Search Header */}
-              <div className="bg-gray-50 p-4 border-b border-gray-200">
+              <div className="bg-gray-50 p-3 sm:p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold text-gray-900">All Doctors</h3>
                   <span className="text-sm text-gray-500">
@@ -264,11 +264,10 @@ export const DoctorForm: React.FC = () => {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-2 bg-emerald-50 p-3 text-sm font-medium text-emerald-800 border-b border-emerald-200">
-                <div className="col-span-1">►</div>
-                <div className="col-span-2">ID</div>
-                <div className="col-span-6">Doctor Name</div>
-                <div className="col-span-3 text-center">Status</div>
+              <div className="grid grid-cols-12 gap-2 bg-emerald-50 p-2 sm:p-3 text-xs sm:text-sm font-medium text-emerald-800 border-b border-emerald-200">
+                <div className="col-span-1">ID</div>
+                <div className="col-span-7 sm:col-span-8">Doctor Name</div>
+                <div className="col-span-4 sm:col-span-3">Status</div>
               </div>
 
               {/* Table Body */}
@@ -280,7 +279,7 @@ export const DoctorForm: React.FC = () => {
                 ) : (
                   filteredDoctors.map((doctor, index) => {
                     const isSelected = selectedDoctorIndex === index;
-                    const rowClasses = `grid grid-cols-12 gap-2 p-3 text-sm border-b border-gray-100 hover:bg-emerald-50 cursor-pointer transition-colors ${
+                    const rowClasses = `grid grid-cols-12 gap-2 p-2 sm:p-3 text-xs sm:text-sm border-b border-gray-100 hover:bg-emerald-50 cursor-pointer transition-colors ${
                       isSelected ? 'bg-emerald-100 border-emerald-300' : ''
                     }`;
                     
@@ -290,7 +289,7 @@ export const DoctorForm: React.FC = () => {
                         className={rowClasses}
                         onClick={() => handleDoctorSelect(doctor, index)}
                       >
-                        <div className="col-span-1 text-emerald-600 font-medium">
+                        <div className="col-span-1 text-emerald-600 font-medium hidden sm:block">
                           {isSelected ? '►' : ''}
                         </div>
                         <div className="col-span-2 font-medium text-emerald-700">

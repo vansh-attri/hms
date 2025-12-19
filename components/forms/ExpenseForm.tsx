@@ -249,7 +249,7 @@ export const ExpenseForm: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="grid grid-cols-12 gap-8 p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 p-4 sm:p-6">
           {/* Left side - Expense Form */}
           <div className="col-span-12 xl:col-span-4">
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-6">
@@ -383,7 +383,7 @@ export const ExpenseForm: React.FC = () => {
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
                     value={searchQuery}
@@ -401,7 +401,7 @@ export const ExpenseForm: React.FC = () => {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-2 bg-orange-50 p-3 text-sm font-medium text-orange-800 border-b border-orange-200">
+              <div className="grid grid-cols-12 gap-2 bg-orange-50 p-2 sm:p-3 text-xs sm:text-sm font-medium text-orange-800 border-b border-orange-200">
                 <div className="col-span-1">►</div>
                 <div className="col-span-2">Date</div>
                 <div className="col-span-4">Remarks</div>
@@ -419,7 +419,7 @@ export const ExpenseForm: React.FC = () => {
                 ) : (
                   filteredExpenses.map((expense, index) => {
                     const isSelected = selectedExpenseIndex === index;
-                    const rowClasses = `grid grid-cols-12 gap-2 p-3 text-sm border-b border-gray-100 hover:bg-orange-50 cursor-pointer transition-colors ${
+                    const rowClasses = `grid grid-cols-12 gap-2 p-2 sm:p-3 text-xs sm:text-sm border-b border-gray-100 hover:bg-orange-50 cursor-pointer transition-colors ${
                       isSelected ? 'bg-orange-100 border-orange-300' : ''
                     }`;
                     

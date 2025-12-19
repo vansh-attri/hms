@@ -83,20 +83,20 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">User Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your account information</p>
+    <main className="min-h-screen bg-gray-50 py-6 md:py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Profile</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Manage your account information</p>
         </header>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6 md:p-8">
           {error && (
             <Alert
               type="error"
               message={error}
               onClose={() => setError('')}
-              className="mb-6"
+              className="mb-4 md:mb-6"
             />
           )}
 

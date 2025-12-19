@@ -5,11 +5,11 @@ import { PatientRegistrationForm } from '@/components/forms/PatientRegistrationF
 
 export default function AddPatientPage() {
   return (
-    <div className="py-4">
+    <div className="py-3 sm:py-4">
       <div className="">
-        <div className="mb-4">
-          <h1 className="text-xl font-semibold text-gray-900">Patient Registration</h1>
-          <p className="mt-1 text-gray-600">
+        <div className="mb-3 sm:mb-4">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">Patient Registration</h1>
+          <p className="mt-1 text-sm sm:text-base text-gray-600">
             Register new patients and manage patient information
           </p>
         </div>

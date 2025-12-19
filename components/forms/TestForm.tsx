@@ -223,7 +223,7 @@ export const TestForm: React.FC = () => {
               <FormSection 
                 title={`${formData.testId ? '✏️ Edit Test' : '➕ Add New Test'}`}
               >
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <InputField
                     label="Test Name"
                     name="testName"
@@ -252,7 +252,7 @@ export const TestForm: React.FC = () => {
                     required
                   />
 
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
                     <label className="flex items-start text-sm font-medium text-gray-700">
                       <input
                         type="checkbox"
@@ -267,7 +267,7 @@ export const TestForm: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       onClick={handleSave}
                       disabled={loading}
@@ -308,7 +308,7 @@ export const TestForm: React.FC = () => {
           <div className="xl:col-span-8">
             <Card>
               {/* Search Header */}
-              <div className="bg-gray-50 p-4 border-b border-gray-200 space-y-4">
+              <div className="bg-gray-50 p-3 sm:p-4 border-b border-gray-200 space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">All Tests</h3>
                   <span className="text-sm text-gray-500">
@@ -316,7 +316,7 @@ export const TestForm: React.FC = () => {
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
                     value={searchQuery}
@@ -338,7 +338,7 @@ export const TestForm: React.FC = () => {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-2 bg-purple-50 p-3 text-sm font-medium text-purple-800 border-b border-purple-200">
+              <div className="grid grid-cols-12 gap-2 bg-purple-50 p-2 sm:p-3 text-xs sm:text-sm font-medium text-purple-800 border-b border-purple-200">
                 <div className="col-span-1">►</div>
                 <div className="col-span-1">ID</div>
                 <div className="col-span-5">Test Name</div>
@@ -356,7 +356,7 @@ export const TestForm: React.FC = () => {
                 ) : (
                   filteredTests.map((test, index) => {
                     const isSelected = selectedTestIndex === index;
-                    const rowClasses = `grid grid-cols-12 gap-2 p-3 text-sm border-b border-gray-100 hover:bg-purple-50 cursor-pointer transition-colors ${
+                    const rowClasses = `grid grid-cols-12 gap-2 p-2 sm:p-3 text-xs sm:text-sm border-b border-gray-100 hover:bg-purple-50 cursor-pointer transition-colors ${
                       isSelected ? 'bg-purple-100 border-purple-300' : ''
                     }`;
                     

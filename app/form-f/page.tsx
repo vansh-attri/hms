@@ -730,7 +730,7 @@ export default function FormFPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="container mx-auto p-6 max-w-5xl">
+      <div className="container mx-auto p-4 sm:p-6 max-w-5xl">
         {/* Enhanced Header */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
@@ -762,16 +762,16 @@ export default function FormFPage() {
         )}
 
         <div className="space-y-8">
-          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm p-8">
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm p-4 sm:p-6 md:p-8">
             {/* Clinic Information Section */}
-            <div className="mb-8 bg-blue-50 p-6 rounded-lg border-l-4 border-blue-400">
+            <div className="mb-6 md:mb-8 bg-blue-50 p-4 sm:p-6 rounded-lg border-l-4 border-blue-400">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                 <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 Clinic Information
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 mb-4">
                 <div className="md:col-span-6">
                   <InputField
                     label="1. Name and complete address of Genetic Clinic/Ultrasound Clinic/Imaging centre"

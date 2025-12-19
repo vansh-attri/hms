@@ -228,8 +228,8 @@ export const ServiceForm: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-t-xl p-6 text-white">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
+      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-t-xl p-4 sm:p-6 text-white">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-3">
           <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">🏥</span>
           Service Management
         </h2>
@@ -237,10 +237,10 @@ export const ServiceForm: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-b-xl shadow-lg border border-gray-200">
-        <div className="grid grid-cols-12 gap-8 p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 p-4 sm:p-6">
           {/* Left side - Service Form */}
           <div className="col-span-12 xl:col-span-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4 sm:space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <span className="w-6 h-6 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-sm">
                   {formData.serviceId ? '✏️' : '➕'}
@@ -298,7 +298,7 @@ export const ServiceForm: React.FC = () => {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Price (₹) *
@@ -361,7 +361,7 @@ export const ServiceForm: React.FC = () => {
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
                     onClick={handleSave}
                     disabled={loading}
@@ -417,7 +417,7 @@ export const ServiceForm: React.FC = () => {
           <div className="col-span-12 xl:col-span-8">
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
               {/* Search Header */}
-              <div className="bg-gray-50 p-4 border-b border-gray-200 space-y-4">
+              <div className="bg-gray-50 p-3 sm:p-4 border-b border-gray-200 space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">All Services</h3>
                   <span className="text-sm text-gray-500">
@@ -425,7 +425,7 @@ export const ServiceForm: React.FC = () => {
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input
                     type="text"
                     value={searchQuery}
@@ -447,7 +447,7 @@ export const ServiceForm: React.FC = () => {
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-2 bg-indigo-50 p-3 text-sm font-medium text-indigo-800 border-b border-indigo-200">
+              <div className="grid grid-cols-12 gap-2 bg-indigo-50 p-2 sm:p-3 text-xs sm:text-sm font-medium text-indigo-800 border-b border-indigo-200">
                 <div className="col-span-1">►</div>
                 <div className="col-span-4">Service Name</div>
                 <div className="col-span-2">Category</div>
@@ -465,7 +465,7 @@ export const ServiceForm: React.FC = () => {
                 ) : (
                   filteredServices.map((service, index) => {
                     const isSelected = selectedServiceIndex === index;
-                    const rowClasses = `grid grid-cols-12 gap-2 p-3 text-sm border-b border-gray-100 hover:bg-indigo-50 cursor-pointer transition-colors ${
+                    const rowClasses = `grid grid-cols-12 gap-2 p-2 sm:p-3 text-xs sm:text-sm border-b border-gray-100 hover:bg-indigo-50 cursor-pointer transition-colors ${
                       isSelected ? 'bg-indigo-100 border-indigo-300' : ''
                     }`;
                     

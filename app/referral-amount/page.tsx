@@ -568,25 +568,25 @@ export default function ReferralAmountPage() {
           </div>
         )}
 
-        <section className="bg-white border border-gray-200 rounded-b-md p-6">
+        <section className="bg-white border border-gray-200 rounded-b-md p-4 sm:p-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-blue-600">Total Unpaid</h3>
-              <p className="text-2xl font-bold text-blue-900">₹{getTotalAmount(false).toLocaleString()}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-xs sm:text-sm font-medium text-blue-600">Total Unpaid</h3>
+              <p className="text-xl sm:text-2xl font-bold text-blue-900">₹{getTotalAmount(false).toLocaleString()}</p>
             </div>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-green-600">Total Paid</h3>
-              <p className="text-2xl font-bold text-green-900">₹{getTotalAmount(true).toLocaleString()}</p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-xs sm:text-sm font-medium text-green-600">Total Paid</h3>
+              <p className="text-xl sm:text-2xl font-bold text-green-900">₹{getTotalAmount(true).toLocaleString()}</p>
             </div>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-600">Total Referrals</h3>
-              <p className="text-2xl font-bold text-gray-900">{referrals.length}</p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-600">Total Referrals</h3>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{referrals.length}</p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="mb-6 space-y-4">
+          <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
             {/* Applied Filters Display */}
             {(appliedFromDate || appliedToDate || appliedDoctor) && (
               <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
@@ -614,7 +614,7 @@ export default function ReferralAmountPage() {
             {/* Date and Doctor Filters */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Filter Options</h3>
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 items-end">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     From Date

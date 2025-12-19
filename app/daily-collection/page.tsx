@@ -444,9 +444,9 @@ export default function DailyCollectionPage() {
   }
 
   return (
-    <div className="py-6">
+    <div className="py-4 sm:py-6">
       {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded-md mb-6">
+        <div className="bg-red-100 text-red-700 p-3 sm:p-4 rounded-md mb-4 sm:mb-6 text-sm sm:text-base">
           {error}
           <button 
             onClick={fetchDailyCollection}
@@ -457,16 +457,16 @@ export default function DailyCollectionPage() {
         </div>
       )}
       
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Daily Collection</h1>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Daily Collection</h1>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="space-y-4">
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="space-y-3 sm:space-y-4">
           {/* Date Range Filters */}
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-48">
+          <div className="flex flex-wrap gap-3 sm:gap-4 items-end">
+            <div className="flex-1 min-w-[140px] sm:min-w-48">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 From Date
               </label>
@@ -477,7 +477,7 @@ export default function DailyCollectionPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
               />
             </div>
-            <div className="flex-1 min-w-48">
+            <div className="flex-1 min-w-[140px] sm:min-w-48">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 To Date
               </label>
@@ -534,18 +534,18 @@ export default function DailyCollectionPage() {
       </div>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-sm text-gray-600">Total Net Amount</p>
-          <p className="text-xl font-bold text-blue-600">₹{stats.totalNetAmount.toLocaleString()}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <p className="text-xs sm:text-sm text-gray-600">Total Net Amount</p>
+          <p className="text-lg sm:text-xl font-bold text-blue-600">₹{stats.totalNetAmount.toLocaleString()}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-sm text-gray-600">Total Ref Amount</p>
-          <p className="text-xl font-bold text-green-600">₹{stats.totalRefAmount.toLocaleString()}</p>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <p className="text-xs sm:text-sm text-gray-600">Total Ref Amount</p>
+          <p className="text-lg sm:text-xl font-bold text-green-600">₹{stats.totalRefAmount.toLocaleString()}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-sm text-gray-600">Total Expenses</p>
-          <p className="text-xl font-bold text-red-600">₹{(() => {
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <p className="text-xs sm:text-sm text-gray-600">Total Expenses</p>
+          <p className="text-lg sm:text-xl font-bold text-red-600">₹{(() => {
             // Calculate total expense by counting each day only once
             const groupedByDate: { [key: string]: CollectionRecord[] } = {};
             collections.forEach((record: CollectionRecord) => {
@@ -563,17 +563,17 @@ export default function DailyCollectionPage() {
             }, 0).toLocaleString();
           })()}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-sm text-gray-600">Net Collection</p>
-          <p className="text-xl font-bold text-purple-600">₹{stats.netCollection.toLocaleString()}</p>
+        <div className="bg-white rounded-lg shadow p-3 sm:p-4 text-center">
+          <p className="text-xs sm:text-sm text-gray-600">Net Collection</p>
+          <p className="text-lg sm:text-xl font-bold text-purple-600">₹{stats.netCollection.toLocaleString()}</p>
         </div>
       </div>
 
       {/* Data Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">Daily Collection Report</h3>
-          <p className="text-sm text-gray-600">
+        <div className="px-3 sm:px-4 py-3 bg-gray-50 border-b">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Daily Collection Report</h3>
+          <p className="text-xs sm:text-sm text-gray-600">
             {fromDate === toDate ? 
               `${formatDate(fromDate)}` : 
               `${formatDate(fromDate)} to ${formatDate(toDate)}`

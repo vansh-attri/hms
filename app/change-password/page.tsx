@@ -134,20 +134,20 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Change Password</h1>
-          <p className="text-gray-600 mt-2">Update your account password for security</p>
+    <main className="min-h-screen bg-gray-50 py-6 md:py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Change Password</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Update your account password for security</p>
         </header>
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6 md:p-8">
           {error && (
             <Alert
               type="error"
               message={error}
               onClose={() => setError('')}
-              className="mb-6"
+              className="mb-4 md:mb-6"
             />
           )}
 
@@ -156,30 +156,30 @@ export default function ChangePasswordPage() {
               type="success"
               message={success}
               onClose={() => setSuccess('')}
-              className="mb-6"
+              className="mb-4 md:mb-6"
             />
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {/* User Info */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">
+            <div className="pb-4 md:pb-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm sm:text-base font-semibold">
                     {(user.firstName?.charAt(0) || '') + (user.lastName?.charAt(0) || '')}
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">
                     {user.firstName} {user.lastName}
                   </h2>
-                  <p className="text-gray-600">@{user.username}</p>
+                  <p className="text-sm sm:text-base text-gray-600">@{user.username}</p>
                 </div>
               </div>
             </div>
 
             {/* Password Fields */}
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="relative">
                 <InputField
                   label="Current Password"
@@ -298,9 +298,9 @@ export default function ChangePasswordPage() {
             </div>
 
             {/* Security Tips */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-blue-800 mb-2">Password Security Tips</h3>
-              <ul className="text-sm text-blue-700 space-y-1">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+              <h3 className="text-xs sm:text-sm font-semibold text-blue-800 mb-2">Password Security Tips</h3>
+              <ul className="text-xs sm:text-sm text-blue-700 space-y-1">
                 <li>• Use a unique password that you don&apos;t use elsewhere</li>
                 <li>• Include uppercase and lowercase letters, numbers, and symbols</li>
                 <li>• Make it at least 8 characters long</li>
@@ -309,7 +309,7 @@ export default function ChangePasswordPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4 md:pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="secondary"

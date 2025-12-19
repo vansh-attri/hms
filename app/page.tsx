@@ -332,6 +332,12 @@ export default function Home() {
                 <a href="#testimonials" className="text-gray-700 hover:text-blue-600 transition-colors">Testimonials</a>
                 <a href="#contact" className="text-gray-700 hover:text-blue-600 transition-colors">Contact Us</a>
                 <button
+                  onClick={() => router.push('/book-appointment')}
+                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                >
+                  Book Appointment
+                </button>
+                <button
                   onClick={() => router.push('/refer-patient')}
                   className="text-gray-700 hover:text-blue-600 transition-colors"
                 >
@@ -369,6 +375,12 @@ export default function Home() {
                 <a href="#testimonials" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Testimonials</a>
                 <a href="#contact" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Contact Us</a>
                 <button
+                  onClick={() => router.push('/book-appointment')}
+                  className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+                >
+                  Book Appointment
+                </button>
+                <button
                   onClick={() => router.push('/refer-patient')}
                   className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600"
                 >
@@ -388,30 +400,30 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="home" className="pt-16 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-800 leading-tight">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="space-y-6 md:space-y-8">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
                 Welcome to{' '}
                 <span className="text-blue-600">Siddhivinayak</span>{' '}
                 <span className="text-indigo-600">Ultrasound Centre</span>
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
                 Your trusted destination for advanced healthcare management 
                 and comprehensive diagnostic solutions with compassionate care.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <a
                   href="#services"
-                  className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-600 hover:text-white transition-colors text-center"
+                  className="border-2 border-blue-600 text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium hover:bg-blue-600 hover:text-white transition-colors text-center"
                 >
                   Our Services
                 </a>
               </div>
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-8 md:mt-0">
               <div className="relative">
-                <div className="w-80 h-80 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
+                <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
                   <Image 
                     src="/logo.png" 
                     alt="Siddhivinayak Ultrasound Centre" 
@@ -420,11 +432,11 @@ export default function Home() {
                     className="rounded-full bg-white p-4"
                   />
                 </div>
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🏥</span>
+                <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="text-xl sm:text-2xl">🏥</span>
                 </div>
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-xl">⚕️</span>
+                <div className="absolute -bottom-4 -left-4 w-12 h-12 sm:w-16 sm:h-16 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="text-lg sm:text-xl">⚕️</span>
                 </div>
               </div>
             </div>
@@ -433,36 +445,36 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 bg-white">
+      <section id="about" className="py-12 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">About Us</h2>
-            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">About Us</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-4xl mx-auto">
               Dr. Virender Ultrasound Centre is a trusted diagnostic center offering the best ultrasound, color Doppler, and specialized scans. 
               Led by Dr. Virender, our expert radiologists and sonologists use advanced ultrasound equipment for precise imaging. 
               We prioritize patient comfort, delivering a comprehensive, patient-centric approach for accurate diagnostics you can rely on.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12 md:mb-16">
             {features.map((feature, index) => (
               <div key={index} className="text-center p-6 rounded-xl bg-gray-50 hover:shadow-lg transition-shadow">
                 <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">{feature.title}</h3>
+                <p className="text-sm sm:text-base text-gray-600">{feature.description}</p>
               </div>
             ))}
           </div>
 
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold mb-4">Our Specialized Diagnostic Services</h3>
-              <p className="text-lg opacity-90 max-w-4xl mx-auto mb-6">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-white">
+            <div className="text-center mb-6 md:mb-8">
+              <h3 className="text-xl sm:text-2xl font-bold mb-3 md:mb-4">Our Specialized Diagnostic Services</h3>
+              <p className="text-base sm:text-lg opacity-90 max-w-4xl mx-auto mb-4 md:mb-6">
                 Experience comprehensive ultrasound imaging with our state-of-the-art technology and expert medical professionals.
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 text-sm">
               <div className="bg-white/10 rounded-lg p-4">
                 <h4 className="font-semibold mb-2 text-yellow-300">🔬 Advanced Imaging</h4>
                 <ul className="space-y-1 opacity-90">
@@ -501,24 +513,24 @@ export default function Home() {
       </section>
 
       {/* Achievements Section */}
-      <section className="py-20 bg-gradient-to-br from-indigo-50 to-purple-100">
+      <section className="py-12 md:py-20 bg-gradient-to-br from-indigo-50 to-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">Achievements</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Achievements</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Professional memberships and certifications that demonstrate our commitment to excellence in fetal medicine and diagnostic imaging
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-5xl mx-auto">
             {/* Fetal Medicine Foundation */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
                   Member of The Fetal Medicine Foundation
                 </h3>
                 
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mb-6 md:mb-8">
                   <div className="relative">
                     <Image 
                       src="/fetal.png" 
@@ -530,7 +542,7 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <p className="text-gray-600 mb-8 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 mb-6 md:mb-8 leading-relaxed">
                   Recognized member of The Fetal Medicine Foundation, ensuring expertise in advanced fetal 
                   diagnostic techniques and adherence to international standards in prenatal care.
                 </p>
@@ -550,13 +562,13 @@ export default function Home() {
             </div>
 
             {/* Society of Fetal Medicine */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
                   Member of SOCIETY OF FETAL MEDICINE
                 </h3>
                 
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mb-6 md:mb-8">
                   <div className="relative">
                     <Image 
                       src="/society.png" 
@@ -568,7 +580,7 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <p className="text-gray-600 mb-8 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 mb-6 md:mb-8 leading-relaxed">
                   Active member of the Society of Fetal Medicine, committed to advancing fetal medicine 
                   research, education, and clinical practice for optimal maternal and fetal outcomes.
                 </p>
@@ -592,18 +604,18 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20 bg-gray-50">
+      <section id="services" className="py-12 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">Our Services</h2>
-            <p className="text-xl text-gray-600">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Our Services</h2>
+            <p className="text-lg sm:text-xl text-gray-600">
               Complete range of ultrasound and diagnostic imaging services with transparent pricing and expert care
             </p>
           </div>
 
           {/* Service Categories */}
-          <div className="mb-12">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="mb-8 md:mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {/* Pregnancy Services */}
               <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200">
                 <div className="text-center mb-4">
@@ -690,7 +702,7 @@ export default function Home() {
           </div>
 
           {/* Additional Services */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Doppler Studies */}
             <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
               <div className="text-center mb-4">
@@ -753,10 +765,10 @@ export default function Home() {
           </div>
 
           {/* Book Appointment CTA */}
-          <div className="mt-12 text-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
-            <h3 className="text-2xl font-bold mb-4">Book Your Appointment Today</h3>
-            <p className="text-lg opacity-90 mb-6">Expert ultrasound services with transparent pricing and advanced technology</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-8 md:mt-12 text-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-white">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 md:mb-4">Book Your Appointment Today</h3>
+            <p className="text-base sm:text-lg opacity-90 mb-4 md:mb-6">Expert ultrasound services with transparent pricing and advanced technology</p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a 
                 href="tel:+919896416790" 
                 className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors inline-flex items-center justify-center gap-2"
@@ -770,11 +782,11 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-white">
+      <section id="testimonials" className="py-12 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">What Our Patients Say</h2>
-            <p className="text-xl text-gray-600">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">What Our Patients Say</h2>
+            <p className="text-lg sm:text-xl text-gray-600">
               Real reviews from patients who experienced our ultrasound services and expert care
             </p>
           </div>
@@ -782,17 +794,17 @@ export default function Home() {
           {/* Testimonials Slideshow */}
           <div className="relative max-w-4xl mx-auto">
             {/* Main Testimonial Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 md:p-12 shadow-2xl border border-blue-100 text-center min-h-[300px] flex flex-col justify-center">
-              <div className="text-yellow-400 text-3xl mb-6">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 md:p-8 lg:p-12 shadow-2xl border border-blue-100 text-center min-h-[280px] sm:min-h-[300px] flex flex-col justify-center">
+              <div className="text-yellow-400 text-2xl sm:text-3xl mb-4 md:mb-6">
                 <span>⭐⭐⭐⭐⭐</span>
               </div>
               
-              <blockquote className="text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-8 font-medium">
+              <blockquote className="text-lg sm:text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-6 md:mb-8 font-medium">
                 &ldquo;{testimonials[currentTestimonial].text}&rdquo;
               </blockquote>
               
-              <div className="border-t border-blue-200 pt-6">
-                <p className="text-xl font-bold text-gray-800 mb-2">{testimonials[currentTestimonial].author}</p>
+              <div className="border-t border-blue-200 pt-4 md:pt-6">
+                <p className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{testimonials[currentTestimonial].author}</p>
                 <p className="text-blue-600 font-medium">{testimonials[currentTestimonial].role}</p>
               </div>
             </div>
@@ -800,20 +812,20 @@ export default function Home() {
             {/* Navigation Arrows */}
             <button
               onClick={prevTestimonial}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow text-blue-600 hover:text-blue-800"
+              className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-shadow text-blue-600 hover:text-blue-800"
               aria-label="Previous testimonial"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             
             <button
               onClick={nextTestimonial}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow text-blue-600 hover:text-blue-800"
+              className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-shadow text-blue-600 hover:text-blue-800"
               aria-label="Next testimonial"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -853,19 +865,19 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20 bg-white">
+      <section id="contact" className="py-12 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <p className="text-blue-600 font-medium text-lg mb-2">Contact Us</p>
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">GET IN TOUCH WITH US</h2>
-            <p className="text-xl text-gray-600">
+          <div className="text-center mb-12 md:mb-16">
+            <p className="text-blue-600 font-medium text-base sm:text-lg mb-2">Contact Us</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">GET IN TOUCH WITH US</h2>
+            <p className="text-lg sm:text-xl text-gray-600">
               Ready to schedule an appointment or have questions? We&apos;re here to help!
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-start">
             {/* Contact Information */}
-            <div className="space-y-8">
+            <div className="space-y-6 md:space-y-8">
               {/* Location */}
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -940,8 +952,8 @@ export default function Home() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
-              <form onSubmit={handleContactFormSubmit} className="space-y-6">
+            <div className="bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100">
+              <form onSubmit={handleContactFormSubmit} className="space-y-4 md:space-y-6">
                 <div>
                   <input
                     type="text"
@@ -1028,9 +1040,9 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8">
+      <footer className="bg-gray-800 text-white py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center mb-4 md:mb-0">
               <Image 
                 src="/logo.png" 
@@ -1044,7 +1056,7 @@ export default function Home() {
               </span>
             </div>
             
-            <div className="flex flex-wrap justify-center space-x-6 mb-4 md:mb-0 text-sm">
+            <div className="flex flex-wrap justify-center space-x-4 sm:space-x-6 mb-4 md:mb-0 text-xs sm:text-sm">
               <a href="#home" className="hover:text-gray-300 transition-colors">Home</a>
               <a href="#about" className="hover:text-gray-300 transition-colors">About Us</a>
               <a href="#services" className="hover:text-gray-300 transition-colors">Services</a>

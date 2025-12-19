@@ -137,47 +137,48 @@ export default function ReferPatientPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Image 
                 src="/logo.png" 
                 alt="Siddhivinayak Ultrasound Centre" 
                 width={40} 
                 height={40}
-                className="rounded-lg"
+                className="rounded-lg w-8 h-8 sm:w-10 sm:h-10"
               />
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Siddhivinayak Ultrasound Centre</h1>
-                <p className="text-sm text-gray-600">Patient Referral Form</p>
+                <h1 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Siddhivinayak Ultrasound Centre</h1>
+                <p className="text-xs sm:text-sm text-gray-600">Patient Referral Form</p>
               </div>
             </div>
             <button
               onClick={handleBackToHome}
-              className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
+              className="flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base text-blue-600 hover:text-blue-800 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span>Back to Home</span>
+              <span className="hidden sm:inline">Back to Home</span>
+              <span className="sm:hidden">Back</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Form Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-          <div className="px-8 py-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-center text-gray-900">Patient Referral Form</h2>
-            <p className="text-center text-gray-600 mt-2">
+          <div className="px-4 sm:px-6 md:px-8 py-4 md:py-6 border-b border-gray-200">
+            <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900">Patient Referral Form</h2>
+            <p className="text-center text-sm sm:text-base text-gray-600 mt-2">
               Please fill out this form to refer a patient to our ultrasound centre
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-4 md:space-y-6">
             {/* Patient Name & Relation Type */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label htmlFor="patientName" className="block text-sm font-medium text-gray-700 mb-2">
                   Patient Name <span className="text-red-500">*</span>
@@ -188,7 +189,7 @@ export default function ReferPatientPage() {
                   name="patientName"
                   value={formData.patientName}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 min-h-[44px] ${
                     errors.patientName ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter patient's full name"
@@ -207,7 +208,7 @@ export default function ReferPatientPage() {
                   name="relationType"
                   value={formData.relationType}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 min-h-[44px]"
                 >
                   <option value="">Select Relation Type</option>
                   <option value="Wife of">Wife of</option>
@@ -218,7 +219,7 @@ export default function ReferPatientPage() {
             </div>
 
             {/* Relation & Mobile */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label htmlFor="relation" className="block text-sm font-medium text-gray-700 mb-2">
                   Relation
@@ -229,7 +230,7 @@ export default function ReferPatientPage() {
                   name="relation"
                   value={formData.relation}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 min-h-[44px]"
                   placeholder="e.g., Father, Mother, Brother"
                 />
               </div>
@@ -244,7 +245,7 @@ export default function ReferPatientPage() {
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 min-h-[44px] ${
                     errors.mobile ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="10-digit mobile number"
@@ -256,7 +257,7 @@ export default function ReferPatientPage() {
             </div>
 
             {/* Age & Gender */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-2">
                   Age
@@ -267,7 +268,7 @@ export default function ReferPatientPage() {
                   name="age"
                   value={formData.age}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 min-h-[44px] ${
                     errors.age ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter age"
@@ -288,7 +289,7 @@ export default function ReferPatientPage() {
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 min-h-[44px]"
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
@@ -309,7 +310,7 @@ export default function ReferPatientPage() {
                 value={formData.address}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 min-h-[44px]"
                 placeholder="Enter complete address"
               />
             </div>
@@ -325,7 +326,7 @@ export default function ReferPatientPage() {
                 name="doctorName"
                 value={formData.doctorName}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 min-h-[44px]"
                 placeholder="Enter referring doctor's name"
               />
               {errors.doctorName && (
@@ -334,11 +335,11 @@ export default function ReferPatientPage() {
             </div>
 
             {/* Submit Button */}
-            <div className="pt-6">
+            <div className="pt-4 md:pt-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-3 px-6 rounded-lg font-medium text-white transition-colors ${
+                className={`w-full py-3 px-6 rounded-lg font-medium text-white transition-colors min-h-[44px] ${
                   isSubmitting
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
@@ -372,9 +373,9 @@ export default function ReferPatientPage() {
         </div>
 
         {/* Contact Info Footer */}
-        <div className="mt-8 bg-blue-50 rounded-xl p-6 border border-blue-200">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">Contact Information</h3>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+        <div className="mt-6 md:mt-8 bg-blue-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+          <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-3 md:mb-4">Contact Information</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 text-sm">
             <div className="flex items-center space-x-2">
               <span className="text-blue-600">📞</span>
               <div>

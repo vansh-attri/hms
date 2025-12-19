@@ -915,13 +915,13 @@ export const CashReceiptForm: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-t-xl p-6 text-white">
-        <h2 className="text-2xl font-bold flex items-center gap-3">
-          <span className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">🧾</span>
+      <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-t-xl p-4 sm:p-6 text-white">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-3">
+          <span className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🧾</span>
           Cash Receipt Management
         </h2>
-        <p className="mt-2 text-green-100">Create and manage patient cash receipts with multiple tests</p>
-        <div className="mt-4 flex gap-6 text-sm">
+        <p className="mt-2 text-sm sm:text-base text-green-100">Create and manage patient cash receipts with multiple tests</p>
+        <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs sm:text-sm">
           <div className="bg-white/20 rounded-lg px-3 py-2">
             <span className="font-medium">Total Amount: ₹{formData.totalAmount}</span>
           </div>
@@ -932,31 +932,31 @@ export const CashReceiptForm: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-b-xl shadow-lg border border-gray-200">
-        <div className="p-6 space-y-8">
+        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
           {/* Patient Information Section */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Patient Information</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Patient Information</h3>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <Button
                   onClick={() => setShowBillSearch(!showBillSearch)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg min-h-[44px]"
                 >
                   {showBillSearch ? 'Hide Bill Search' : 'Search Bills'}
                 </Button>
                 <Button
                   onClick={handleFormFRedirect}
                   disabled={!formData.patientID}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
                 >
                   <span>📋</span>
                   Form F
                 </Button>
                 <Button
                   onClick={handleClear}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg min-h-[44px]"
                 >
                   New Receipt
                 </Button>
@@ -965,23 +965,23 @@ export const CashReceiptForm: React.FC = () => {
 
             {/* Bill Search */}
             {showBillSearch && (
-              <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
+              <div className="mb-6 bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Search Previous Bills</h4>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <div className="flex-1">
                     <input
                       type="text"
                       value={searchBillQuery}
                       onChange={(e) => setSearchBillQuery(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleBillSearch()}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 text-sm sm:text-base min-h-[44px]"
                       placeholder="Search by bill number, patient name, or mobile number..."
                     />
                   </div>
                   <Button
                     onClick={handleBillSearch}
                     disabled={searchingBills || !searchBillQuery.trim()}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg min-h-[44px]"
                   >
                     {searchingBills ? 'Searching...' : 'Search'}
                   </Button>
@@ -991,7 +991,7 @@ export const CashReceiptForm: React.FC = () => {
                         setSearchBillQuery('');
                         setSearchBillResults([]);
                       }}
-                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg min-h-[44px]"
                     >
                       Clear
                     </Button>
@@ -1039,10 +1039,10 @@ export const CashReceiptForm: React.FC = () => {
 
 
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Left Column */}
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Patient ID
@@ -1052,7 +1052,7 @@ export const CashReceiptForm: React.FC = () => {
                       name="patientID"
                       value={formData.patientID || ''}
                       readOnly
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm sm:text-base min-h-[44px]"
                       placeholder="Auto-filled"
                     />
                   </div>
@@ -1065,7 +1065,7 @@ export const CashReceiptForm: React.FC = () => {
                       name="billDate"
                       value={formData.billDate}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 text-sm sm:text-base min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -1080,7 +1080,7 @@ export const CashReceiptForm: React.FC = () => {
                     value={formData.patientName}
                     onChange={handleInputChange}
                     readOnly={!!formData.patientID}
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base min-h-[44px] ${
                       formData.patientID 
                         ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
                         : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
@@ -1157,9 +1157,9 @@ export const CashReceiptForm: React.FC = () => {
                     {/* Relation Type Selection */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-3">Relation Type</label>
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         {(['W/o', 'D/o', 'S/o'] as const).map((type) => (
-                          <label key={type} className="flex items-center cursor-pointer">
+                          <label key={type} className="flex items-center cursor-pointer min-h-[44px]">
                             <input
                               type="radio"
                               name="relationType"
@@ -1203,7 +1203,7 @@ export const CashReceiptForm: React.FC = () => {
                   </div>
                 </Card>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
                     <input
@@ -1212,7 +1212,7 @@ export const CashReceiptForm: React.FC = () => {
                       value={formData.age}
                       onChange={handleInputChange}
                       readOnly={!!formData.patientID}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base min-h-[44px] ${
                         formData.patientID 
                           ? 'bg-gray-50 text-gray-500 cursor-not-allowed' 
                           : 'focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900'
@@ -1341,18 +1341,18 @@ export const CashReceiptForm: React.FC = () => {
           </div>
 
           {/* Test Selection Section */}
-          <div className="grid grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
             {/* Left side - Test Selection */}
-            <div className="col-span-12 xl:col-span-6">
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Selection</h3>
+            <div className="col-span-1 lg:col-span-12 xl:col-span-6">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Test Selection</h3>
                 
                 <div className="mb-4">
                   <input
                     type="text"
                     value={searchTestQuery}
                     onChange={(e) => setSearchTestQuery(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 text-sm sm:text-base min-h-[44px]"
                     placeholder="Search tests..."
                   />
                 </div>
@@ -1362,15 +1362,15 @@ export const CashReceiptForm: React.FC = () => {
                     <div
                       key={test.ID}
                       onClick={() => handleTestSelect(test)}
-                      className="p-3 border-b border-gray-100 hover:bg-green-50 cursor-pointer transition-colors"
+                      className="p-3 border-b border-gray-100 hover:bg-green-50 cursor-pointer transition-colors min-h-[44px] flex items-center"
                     >
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-1 sm:gap-0">
                         <div>
-                          <div className="font-medium text-gray-900">{test.TestName}</div>
-                          <div className="text-sm text-gray-500">{test.Category}</div>
+                          <div className="font-medium text-gray-900 text-sm sm:text-base">{test.TestName}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{test.Category}</div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium text-green-600">₹{test.Price}</div>
+                        <div className="text-left sm:text-right">
+                          <div className="font-medium text-green-600 text-sm sm:text-base">₹{test.Price}</div>
                           <div className="text-xs text-gray-500">ID: {test.ID}</div>
                         </div>
                       </div>
@@ -1381,9 +1381,9 @@ export const CashReceiptForm: React.FC = () => {
             </div>
 
             {/* Right side - Selected Tests & Summary */}
-            <div className="col-span-12 xl:col-span-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Tests & Billing</h3>
+            <div className="col-span-1 lg:col-span-12 xl:col-span-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Selected Tests & Billing</h3>
                 
                 {/* Selected Tests */}
                 <div className="mb-6">
@@ -1394,23 +1394,23 @@ export const CashReceiptForm: React.FC = () => {
                   ) : (
                     <div className="space-y-3 max-h-40 overflow-y-auto">
                       {formData.selectedTests.map((test) => (
-                        <div key={test.testId} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                        <div key={test.testId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-50 p-3 rounded-lg gap-2">
                           <div className="flex-1">
-                            <div className="font-medium text-gray-900">{test.testName}</div>
-                            <div className="text-sm text-gray-500">₹{test.price} each</div>
+                            <div className="font-medium text-gray-900 text-sm sm:text-base">{test.testName}</div>
+                            <div className="text-xs sm:text-sm text-gray-500">₹{test.price} each</div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 justify-end">
                             <input
                               type="number"
                               value={test.quantity}
                               onChange={(e) => handleQuantityChange(test.testId, parseInt(e.target.value) || 1)}
                               min="1"
-                              className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                              className="w-14 sm:w-16 px-2 py-2 border border-gray-300 rounded text-center text-sm min-h-[44px]"
                             />
-                            <span className="font-medium text-gray-900 w-16 text-right">₹{test.amount}</span>
+                            <span className="font-medium text-gray-900 w-16 text-right text-sm sm:text-base">₹{test.amount}</span>
                             <Button
                               onClick={() => handleTestRemove(test.testId)}
-                              className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 text-xs rounded"
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 text-xs rounded min-h-[44px] min-w-[44px]"
                             >
                               ✕
                             </Button>
@@ -1469,14 +1469,14 @@ export const CashReceiptForm: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-center pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6 border-t border-gray-200">
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 font-medium rounded-lg"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 sm:px-8 py-3 font-medium rounded-lg min-h-[44px]"
             >
               {loading ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -1488,11 +1488,11 @@ export const CashReceiptForm: React.FC = () => {
               )}
             </Button>
 
-            <div className="relative print-dropdown">
+            <div className="relative print-dropdown w-full sm:w-auto">
               <Button
                 onClick={() => setShowPrintPreview(!showPrintPreview)}
                 disabled={!formData.patientName.trim() || formData.selectedTests.length === 0}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 font-medium rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
@@ -1504,13 +1504,13 @@ export const CashReceiptForm: React.FC = () => {
               </Button>
               
               {showPrintPreview && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-48">
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-full sm:min-w-48">
                   <button
                     onClick={() => {
                       handlePrintBill(false);
                       setShowPrintPreview(false);
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100"
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100 min-h-[44px]"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
@@ -1522,7 +1522,7 @@ export const CashReceiptForm: React.FC = () => {
                       handlePrintBill(true);
                       setShowPrintPreview(false);
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 min-h-[44px]"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -1536,7 +1536,7 @@ export const CashReceiptForm: React.FC = () => {
             
             <Button
               onClick={handleClear}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 font-medium rounded-lg"
+              className="bg-gray-500 hover:bg-gray-600 text-white px-6 sm:px-8 py-3 font-medium rounded-lg min-h-[44px]"
             >
               Clear Form
             </Button>

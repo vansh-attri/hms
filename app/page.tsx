@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { getHomepageServices, HomepageService } from '@/utils/homepageServices';
 
 export default function Home() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [services, setServices] = useState<HomepageService[]>([]);
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -19,186 +22,29 @@ export default function Home() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState('');
 
+  // Load services from localStorage
+  useEffect(() => {
+    setServices(getHomepageServices());
+  }, []);
+
+  // Scroll effect for sticky navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleLoginClick = () => {
     router.push('/dashboard');
   };
-
-  const services = [
-    {
-      name: `Pregnancy: Routine`,
-      price: `3400`,
-      category: "Pregnancy",
-      icon: "👶"
-    },
-    {
-      name: `Pregnancy: Early Morphology`,
-      price: `4000`,
-      category: "Pregnancy",
-      icon: "👶"
-    },
-    {
-      name: `Pregnancy: Anomalies Scan`,
-      price: `4250`,
-      category: "Pregnancy",
-      icon: "👶"
-    },
-    {
-      name: `Pregnancy: Doppler`,
-      price: `4000`,
-      category: "Pregnancy",
-      icon: "👶"
-    },
-    {
-      name: `Pregnancy: Fetal Echocardiography`,
-      price: `4500`,
-      category: "Pregnancy",
-      icon: "❤️"
-    },
-    {
-      name: `Pregnancy: Non-Stress Test`,
-      price: `4750`,
-      category: "Pregnancy",
-      icon: "👶"
-    },
-    {
-      name: `Pregnancy: 3D/ 4D`,
-      price: `5000`,
-      category: "Pregnancy",
-      icon: "🎯"
-    },
-    {
-      name: `Pregnancy: 3D/ 4D with Fetal Echocardiography`,
-      price: `5500`,
-      category: "Pregnancy",
-      icon: "🎯"
-    },
-    {
-      name: `Ovulation: One Sitting`,
-      price: `1250`,
-      category: "Gynecology",
-      icon: "�"
-    },
-    {
-      name: `Ovulation: Whole Cycle`,
-      price: `3500`,
-      category: "Gynecology",
-      icon: "🔬"
-    },
-    {
-      name: `Pelvis (Lower Abdomen)`,
-      price: `2000`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Transvaginal Ultrasound (TVS)`,
-      price: `3750`,
-      category: "Gynecology",
-      icon: "🔬"
-    },
-    {
-      name: `Kidneys & TVS`,
-      price: `3750`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Breast`,
-      price: `3000`,
-      category: "Small Parts",
-      icon: "🩺"
-    },
-    {
-      name: `Thyroid/ Cranium`,
-      price: `2500`,
-      category: "Small Parts",
-      icon: "🩺"
-    },
-    {
-      name: `Scrotum & Varicocele`,
-      price: `2750`,
-      category: "Small Parts",
-      icon: "🩺"
-    },
-    {
-      name: `Carotid Doppler`,
-      price: `2750`,
-      category: "Doppler",
-      icon: "💓"
-    },
-    {
-      name: `FNAC/ Aspiration`,
-      price: `3500`,
-      category: "Procedures",
-      icon: "💉"
-    },
-    {
-      name: `CVS (Ultrasound + Disposables)`,
-      price: `4000`,
-      category: "Procedures",
-      icon: "�"
-    },
-    {
-      name: `Kidneys & Pelvis`,
-      price: `2250`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Upper Abdomen`,
-      price: `1900`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Abdomen (Upper Abdomen + Urinary Bladder)`,
-      price: `2000`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Abdomen & Pelvis (Transabdominal)`,
-      price: `2400`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Kidneys & Urinary Bladder`,
-      price: `1900`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Kidneys, Urinary Bladder & Prostate`,
-      price: `2000`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Transrectal Ultrasound (TRUS)`,
-      price: `3250`,
-      category: "Specialized",
-      icon: "🔍"
-    },
-    {
-      name: `Kidneys & Suprarenals`,
-      price: `1750`,
-      category: "General",
-      icon: "🏥"
-    },
-    {
-      name: `Pleura`,
-      price: `1600`,
-      category: "General",
-      icon: "🏥"
-    }
-  ];
 
   const features = [
     {
       title: "State-of-the-Art Technology",
       description: "We use advanced ultrasound equipment with COLOR 3D, 4D WITH 5D FEATURES for clear and accurate imaging",
-      icon: "�️"
+      icon: "🖥️"
     },
     {
       title: "Expert Care",
@@ -307,56 +153,85 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation Header */}
-      <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
+      {/* Top Info Bar */}
+      <div className="bg-gradient-to-r from-teal-700 to-teal-600 text-white py-2 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center space-x-6">
+              <a href="tel:+918307233058" className="flex items-center hover:text-teal-200 transition-colors">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                +91 8307233058
+              </a>
+              <a href="mailto:siddhivinayakpalwal@gmail.com" className="flex items-center hover:text-teal-200 transition-colors">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                siddhivinayakpalwal@gmail.com
+              </a>
+            </div>
+            <div className="flex items-center">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Mon - Sat: 9:00 AM - 8:00 PM
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Header */}
+      <nav className={`bg-white fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'shadow-lg py-2 top-0' : 'shadow-md py-3 md:top-10 top-0'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Image 
                 src="/logo.png" 
                 alt="Siddhivinayak Ultrasound Centre" 
-                width={40} 
-                height={40}
-                className="rounded-lg"
+                width={50} 
+                height={50}
+                className="rounded-xl shadow-md"
               />
-              <span className="ml-3 text-xl font-bold text-gray-800">
-                Siddhivinayak Ultrasound Centre
-              </span>
+              <div className="ml-3">
+                <span className="text-lg sm:text-xl font-bold text-gray-800 leading-tight block">
+                  Siddhivinayak
+                </span>
+                <span className="text-xs text-teal-600 font-medium hidden sm:block">Ultrasound Centre</span>
+              </div>
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:block">
-              <div className="flex items-center space-x-8">
-                <a href="#about" className="text-gray-700 hover:text-blue-600 transition-colors">About Us</a>
-                <a href="#services" className="text-gray-700 hover:text-blue-600 transition-colors">Services</a>
-                <a href="#testimonials" className="text-gray-700 hover:text-blue-600 transition-colors">Testimonials</a>
-                <a href="#contact" className="text-gray-700 hover:text-blue-600 transition-colors">Contact Us</a>
-                <button
-                  onClick={() => router.push('/book-appointment')}
-                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                >
-                  Book Appointment
-                </button>
-                <button
-                  onClick={() => router.push('/refer-patient')}
-                  className="text-gray-700 hover:text-blue-600 transition-colors"
-                >
-                  Refer a Patient
-                </button>
-                <button
-                  onClick={handleLoginClick}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Admin Login
-                </button>
-              </div>
+            <div className="hidden lg:flex items-center space-x-1">
+              <a href="#home" className="px-4 py-2 text-gray-700 hover:text-teal-600 font-medium transition-colors">Home</a>
+              <a href="#about" className="px-4 py-2 text-gray-700 hover:text-teal-600 font-medium transition-colors">About</a>
+              <a href="#services" className="px-4 py-2 text-gray-700 hover:text-teal-600 font-medium transition-colors">Services</a>
+              <a href="#testimonials" className="px-4 py-2 text-gray-700 hover:text-teal-600 font-medium transition-colors">Testimonials</a>
+              <a href="#contact" className="px-4 py-2 text-gray-700 hover:text-teal-600 font-medium transition-colors">Contact</a>
+              <button
+                onClick={() => router.push('/refer-patient')}
+                className="ml-2 px-4 py-2 text-teal-600 border-2 border-teal-600 rounded-full font-medium hover:bg-teal-50 transition-colors"
+              >
+                Refer Patient
+              </button>
+              <button
+                onClick={handleLoginClick}
+                className="ml-2 px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Staff Login
+              </button>
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="lg:hidden flex items-center space-x-2">
+              <a href="tel:+918307233058" className="p-2 bg-teal-600 text-white rounded-full">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </a>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-700 hover:text-gray-900"
+                className="p-2 text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-100"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
@@ -366,77 +241,98 @@ export default function Home() {
           </div>
 
           {/* Mobile menu */}
-          {isMenuOpen && (
-            <div className="md:hidden bg-white border-t border-gray-200">
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                <a href="#home" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Dr.Virender Ultrasound Centre Home</a>
-                <a href="#about" className="block px-3 py-2 text-gray-700 hover:text-blue-600">About Us</a>
-                <a href="#services" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Services</a>
-                <a href="#testimonials" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Testimonials</a>
-                <a href="#contact" className="block px-3 py-2 text-gray-700 hover:text-blue-600">Contact Us</a>
-                <button
-                  onClick={() => router.push('/book-appointment')}
-                  className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
-                >
-                  Book Appointment
+          <div className={`lg:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="py-4 space-y-2 border-t border-gray-100 mt-4">
+              <a href="#home" className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 rounded-lg font-medium" onClick={() => setIsMenuOpen(false)}>Home</a>
+              <a href="#about" className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 rounded-lg font-medium" onClick={() => setIsMenuOpen(false)}>About</a>
+              <a href="#services" className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 rounded-lg font-medium" onClick={() => setIsMenuOpen(false)}>Services</a>
+              <a href="#testimonials" className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 rounded-lg font-medium" onClick={() => setIsMenuOpen(false)}>Testimonials</a>
+              <a href="#contact" className="block px-4 py-3 text-gray-700 hover:bg-teal-50 hover:text-teal-600 rounded-lg font-medium" onClick={() => setIsMenuOpen(false)}>Contact</a>
+              <div className="pt-4 space-y-2 border-t border-gray-100">
+                <button onClick={() => { router.push('/refer-patient'); setIsMenuOpen(false); }} className="w-full px-4 py-3 border-2 border-teal-600 text-teal-600 rounded-lg font-medium">
+                  Refer Patient
                 </button>
-                <button
-                  onClick={() => router.push('/refer-patient')}
-                  className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600"
-                >
-                  Refer a Patient
-                </button>
-                <button
-                  onClick={handleLoginClick}
-                  className="w-full text-left px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Admin Login
+                <button onClick={() => { handleLoginClick(); setIsMenuOpen(false); }} className="w-full px-4 py-3 text-gray-600 font-medium">
+                  Staff Login
                 </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="pt-16 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+      <section id="home" className="pt-32 pb-16 bg-gradient-to-br from-teal-50 via-white to-emerald-50 min-h-screen flex items-center relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-teal-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-center">
             <div className="space-y-6 md:space-y-8">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                Welcome to{' '}
-                <span className="text-blue-600">Siddhivinayak</span>{' '}
-                <span className="text-indigo-600">Ultrasound Centre</span>
+              <div className="inline-flex items-center px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
+                <span className="w-2 h-2 bg-teal-500 rounded-full mr-2 animate-pulse"></span>
+                Advanced Diagnostic Centre
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Your Health,{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">Our Priority</span>
               </h1>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-700">
+                Siddhivinayak Ultrasound Centre
+              </h2>
               <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
-                Your trusted destination for advanced healthcare management 
-                and comprehensive diagnostic solutions with compassionate care.
+                State-of-the-art diagnostic imaging with compassionate care. 
+                Trusted by thousands of patients for accurate and timely results.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="#contact"
+                  className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-center"
+                >
+                  Book Appointment
+                </a>
                 <a
                   href="#services"
-                  className="border-2 border-blue-600 text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-medium hover:bg-blue-600 hover:text-white transition-colors text-center"
+                  className="border-2 border-teal-600 text-teal-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-teal-50 transition-all text-center"
                 >
                   Our Services
                 </a>
               </div>
+          
             </div>
-            <div className="flex justify-center mt-8 md:mt-0">
+            <div className="flex justify-center mt-8 lg:mt-0">
               <div className="relative">
-                <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-                  <Image 
-                    src="/logo.png" 
-                    alt="Siddhivinayak Ultrasound Centre" 
-                    width={200} 
-                    height={200}
-                    className="rounded-full bg-white p-4"
-                  />
+                {/* Main image container */}
+                <div className="w-72 h-72 sm:w-96 sm:h-96 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <div className="w-[calc(100%-16px)] h-[calc(100%-16px)] bg-white rounded-2xl flex items-center justify-center">
+                    <Image 
+                      src="/logo.png" 
+                      alt="Siddhivinayak Ultrasound Centre" 
+                      width={250} 
+                      height={250}
+                      className="p-4"
+                    />
+                  </div>
                 </div>
-                <div className="absolute -top-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-xl sm:text-2xl">🏥</span>
+                {/* Floating badges */}
+                <div className="absolute -top-4 -right-4 bg-white px-4 py-2 rounded-xl shadow-lg border border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🏆</span>
+                    <div>
+                      <p className="text-xs text-gray-500">Experience</p>
+                      <p className="text-sm font-bold text-gray-800">10+ Years</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="absolute -bottom-4 -left-4 w-12 h-12 sm:w-16 sm:h-16 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-lg sm:text-xl">⚕️</span>
+                <div className="absolute -bottom-4 -left-4 bg-white px-4 py-2 rounded-xl shadow-lg border border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">👨‍👩‍👧‍👦</span>
+                    <div>
+                      <p className="text-xs text-gray-500">Happy Patients</p>
+                      <p className="text-sm font-bold text-gray-800">10,000+</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -445,115 +341,121 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-12 md:py-20 bg-white">
+      <section id="about" className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">About Us</h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-4xl mx-auto">
+            <span className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium mb-4">About Us</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">Excellence in Diagnostic Care</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Dr. Virender Ultrasound Centre is a trusted diagnostic center offering the best ultrasound, color Doppler, and specialized scans. 
-              Led by Dr. Virender, our expert radiologists and sonologists use advanced ultrasound equipment for precise imaging. 
-              We prioritize patient comfort, delivering a comprehensive, patient-centric approach for accurate diagnostics you can rely on.
+              Led by Dr. Virender, our expert radiologists and sonologists use advanced ultrasound equipment for precise imaging.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12 md:mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-16">
             {features.map((feature, index) => (
-              <div key={index} className="text-center p-6 rounded-xl bg-gray-50 hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">{feature.title}</h3>
+              <div key={index} className="text-center p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 hover:shadow-xl hover:border-teal-200 transition-all duration-300 group">
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">{feature.title}</h3>
                 <p className="text-sm sm:text-base text-gray-600">{feature.description}</p>
               </div>
             ))}
           </div>
 
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-white">
-            <div className="text-center mb-6 md:mb-8">
-              <h3 className="text-xl sm:text-2xl font-bold mb-3 md:mb-4">Our Specialized Diagnostic Services</h3>
-              <p className="text-base sm:text-lg opacity-90 max-w-4xl mx-auto mb-4 md:mb-6">
+          <div className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-3xl p-8 md:p-12 text-white shadow-2xl">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4">Our Specialized Diagnostic Services</h3>
+              <p className="text-lg opacity-90 max-w-3xl mx-auto">
                 Experience comprehensive ultrasound imaging with our state-of-the-art technology and expert medical professionals.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 text-sm">
-              <div className="bg-white/10 rounded-lg p-4">
-                <h4 className="font-semibold mb-2 text-yellow-300">🔬 Advanced Imaging</h4>
-                <ul className="space-y-1 opacity-90">
-                  <li>• COLOR 3D, 4D WITH 5D FEATURES</li>
-                  <li>• Fibroscan & Fat Quantification</li>
-                  <li>• 5D CNS, Heart & Follicles</li>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
+              <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/25 transition-all">
+                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <span className="text-2xl">🔬</span> Advanced Imaging
+                </h4>
+                <ul className="space-y-2 opacity-90">
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> COLOR 3D, 4D WITH 5D FEATURES</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> Fibroscan & Fat Quantification</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> 5D CNS, Heart & Follicles</li>
                 </ul>
               </div>
               
-              <div className="bg-white/10 rounded-lg p-4">
-                <h4 className="font-semibold mb-2 text-green-300">👶 Fetal & Pregnancy</h4>
-                <ul className="space-y-1 opacity-90">
-                  <li>• Fetal Echocardiography</li>
-                  <li>• NT/NB Scan (Level I)</li>
-                  <li>• Level II Anomaly Scan</li>
-                  <li>• Neurosonogram</li>
+              <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/25 transition-all">
+                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <span className="text-2xl">👶</span> Fetal & Pregnancy
+                </h4>
+                <ul className="space-y-2 opacity-90">
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> Fetal Echocardiography</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> NT/NB Scan (Level I)</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> Level II Anomaly Scan</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> Neurosonogram</li>
                 </ul>
               </div>
               
-              <div className="bg-white/10 rounded-lg p-4">
-                <h4 className="font-semibold mb-2 text-blue-300">🩺 Specialized Scans</h4>
-                <ul className="space-y-1 opacity-90">
-                  <li>• Small Parts (Breast, Scrotum)</li>
-                  <li>• TVS, Neck & Thyroid</li>
-                  <li>• Doppler Studies</li>
-                  <li>• General Ultrasound</li>
+              <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/25 transition-all">
+                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <span className="text-2xl">🩺</span> Specialized Scans
+                </h4>
+                <ul className="space-y-2 opacity-90">
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> Small Parts (Breast, Scrotum)</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> TVS, Neck & Thyroid</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> Doppler Studies</li>
+                  <li className="flex items-center gap-2"><span className="text-emerald-300">✓</span> General Ultrasound</li>
                 </ul>
               </div>
             </div>
             
-            <div className="text-center mt-6">
-              <p className="text-sm opacity-75">Book appointments for Level II, Doppler Studies, and specialized diagnostics</p>
+            <div className="text-center mt-8">
+              <a href="#contact" className="inline-block bg-white text-teal-700 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
+                Book Your Appointment Today
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Achievements Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-br from-indigo-50 to-purple-100">
+      <section className="py-16 md:py-24 bg-gradient-to-br from-teal-50 via-emerald-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Achievements</h2>
+            <span className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium mb-4">Our Credentials</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">Professional Memberships</h2>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Professional memberships and certifications that demonstrate our commitment to excellence in fetal medicine and diagnostic imaging
+              Certified memberships that demonstrate our commitment to excellence in fetal medicine and diagnostic imaging
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-5xl mx-auto">
             {/* Fetal Medicine Foundation */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2">
               <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
-                  Member of The Fetal Medicine Foundation
-                </h3>
-                
-                <div className="flex justify-center mb-6 md:mb-8">
-                  <div className="relative">
-                    <Image 
-                      src="/fetal.png" 
-                      alt="The Fetal Medicine Foundation" 
-                      width={200} 
-                      height={120}
-                      className="object-contain"
-                    />
-                  </div>
+                <div className="inline-block p-4 bg-teal-50 rounded-2xl mb-6 group-hover:bg-teal-100 transition-colors">
+                  <Image 
+                    src="/fetal.png" 
+                    alt="The Fetal Medicine Foundation" 
+                    width={180} 
+                    height={100}
+                    className="object-contain"
+                  />
                 </div>
                 
-                <p className="text-sm sm:text-base text-gray-600 mb-6 md:mb-8 leading-relaxed">
-                  Recognized member of The Fetal Medicine Foundation, ensuring expertise in advanced fetal 
-                  diagnostic techniques and adherence to international standards in prenatal care.
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
+                  The Fetal Medicine Foundation
+                </h3>
+                
+                <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+                  Recognized member ensuring expertise in advanced fetal diagnostic techniques and adherence to international standards in prenatal care.
                 </p>
                 
                 <a 
                   href="https://fetalmedicine.org/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+                  className="inline-flex items-center justify-center bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:from-teal-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
                 >
-                  Know more
+                  Learn More
                   <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
@@ -562,36 +464,33 @@ export default function Home() {
             </div>
 
             {/* Society of Fetal Medicine */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2">
               <div className="text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 md:mb-6">
-                  Member of SOCIETY OF FETAL MEDICINE
-                </h3>
-                
-                <div className="flex justify-center mb-6 md:mb-8">
-                  <div className="relative">
-                    <Image 
-                      src="/society.png" 
-                      alt="Society of Fetal Medicine" 
-                      width={200} 
-                      height={120}
-                      className="object-contain"
-                    />
-                  </div>
+                <div className="inline-block p-4 bg-emerald-50 rounded-2xl mb-6 group-hover:bg-emerald-100 transition-colors">
+                  <Image 
+                    src="/society.png" 
+                    alt="Society of Fetal Medicine" 
+                    width={180} 
+                    height={100}
+                    className="object-contain"
+                  />
                 </div>
                 
-                <p className="text-sm sm:text-base text-gray-600 mb-6 md:mb-8 leading-relaxed">
-                  Active member of the Society of Fetal Medicine, committed to advancing fetal medicine 
-                  research, education, and clinical practice for optimal maternal and fetal outcomes.
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
+                  Society of Fetal Medicine
+                </h3>
+                
+                <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+                  Active member committed to advancing fetal medicine research, education, and clinical practice for optimal outcomes.
                 </p>
                 
                 <a 
                   href="https://www.societyoffetalmedicine.org/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center bg-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors shadow-md hover:shadow-lg"
+                  className="inline-flex items-center justify-center bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-medium hover:from-emerald-700 hover:to-teal-700 transition-all shadow-md hover:shadow-lg"
                 >
-                  Know more
+                  Learn More
                   <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
@@ -604,55 +503,53 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-12 md:py-20 bg-gray-50">
+      <section id="services" className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Our Services</h2>
-            <p className="text-lg sm:text-xl text-gray-600">
+            <span className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium mb-4">Our Services</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">Comprehensive Diagnostic Services</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Complete range of ultrasound and diagnostic imaging services with transparent pricing and expert care
             </p>
           </div>
 
           {/* Service Categories */}
           <div className="mb-8 md:mb-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {/* Pregnancy Services */}
-              <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200">
+              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
                 <div className="text-center mb-4">
-                  <div className="text-4xl mb-2">👶</div>
-                  <h3 className="text-xl font-bold text-pink-800 mb-2">Pregnancy & Fetal</h3>
+                  <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">👶</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Pregnancy & Fetal</h3>
                 </div>
-                <div className="space-y-3">
-                  {services.filter(s => s.category === 'Pregnancy').slice(0, 4).map((service, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
+                  {services.filter(s => s.category === 'Pregnancy').map((service, index) => (
+                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-pink-50 transition-colors">
                       <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        </div>
-                        <span className="text-pink-600 font-bold text-sm">₹{service.price}</span>
+                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                       </div>
                     </div>
                   ))}
-                  <div className="text-center mt-3">
-                    <span className="text-xs text-pink-600">+{services.filter(s => s.category === 'Pregnancy').length - 4} more services</span>
-                  </div>
                 </div>
               </div>
 
               {/* Gynecology Services */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
                 <div className="text-center mb-4">
-                  <div className="text-4xl mb-2">🔬</div>
-                  <h3 className="text-xl font-bold text-purple-800 mb-2">Gynecology</h3>
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">🔬</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Gynecology</h3>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
                   {services.filter(s => s.category === 'Gynecology').map((service, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-purple-50 transition-colors">
                       <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        </div>
-                        <span className="text-purple-600 font-bold text-sm">₹{service.price}</span>
+                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                       </div>
                     </div>
                   ))}
@@ -660,19 +557,19 @@ export default function Home() {
               </div>
 
               {/* Small Parts */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
                 <div className="text-center mb-4">
-                  <div className="text-4xl mb-2">🩺</div>
-                  <h3 className="text-xl font-bold text-blue-800 mb-2">Small Parts</h3>
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">🩺</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Small Parts</h3>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
                   {services.filter(s => s.category === 'Small Parts').map((service, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-blue-50 transition-colors">
                       <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        </div>
-                        <span className="text-blue-600 font-bold text-sm">₹{service.price}</span>
+                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                       </div>
                     </div>
                   ))}
@@ -680,19 +577,19 @@ export default function Home() {
               </div>
 
               {/* General Ultrasound */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
                 <div className="text-center mb-4">
-                  <div className="text-4xl mb-2">🏥</div>
-                  <h3 className="text-xl font-bold text-green-800 mb-2">General Ultrasound</h3>
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">🏥</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">General Ultrasound</h3>
                 </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
+                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
                   {services.filter(s => s.category === 'General').map((service, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-green-50 transition-colors">
                       <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        </div>
-                        <span className="text-green-600 font-bold text-sm">₹{service.price}</span>
+                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                       </div>
                     </div>
                   ))}
@@ -702,21 +599,21 @@ export default function Home() {
           </div>
 
           {/* Additional Services */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             {/* Doppler Studies */}
-            <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
               <div className="text-center mb-4">
-                <div className="text-4xl mb-2">💓</div>
-                <h3 className="text-xl font-bold text-red-800 mb-2">Doppler Studies</h3>
+                <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">💓</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Doppler Studies</h3>
               </div>
               <div className="space-y-3">
                 {services.filter(s => s.category === 'Doppler').map((service, index) => (
-                  <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                  <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-red-50 transition-colors">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                      </div>
-                      <span className="text-red-600 font-bold text-sm">₹{service.price}</span>
+                      <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                      <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                     </div>
                   </div>
                 ))}
@@ -724,19 +621,19 @@ export default function Home() {
             </div>
 
             {/* Procedures */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
               <div className="text-center mb-4">
-                <div className="text-4xl mb-2">💉</div>
-                <h3 className="text-xl font-bold text-orange-800 mb-2">Procedures</h3>
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">💉</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Procedures</h3>
               </div>
               <div className="space-y-3">
                 {services.filter(s => s.category === 'Procedures').map((service, index) => (
-                  <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                  <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-orange-50 transition-colors">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                      </div>
-                      <span className="text-orange-600 font-bold text-sm">₹{service.price}</span>
+                      <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                      <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                     </div>
                   </div>
                 ))}
@@ -744,19 +641,19 @@ export default function Home() {
             </div>
 
             {/* Specialized */}
-            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border border-indigo-200">
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
               <div className="text-center mb-4">
-                <div className="text-4xl mb-2">🔍</div>
-                <h3 className="text-xl font-bold text-indigo-800 mb-2">Specialized</h3>
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🔍</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Specialized</h3>
               </div>
               <div className="space-y-3">
                 {services.filter(s => s.category === 'Specialized').map((service, index) => (
-                  <div key={index} className="bg-white rounded-lg p-3 shadow-sm">
+                  <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-indigo-50 transition-colors">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                      </div>
-                      <span className="text-indigo-600 font-bold text-sm">₹{service.price}</span>
+                      <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
+                      <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
                     </div>
                   </div>
                 ))}
@@ -765,16 +662,23 @@ export default function Home() {
           </div>
 
           {/* Book Appointment CTA */}
-          <div className="mt-8 md:mt-12 text-center bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-white">
-            <h3 className="text-xl sm:text-2xl font-bold mb-3 md:mb-4">Book Your Appointment Today</h3>
-            <p className="text-base sm:text-lg opacity-90 mb-4 md:mb-6">Expert ultrasound services with transparent pricing and advanced technology</p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+          <div className="mt-12 md:mt-16 text-center bg-gradient-to-r from-teal-600 to-emerald-600 rounded-3xl p-8 md:p-12 text-white shadow-2xl">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Book Your Appointment?</h3>
+            <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">Expert ultrasound services with transparent pricing and advanced technology</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
                 href="tel:+918307233058" 
-                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors inline-flex items-center justify-center gap-2"
+                className="bg-white text-teal-700 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-colors inline-flex items-center justify-center gap-2 shadow-lg"
               >
                 <span>📞</span>
                 Call (+91) 8307233058
+              </a>
+              <a 
+                href="#contact" 
+                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition-colors inline-flex items-center justify-center gap-2"
+              >
+                <span>✉️</span>
+                Send Message
               </a>
             </div>
           </div>
@@ -782,10 +686,11 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-12 md:py-20 bg-white">
+      <section id="testimonials" className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">What Our Patients Say</h2>
+            <span className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium mb-4">Testimonials</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">What Our Patients Say</h2>
             <p className="text-lg sm:text-xl text-gray-600">
               Real reviews from patients who experienced our ultrasound services and expert care
             </p>
@@ -794,25 +699,28 @@ export default function Home() {
           {/* Testimonials Slideshow */}
           <div className="relative max-w-4xl mx-auto">
             {/* Main Testimonial Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 md:p-8 lg:p-12 shadow-2xl border border-blue-100 text-center min-h-[280px] sm:min-h-[300px] flex flex-col justify-center">
-              <div className="text-yellow-400 text-2xl sm:text-3xl mb-4 md:mb-6">
+            <div className="bg-white rounded-3xl p-8 md:p-12 lg:p-16 shadow-2xl border border-gray-100 text-center min-h-[300px] sm:min-h-[320px] flex flex-col justify-center relative overflow-hidden">
+              {/* Quote icon */}
+              <div className="absolute top-6 left-6 text-6xl text-teal-100 font-serif">&ldquo;</div>
+              
+              <div className="text-yellow-400 text-2xl sm:text-3xl mb-6">
                 <span>⭐⭐⭐⭐⭐</span>
               </div>
               
-              <blockquote className="text-lg sm:text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-6 md:mb-8 font-medium">
+              <blockquote className="text-lg sm:text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-8 font-medium relative z-10">
                 &ldquo;{testimonials[currentTestimonial].text}&rdquo;
               </blockquote>
               
-              <div className="border-t border-blue-200 pt-4 md:pt-6">
+              <div className="border-t border-gray-100 pt-6">
                 <p className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{testimonials[currentTestimonial].author}</p>
-                <p className="text-blue-600 font-medium">{testimonials[currentTestimonial].role}</p>
+                <p className="text-teal-600 font-medium">{testimonials[currentTestimonial].role}</p>
               </div>
             </div>
 
             {/* Navigation Arrows */}
             <button
               onClick={prevTestimonial}
-              className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-shadow text-blue-600 hover:text-blue-800"
+              className="absolute left-0 sm:-left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all text-teal-600 hover:text-teal-800 hover:scale-110"
               aria-label="Previous testimonial"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -822,7 +730,7 @@ export default function Home() {
             
             <button
               onClick={nextTestimonial}
-              className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 sm:p-3 shadow-lg hover:shadow-xl transition-shadow text-blue-600 hover:text-blue-800"
+              className="absolute right-0 sm:-right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all text-teal-600 hover:text-teal-800 hover:scale-110"
               aria-label="Next testimonial"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -836,10 +744,10 @@ export default function Home() {
                 <button
                   key={index}
                   onClick={() => goToTestimonial(index)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-200 ${
+                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
                     index === currentTestimonial 
-                      ? 'bg-blue-600' 
-                      : 'bg-gray-300 hover:bg-blue-400'
+                      ? 'bg-teal-600 scale-125' 
+                      : 'bg-gray-300 hover:bg-teal-400'
                   }`}
                   aria-label={`Go to testimonial ${index + 1}`}
                 />
@@ -847,29 +755,27 @@ export default function Home() {
             </div>
 
             {/* Progress Bar */}
-            <div className="mt-6 bg-gray-200 rounded-full h-1 overflow-hidden">
+            <div className="mt-6 bg-gray-200 rounded-full h-1.5 overflow-hidden">
               <div 
-                className="bg-blue-600 h-full transition-all duration-5000 ease-linear"
+                className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full transition-all duration-300 ease-linear rounded-full"
                 style={{width: `${((currentTestimonial + 1) / testimonials.length) * 100}%`}}
               />
             </div>
 
             {/* Testimonial Counter */}
-            <div className="text-center mt-4 text-gray-500 text-sm">
+            <div className="text-center mt-4 text-gray-500 text-sm font-medium">
               {currentTestimonial + 1} of {testimonials.length} reviews
             </div>
           </div>
-
-          
         </div>
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-12 md:py-20 bg-white">
+      <section id="contact" className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
-            <p className="text-blue-600 font-medium text-base sm:text-lg mb-2">Contact Us</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">GET IN TOUCH WITH US</h2>
+            <span className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium mb-4">Contact Us</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">Get In Touch With Us</h2>
             <p className="text-lg sm:text-xl text-gray-600">
               Ready to schedule an appointment or have questions? We&apos;re here to help!
             </p>
@@ -879,15 +785,15 @@ export default function Home() {
             {/* Contact Information */}
             <div className="space-y-6 md:space-y-8">
               {/* Location */}
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-start space-x-4 p-6 bg-gray-50 rounded-2xl hover:bg-teal-50 transition-colors group">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Our Location</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Our Location</h3>
                   <p className="text-gray-600 leading-relaxed">
                     New, Sohna Rd, opposite Civil Hospital,<br />
                     Kalra Colony, Palwal, Haryana 121102
@@ -896,7 +802,7 @@ export default function Home() {
                     href="https://www.google.com/maps/place/DR.VIRENDER+ULTRASOUND+CENTRE/@27.9032685,77.3645594,17z/data=!3m1!4b1!4m6!3m5!1s0x39732d2bb765c6f5:0x7a313507b8813333!8m2!3d27.9032685!4d77.3645594!16s%2Fg%2F11fmd7qxkn" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors mt-2 text-sm font-medium"
+                    className="inline-flex items-center text-teal-600 hover:text-teal-800 transition-colors mt-3 text-sm font-semibold"
                   >
                     View on Google Maps
                     <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -907,18 +813,18 @@ export default function Home() {
               </div>
 
               {/* Phone */}
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-start space-x-4 p-6 bg-gray-50 rounded-2xl hover:bg-teal-50 transition-colors group">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Phone Number</h3>
-                  <p className="text-gray-600 mb-2">(+91) 8307233058</p>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Phone Number</h3>
+                  <p className="text-gray-600 mb-3 text-lg">(+91) 8307233058</p>
                   <a 
                     href="tel:+918307233058" 
-                    className="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                    className="inline-flex items-center bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:from-teal-700 hover:to-emerald-700 transition-all text-sm font-semibold shadow-md"
                   >
                     Call Now
                     <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -929,18 +835,18 @@ export default function Home() {
               </div>
 
               {/* Email */}
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-start space-x-4 p-6 bg-gray-50 rounded-2xl hover:bg-teal-50 transition-colors group">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">Email Address</h3>
-                  <p className="text-gray-600 mb-2 break-all">siddhivinayakpalwal@gmail.com</p>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Email Address</h3>
+                  <p className="text-gray-600 mb-3 break-all">siddhivinayakpalwal@gmail.com</p>
                   <a 
                     href="mailto:siddhivinayakpalwal@gmail.com" 
-                    className="inline-flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                    className="inline-flex items-center bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:from-teal-700 hover:to-emerald-700 transition-all text-sm font-semibold shadow-md"
                   >
                     Send Email
                     <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -952,8 +858,9 @@ export default function Home() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100">
-              <form onSubmit={handleContactFormSubmit} className="space-y-4 md:space-y-6">
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-gray-100">
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">Send Us a Message</h3>
+              <form onSubmit={handleContactFormSubmit} className="space-y-5">
                 <div>
                   <input
                     type="text"
@@ -962,7 +869,7 @@ export default function Home() {
                     onChange={handleContactFormChange}
                     placeholder="Your Name"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500 transition-colors"
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50 text-gray-900 placeholder-gray-500 transition-all"
                   />
                 </div>
 
@@ -974,7 +881,7 @@ export default function Home() {
                     onChange={handleContactFormChange}
                     placeholder="Your Email"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500 transition-colors"
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50 text-gray-900 placeholder-gray-500 transition-all"
                   />
                 </div>
 
@@ -985,7 +892,7 @@ export default function Home() {
                     value={contactForm.phone}
                     onChange={handleContactFormChange}
                     placeholder="Your Phone"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500 transition-colors"
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50 text-gray-900 placeholder-gray-500 transition-all"
                   />
                 </div>
 
@@ -997,17 +904,17 @@ export default function Home() {
                     placeholder="Your Message"
                     rows={5}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500 transition-colors resize-vertical"
+                    className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-gray-50 text-gray-900 placeholder-gray-500 transition-all resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
+                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all shadow-lg ${
                     formSubmitting
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                      : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 hover:shadow-xl'
                   } text-white`}
                 >
                   {formSubmitting ? (
@@ -1024,7 +931,7 @@ export default function Home() {
                 </button>
 
                 {formMessage && (
-                  <div className={`p-4 rounded-lg text-sm ${
+                  <div className={`p-4 rounded-xl text-sm ${
                     formMessage.includes('Thank you') 
                       ? 'bg-green-100 text-green-700 border border-green-300' 
                       : 'bg-red-100 text-red-700 border border-red-300'
@@ -1040,34 +947,63 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6 md:py-8">
+      <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center mb-4 md:mb-0">
-              <Image 
-                src="/logo.png" 
-                alt="Siddhivinayak Ultrasound Centre" 
-                width={32} 
-                height={32}
-                className="rounded"
-              />
-              <span className="ml-3 text-lg font-semibold">
-                Siddhivinayak Ultrasound Centre
-              </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            {/* Brand */}
+            <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start mb-4">
+                <div className="bg-gradient-to-br from-teal-500 to-emerald-500 p-2 rounded-xl">
+                  <Image 
+                    src="/logo.png" 
+                    alt="Siddhivinayak Ultrasound Centre" 
+                    width={40} 
+                    height={40}
+                    className="rounded"
+                  />
+                </div>
+                <span className="ml-3 text-xl font-bold">
+                  Siddhivinayak
+                </span>
+              </div>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Your trusted destination for advanced healthcare management and comprehensive diagnostic solutions with compassionate care.
+              </p>
             </div>
             
-            <div className="flex flex-wrap justify-center space-x-4 sm:space-x-6 mb-4 md:mb-0 text-xs sm:text-sm">
-              <a href="#home" className="hover:text-gray-300 transition-colors">Home</a>
-              <a href="#about" className="hover:text-gray-300 transition-colors">About Us</a>
-              <a href="#services" className="hover:text-gray-300 transition-colors">Services</a>
-              <a href="#testimonials" className="hover:text-gray-300 transition-colors">Testimonials</a>
-              <a href="#refer-patient" className="hover:text-gray-300 transition-colors">Refer a Patient</a>
-              <a href="#contact" className="hover:text-gray-300 transition-colors">Contact Us</a>
+            {/* Quick Links */}
+            <div className="text-center">
+              <h4 className="text-lg font-bold mb-4 text-teal-400">Quick Links</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <a href="#home" className="text-gray-400 hover:text-white transition-colors">Home</a>
+                <a href="#about" className="text-gray-400 hover:text-white transition-colors">About Us</a>
+                <a href="#services" className="text-gray-400 hover:text-white transition-colors">Services</a>
+                <a href="#testimonials" className="text-gray-400 hover:text-white transition-colors">Testimonials</a>
+                <a href="#contact" className="text-gray-400 hover:text-white transition-colors">Contact Us</a>
+              </div>
             </div>
             
-            <p className="text-gray-400 text-sm">
-              © 2024 Siddhivinayak Ultrasound Centre. All Rights Reserved.
-            </p>
+            {/* Contact Info */}
+            <div className="text-center md:text-right">
+              <h4 className="text-lg font-bold mb-4 text-teal-400">Contact Info</h4>
+              <div className="space-y-2 text-sm text-gray-400">
+                <p>📍 Sohna Rd, Palwal, Haryana</p>
+                <p>📞 (+91) 8307233058</p>
+                <p>✉️ siddhivinayakpalwal@gmail.com</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Bottom Bar */}
+          <div className="border-t border-gray-700 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <p className="text-gray-400 text-sm">
+                © 2024 Siddhivinayak Ultrasound Centre. All Rights Reserved.
+              </p>
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-400 text-sm">Made with ❤️ for better healthcare</span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

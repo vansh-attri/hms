@@ -24,26 +24,5 @@ export interface ReferringDoctor {
   isActive?: boolean;
 }
 
-export interface Appointment {
-  id: number;
-  patientId: number;
-  doctorId: number;
-  referenceDoctorId?: number;
-  serviceIds: number[];
-  appointmentDate: string;
-  appointmentTime: string;
-  notes?: string;
-  status?: 'scheduled' | 'completed' | 'cancelled';
-}
-
 export type DoctorFormData = Omit<Doctor, 'id'>;
 export type ServiceFormData = Omit<Service, 'id'>;
-export interface AppointmentFormData {
-  patientId: number;
-  doctorId: number;
-  referenceDoctorId?: number;
-  serviceIds: number[];
-  appointmentDate: string;
-  appointmentTime: string;
-  notes?: string;
-}

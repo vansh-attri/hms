@@ -290,7 +290,7 @@ export default function Home() {
                   href="#contact"
                   className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-center"
                 >
-                  Book Appointment
+                  Contact Us
                 </a>
                 <a
                   href="#services"
@@ -409,7 +409,7 @@ export default function Home() {
             
             <div className="text-center mt-8">
               <a href="#contact" className="inline-block bg-white text-teal-700 px-8 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-colors">
-                Book Your Appointment Today
+                Get In Touch Today
               </a>
             </div>
           </div>
@@ -661,9 +661,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Book Appointment CTA */}
+          {/* Contact CTA */}
           <div className="mt-12 md:mt-16 text-center bg-gradient-to-r from-teal-600 to-emerald-600 rounded-3xl p-8 md:p-12 text-white shadow-2xl">
-            <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Book Your Appointment?</h3>
+            <h3 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Get Started?</h3>
             <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">Expert ultrasound services with transparent pricing and advanced technology</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
@@ -777,7 +777,7 @@ export default function Home() {
             <span className="inline-block px-4 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium mb-4">Contact Us</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-6">Get In Touch With Us</h2>
             <p className="text-lg sm:text-xl text-gray-600">
-              Ready to schedule an appointment or have questions? We&apos;re here to help!
+              Have questions or need more information? We&apos;re here to help!
             </p>
           </div>
 

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Siddhivinayak Ultrasound Centre Palwal | 3D Ultrasound, Color Doppler & Diagnostic Imaging",
-  description: "Best Ultrasound Center in Palwal offering 3D/4D Ultrasound, Color Doppler, Pregnancy Scans, Fetal Medicine & Advanced Diagnostic Imaging. Trusted by 10,000+ patients. Book your appointment today!",
+  description: "Best Ultrasound Center in Palwal offering 3D/4D Ultrasound, Color Doppler, Pregnancy Scans, Fetal Medicine & Advanced Diagnostic Imaging. Trusted by 10,000+ patients. Contact us today!",
   keywords: [
     "3D Ultrasound in Palwal",
     "Color Ultrasound in Palwal", 

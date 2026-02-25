@@ -34,7 +34,7 @@ interface Appointment {
   tests?: AppointmentTest[];
 }
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
 
 export default function AppointmentsPage() {
   const { user, isAdmin } = useAuth();

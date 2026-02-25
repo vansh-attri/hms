@@ -49,6 +49,19 @@ export const Navigation: React.FC = () => {
       iconColor: 'text-green-600',
     },
     {
+      id: 'appointments',
+      label: 'Appointments',
+      href: '/appointments',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      bgColor: 'bg-cyan-100 hover:bg-cyan-200',
+      iconColor: 'text-cyan-600',
+      adminOnly: true,
+    },
+    {
       id: 'add-test',
       label: 'Add Test',
       href: '/add-test',
@@ -162,7 +175,9 @@ export const Navigation: React.FC = () => {
     },
   ];
 
-  const allNavItems = isAdmin ? [...navItems, ...adminNavItems] : navItems;
+  // Filter nav items based on admin status
+  const filteredNavItems = navItems.filter(item => !('adminOnly' in item) || isAdmin);
+  const allNavItems = isAdmin ? [...filteredNavItems, ...adminNavItems] : filteredNavItems;
 
   return (
     <>

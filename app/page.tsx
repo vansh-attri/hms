@@ -3,14 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getHomepageServices, HomepageService } from '@/utils/homepageServices';
+import Link from 'next/link';
+
+interface Service {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  bookingCount?: number;
+}
+
+const API_BASE_URL = 'http://localhost:5002/api';
 
 export default function Home() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [services, setServices] = useState<HomepageService[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -22,9 +33,22 @@ export default function Home() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState('');
 
-  // Load services from localStorage
+  // Fetch popular services from API (sorted by booking count)
   useEffect(() => {
-    setServices(getHomepageServices());
+    const fetchServices = async () => {
+      try {
+        const response = await fetch(API_BASE_URL + '/appointments/tests/popular?limit=30');
+        if (!response.ok) throw new Error('Failed to fetch services');
+        const data = await response.json();
+        setServices(data);
+      } catch (err) {
+        console.error('Error fetching services:', err);
+        setServices([]);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+    fetchServices();
   }, []);
 
   // Scroll effect for sticky navbar
@@ -286,15 +310,21 @@ export default function Home() {
                 Trusted by thousands of patients for accurate and timely results.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/book-appointment"
+                  className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-center"
+                >
+                  Book Appointment
+                </Link>
                 <a
                   href="#contact"
-                  className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-teal-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-center"
+                  className="border-2 border-teal-600 text-teal-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-teal-50 transition-all text-center"
                 >
                   Contact Us
                 </a>
                 <a
                   href="#services"
-                  className="border-2 border-teal-600 text-teal-600 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-teal-50 transition-all text-center"
+                  className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-all text-center"
                 >
                   Our Services
                 </a>
@@ -513,153 +543,36 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Service Categories */}
-          <div className="mb-8 md:mb-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {/* Pregnancy Services */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <span className="text-3xl">👶</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Pregnancy & Fetal</h3>
-                </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
-                  {services.filter(s => s.category === 'Pregnancy').map((service, index) => (
-                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-pink-50 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Gynecology Services */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <span className="text-3xl">🔬</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Gynecology</h3>
-                </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
-                  {services.filter(s => s.category === 'Gynecology').map((service, index) => (
-                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-purple-50 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Small Parts */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <span className="text-3xl">🩺</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Small Parts</h3>
-                </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
-                  {services.filter(s => s.category === 'Small Parts').map((service, index) => (
-                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-blue-50 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* General Ultrasound */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <span className="text-3xl">🏥</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">General Ultrasound</h3>
-                </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
-                  {services.filter(s => s.category === 'General').map((service, index) => (
-                    <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-green-50 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                        <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          {/* Popular Services - Sorted by Booking Count */}
+          {loadingServices ? (
+            <div className="flex justify-center items-center py-12">
+              <svg className="animate-spin h-8 w-8 text-teal-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="ml-3 text-gray-600">Loading services...</span>
             </div>
-          </div>
-
-          {/* Additional Services */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {/* Doppler Studies */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">💓</span>
+          ) : (
+            <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-gray-100">
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-4xl">🏥</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Doppler Studies</h3>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Our Services & Pricing</h3>
+                <p className="text-gray-500">{services.length} services available</p>
               </div>
-              <div className="space-y-3">
-                {services.filter(s => s.category === 'Doppler').map((service, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-red-50 transition-colors">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                      <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2">
+                {services.map((service) => (
+                  <div key={service.id} className="bg-gray-50 rounded-xl p-4 hover:bg-teal-50 transition-colors">
+                    <div className="flex justify-between items-center gap-2">
+                      <h4 className="font-medium text-gray-800 text-sm flex-1">{service.name}</h4>
+                      <span className="text-teal-600 font-bold text-sm whitespace-nowrap">₹{service.price}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Procedures */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">💉</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Procedures</h3>
-              </div>
-              <div className="space-y-3">
-                {services.filter(s => s.category === 'Procedures').map((service, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-orange-50 transition-colors">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                      <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Specialized */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group hover:-translate-y-1">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🔍</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Specialized</h3>
-              </div>
-              <div className="space-y-3">
-                {services.filter(s => s.category === 'Specialized').map((service, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-3 hover:bg-indigo-50 transition-colors">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium text-gray-800 text-sm">{service.name}</h4>
-                      <span className="text-teal-600 font-bold text-sm">₹{service.price}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Contact CTA */}
           <div className="mt-12 md:mt-16 text-center bg-gradient-to-r from-teal-600 to-emerald-600 rounded-3xl p-8 md:p-12 text-white shadow-2xl">

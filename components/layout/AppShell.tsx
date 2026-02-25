@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: iconChart() },
   { id: 'add-patient', label: 'Add Patient', href: '/add-patient', icon: iconUserPlus() },
   { id: 'cash-receipt', label: 'Cash Receipt', href: '/cash-receipt', icon: iconReceipt() },
+  { id: 'appointments', label: 'Appointments', href: '/appointments', icon: iconCalendar(), adminOnly: true },
   { id: 'add-test', label: 'Add Test', href: '/add-test', icon: iconBeaker() },
   { id: 'add-doctor', label: 'Add Doctor', href: '/add-doctor', icon: iconDoctor() },
   { id: 'daily-expenses', label: 'Daily Expenses', href: '/daily-expenses', icon: iconCurrency() },
@@ -50,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [query, availableNavItems]);
 
   // If on public pages, render without shell
-  if (pathname === '/' || pathname === '/refer-patient') {
+  if (pathname === '/' || pathname === '/refer-patient' || pathname === '/book-appointment') {
     return <>{children}</>;
   }
 
@@ -251,6 +252,17 @@ function iconServices() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  );
+}
+
+function iconCalendar() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
   );
 }

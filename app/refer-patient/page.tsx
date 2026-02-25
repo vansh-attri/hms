@@ -17,7 +17,7 @@ interface ReferralFormData {
 
 // API function to submit referral
 const submitReferral = async (formData: ReferralFormData) => {
-  const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
+  const API_BASE_URL = 'http://localhost:5002/api';
   
   const response = await fetch(`${API_BASE_URL}/referrals`, {
     method: 'POST',

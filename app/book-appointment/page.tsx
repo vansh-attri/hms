@@ -14,6 +14,9 @@ interface Test {
 interface TimeSlot {
   time: string;
   available: boolean;
+  isPast?: boolean;
+  isFullyBooked?: boolean;
+  bookingCount?: number;
 }
 
 const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
@@ -65,12 +68,17 @@ export default function BookAppointmentPage() {
           const response = await fetch(API_BASE_URL + '/appointments/slots?date=' + formData.appointmentDate);
           if (!response.ok) throw new Error('Failed to fetch slots');
           const data = await response.json();
-          // Transform API response to expected format
-          const slots = (data.availableSlots || []).map((time: string) => ({
-            time,
-            available: true
-          }));
-          setAvailableSlots(slots);
+          // Use the new slots format with availability info, fallback to old format
+          if (data.slots) {
+            setAvailableSlots(data.slots);
+          } else {
+            // Fallback for backward compatibility
+            const slots = (data.availableSlots || []).map((time: string) => ({
+              time,
+              available: true
+            }));
+            setAvailableSlots(slots);
+          }
         } catch (err) {
           console.error('Error fetching slots:', err);
           setAvailableSlots([]);
@@ -396,11 +404,37 @@ export default function BookAppointmentPage() {
                     <p className="text-gray-500 text-center py-8">No slots available for this date</p>
                   ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                      {availableSlots.map((slot) => (
-                        <button key={slot.time} type="button" onClick={() => slot.available && handleTimeSelect(slot.time)} disabled={!slot.available} className={'py-3 px-2 rounded-xl text-sm font-medium transition-all ' + (formData.appointmentTime === slot.time ? 'bg-teal-600 text-white' : slot.available ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed line-through')}>
-                          {formatTime(slot.time)}
-                        </button>
-                      ))}
+                      {availableSlots.map((slot) => {
+                        const isSelected = formData.appointmentTime === slot.time;
+                        const isDisabled = !slot.available;
+                        const isPast = slot.isPast;
+                        const isFullyBooked = slot.isFullyBooked;
+                        
+                        let className = 'py-3 px-2 rounded-xl text-sm font-medium transition-all ';
+                        if (isSelected) {
+                          className += 'bg-teal-600 text-white shadow-md';
+                        } else if (isPast) {
+                          className += 'bg-gray-100 text-gray-300 cursor-not-allowed line-through';
+                        } else if (isFullyBooked) {
+                          className += 'bg-red-50 text-red-300 cursor-not-allowed line-through border border-red-200';
+                        } else {
+                          className += 'bg-gray-100 hover:bg-teal-50 hover:border-teal-300 text-gray-700 border border-transparent';
+                        }
+                        
+                        return (
+                          <button 
+                            key={slot.time} 
+                            type="button" 
+                            onClick={() => slot.available && handleTimeSelect(slot.time)} 
+                            disabled={isDisabled}
+                            title={isPast ? 'Past time' : isFullyBooked ? 'Fully booked' : 'Available'}
+                            className={className}
+                          >
+                            {formatTime(slot.time)}
+                            {isFullyBooked && !isPast && <span className="block text-xs">Booked</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

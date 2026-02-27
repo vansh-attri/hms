@@ -60,7 +60,8 @@ export default function BookAppointmentPage() {
   useEffect(() => {
     const fetchTests = async () => {
       try {
-        const response = await fetch(API_BASE_URL + '/appointments/tests');
+        // Fetch tests sorted by popularity (most booked first)
+        const response = await fetch(API_BASE_URL + '/appointments/tests/popular?limit=100');
         if (!response.ok) throw new Error('Failed to fetch tests');
         const data = await response.json();
         setTests(data);
@@ -301,13 +302,6 @@ export default function BookAppointmentPage() {
     return hour12 + ':' + minutes + ' ' + ampm;
   };
 
-  const testsByCategory = tests.reduce((acc, test) => {
-    const cat = test.category || 'Other';
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(test);
-    return acc;
-  }, {} as Record<string, Test[]>);
-
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 flex items-center justify-center p-4">
@@ -447,22 +441,18 @@ export default function BookAppointmentPage() {
           {step === 2 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">Select Tests</h2>
-              {Object.entries(testsByCategory).map(([cat, catTests]) => (
-                <div key={cat}>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{cat}</h3>
-                  <div className="space-y-2">
-                    {catTests.map((test, index) => (
-                      <label key={cat + '-' + test.id + '-' + index} className={'flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ' + (formData.selectedTests.includes(test.id) ? 'border-teal-600 bg-teal-50' : 'border-gray-200 hover:border-gray-300')}>
-                        <div className="flex items-center gap-3">
-                          <input type="checkbox" checked={formData.selectedTests.includes(test.id)} onChange={() => handleTestToggle(test.id)} className="w-5 h-5 text-teal-600 rounded focus:ring-teal-500" />
-                          <span className="font-medium text-gray-900">{test.name}</span>
-                        </div>
-                        <span className="font-semibold text-teal-600">₹{test.price}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <p className="text-sm text-gray-500">Sorted by popularity</p>
+              <div className="space-y-2">
+                {tests.map((test) => (
+                  <label key={'test-' + test.id} className={'flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ' + (formData.selectedTests.includes(test.id) ? 'border-teal-600 bg-teal-50' : 'border-gray-200 hover:border-gray-300')}>
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" checked={formData.selectedTests.includes(test.id)} onChange={() => handleTestToggle(test.id)} className="w-5 h-5 text-teal-600 rounded focus:ring-teal-500" />
+                      <span className="font-medium text-gray-900">{test.name}</span>
+                    </div>
+                    <span className="font-semibold text-teal-600">₹{test.price}</span>
+                  </label>
+                ))}
+              </div>
               {formData.selectedTests.length > 0 && (
                 <div className="bg-teal-50 rounded-xl p-4 border border-teal-200">
                   <div className="flex justify-between items-center">

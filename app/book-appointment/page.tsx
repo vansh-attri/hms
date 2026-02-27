@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 
 interface Test {
   id: number;
@@ -19,6 +20,16 @@ interface TimeSlot {
   bookingCount?: number;
 }
 
+declare global {
+  interface Window {
+    Cashfree: {
+      checkout: (config: { paymentSessionId: string }) => {
+        on: (event: string, callback: (data: unknown) => void) => void;
+      };
+    };
+  }
+}
+
 const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
 
 export default function BookAppointmentPage() {
@@ -31,6 +42,8 @@ export default function BookAppointmentPage() {
   const [success, setSuccess] = useState(false);
   const [appointmentId, setAppointmentId] = useState<number | null>(null);
   const [cashReceiptId, setCashReceiptId] = useState<number | null>(null);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [cashfreeLoaded, setCashfreeLoaded] = useState(false);
 
   const [formData, setFormData] = useState({
     patientName: '',
@@ -143,6 +156,91 @@ export default function BookAppointmentPage() {
 
   const handleBack = () => { setError(null); setStep(prev => prev - 1); };
 
+  // Cashfree payment initiation
+  const initiateCashfreePayment = async (aptId: number, amount: number) => {
+    if (!cashfreeLoaded) {
+      setError('Payment system is loading. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    setPaymentProcessing(true);
+    
+    try {
+      // Create payment order
+      const orderResponse = await fetch(API_BASE_URL + '/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appointmentId: aptId,
+          customerName: formData.patientName,
+          customerPhone: formData.mobile,
+          amount: amount
+        })
+      });
+
+      if (!orderResponse.ok) {
+        const orderError = await orderResponse.json();
+        throw new Error(orderError.error || 'Failed to create payment order');
+      }
+
+      const orderData = await orderResponse.json();
+      const paymentSessionId = orderData.paymentSessionId;
+      const orderId = orderData.orderId;
+
+      // Initialize Cashfree checkout
+      const cashfree = window.Cashfree;
+      const checkout = cashfree.checkout({ paymentSessionId });
+
+      checkout.on('payment_success', async () => {
+        // Verify payment and confirm appointment
+        try {
+          const verifyResponse = await fetch(API_BASE_URL + '/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: orderId,
+              appointmentId: aptId
+            })
+          });
+
+          if (!verifyResponse.ok) {
+            const verifyError = await verifyResponse.json();
+            throw new Error(verifyError.error || 'Payment verification failed');
+          }
+
+          const verifyData = await verifyResponse.json();
+          setCashReceiptId(verifyData.cashReceiptId);
+          setSuccess(true);
+        } catch (verifyErr) {
+          setError(verifyErr instanceof Error ? verifyErr.message : 'Payment verification failed');
+        } finally {
+          setPaymentProcessing(false);
+          setLoading(false);
+        }
+      });
+
+      checkout.on('payment_failed', () => {
+        setError('Payment failed. Please try again.');
+        setPaymentProcessing(false);
+        setLoading(false);
+      });
+
+      checkout.on('payment_closed', () => {
+        if (!success) {
+          setError('Payment was cancelled. Your appointment is saved but not confirmed.');
+          setPaymentProcessing(false);
+          setLoading(false);
+        }
+      });
+
+    } catch (paymentErr) {
+      setError(paymentErr instanceof Error ? paymentErr.message : 'Payment initiation failed');
+      setPaymentProcessing(false);
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
@@ -155,6 +253,8 @@ export default function BookAppointmentPage() {
           testPrice: test?.price || 0
         };
       });
+
+      const totalAmount = testsData.reduce((sum, t) => sum + t.testPrice, 0);
 
       // First create the appointment
       const response = await fetch(API_BASE_URL + '/appointments', {
@@ -184,28 +284,11 @@ export default function BookAppointmentPage() {
       const aptId = data.appointment?.ID || data.appointmentId;
       setAppointmentId(aptId);
       
-      // Bypass payment - directly confirm the appointment
-      const confirmResponse = await fetch(API_BASE_URL + '/appointments/' + aptId + '/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paymentId: 'BYPASS-' + Date.now(),
-          paymentMethod: 'cash'
-        })
-      });
-
-      if (!confirmResponse.ok) {
-        const confirmError = await confirmResponse.json();
-        throw new Error(confirmError.error || 'Failed to confirm appointment');
-      }
-
-      const confirmData = await confirmResponse.json();
-      setCashReceiptId(confirmData.receiptId);
-      setSuccess(true);
+      // Initiate Cashfree payment
+      await initiateCashfreePayment(aptId, totalAmount);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to book appointment');
-    } finally {
       setLoading(false);
     }
   };
@@ -262,6 +345,12 @@ export default function BookAppointmentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50">
+      {/* Cashfree SDK Script */}
+      <Script 
+        src="https://sdk.cashfree.com/js/v3/cashfree.js" 
+        onLoad={() => setCashfreeLoaded(true)}
+      />
+      
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center">
@@ -505,23 +594,26 @@ export default function BookAppointmentPage() {
               <button 
                 type="button" 
                 onClick={handleSubmit} 
-                disabled={loading} 
+                disabled={loading || paymentProcessing} 
                 className="px-8 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-700 hover:to-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {loading ? (
+                {loading || paymentProcessing ? (
                   <>
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Confirming Appointment...
+                    {paymentProcessing ? 'Processing Payment...' : 'Creating Appointment...'}
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
-                    Confirm Appointment
+                    Pay ₹{formData.selectedTests.reduce((sum, id) => {
+                      const test = tests.find(t => t.id === id);
+                      return sum + (test?.price || 0);
+                    }, 0)} & Confirm
                   </>
                 )}
               </button>

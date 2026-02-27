@@ -22,10 +22,8 @@ interface TimeSlot {
 
 declare global {
   interface Window {
-    Cashfree: {
-      checkout: (config: { paymentSessionId: string }) => {
-        on: (event: string, callback: (data: unknown) => void) => void;
-      };
+    Cashfree: (config: { mode: string }) => {
+      checkout: (options: { paymentSessionId: string; redirectTarget: string }) => Promise<{ error?: { message: string }; paymentDetails?: unknown }>;
     };
   }
 }
@@ -188,12 +186,30 @@ export default function BookAppointmentPage() {
       const paymentSessionId = orderData.paymentSessionId;
       const orderId = orderData.orderId;
 
-      // Initialize Cashfree checkout
-      const cashfree = window.Cashfree;
-      const checkout = cashfree.checkout({ paymentSessionId });
+      // Initialize Cashfree SDK (sandbox mode for TEST credentials)
+      const cashfree = window.Cashfree({ mode: 'sandbox' });
+      
+      // Open checkout - this returns a promise
+      const result = await cashfree.checkout({
+        paymentSessionId: paymentSessionId,
+        redirectTarget: '_modal' // Opens in modal instead of redirect
+      });
 
-      checkout.on('payment_success', async () => {
-        // Verify payment and confirm appointment
+      // Handle the result
+      if (result.error) {
+        // Payment failed or was cancelled
+        if (result.error.message.includes('cancelled') || result.error.message.includes('closed')) {
+          setError('Payment was cancelled. Your appointment is saved but not confirmed.');
+        } else {
+          setError(result.error.message || 'Payment failed. Please try again.');
+        }
+        setPaymentProcessing(false);
+        setLoading(false);
+        return;
+      }
+
+      // Payment successful - verify and confirm
+      if (result.paymentDetails) {
         try {
           const verifyResponse = await fetch(API_BASE_URL + '/payments/verify', {
             method: 'POST',
@@ -214,28 +230,12 @@ export default function BookAppointmentPage() {
           setSuccess(true);
         } catch (verifyErr) {
           setError(verifyErr instanceof Error ? verifyErr.message : 'Payment verification failed');
-        } finally {
-          setPaymentProcessing(false);
-          setLoading(false);
         }
-      });
-
-      checkout.on('payment_failed', () => {
-        setError('Payment failed. Please try again.');
-        setPaymentProcessing(false);
-        setLoading(false);
-      });
-
-      checkout.on('payment_closed', () => {
-        if (!success) {
-          setError('Payment was cancelled. Your appointment is saved but not confirmed.');
-          setPaymentProcessing(false);
-          setLoading(false);
-        }
-      });
+      }
 
     } catch (paymentErr) {
       setError(paymentErr instanceof Error ? paymentErr.message : 'Payment initiation failed');
+    } finally {
       setPaymentProcessing(false);
       setLoading(false);
     }

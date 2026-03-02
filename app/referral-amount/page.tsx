@@ -391,7 +391,9 @@ export default function ReferralAmountPage() {
       <!DOCTYPE html>
       <html>
         <head>
+          <title>Referral Amount Report - Siddhivinayak Ultrasound Centre</title>
           <style>
+            @page { margin: 10mm; }
             body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
             .header { margin-bottom: 30px; border-bottom: 2px solid #16a34a; padding-bottom: 20px; }
             .clinic-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }

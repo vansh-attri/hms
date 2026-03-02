@@ -28,7 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'manage-users', label: 'Manage Users', href: '/admin/manage-users', icon: iconAdminUsers(), adminOnly: true },
   { id: 'run-scripts', label: 'Run Scripts', href: '/admin/scripts', icon: iconScript(), adminOnly: true },
   { id: 'homepage-services', label: 'Homepage Services', href: '/admin/homepage-services', icon: iconServices(), adminOnly: true },
-  { id: 'settings', label: 'Settings', href: '/admin/settings', icon: iconSettings(), adminOnly: true },
+  { id: 'settings', label: 'Maximum Discount', href: '/admin/settings', icon: iconSettings(), adminOnly: true },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

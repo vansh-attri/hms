@@ -454,15 +454,15 @@ export default function ReferralAmountPage() {
           
           <div class="stats">
             <div class="stat-card blue">
-              <h3>Total Unpaid</h3>
+              <h3>Total Referral Unpaid</h3>
               <p>₹${totalUnpaid.toLocaleString()}</p>
             </div>
             <div class="stat-card green">
-              <h3>Total Paid</h3>
+              <h3>Total Referral Paid</h3>
               <p>₹${totalPaid.toLocaleString()}</p>
             </div>
             <div class="stat-card gray">
-              <h3>Total Amount</h3>
+              <h3>Total Referral Amount</h3>
               <p>₹${totalAmount.toLocaleString()}</p>
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function ReferralAmountPage() {
                         <td class="text-center">${record.age || '-'}</td>
                         <td class="address-col">${record.address || '-'}</td>
                         <td class="text-center">${record.gender || '-'}</td>
-                        <td class="text-right">₹${record.netAmount ? record.netAmount.toLocaleString() : '-'}</td>
+                        <td class="text-right">${record.netAmount != null && record.totalAmount != null ? `₹${record.netAmount.toLocaleString()} (${record.totalAmount.toLocaleString()} - ${(record.discount || 0).toLocaleString()} - ${record.amount.toLocaleString()})` : '-'}</td>
                         <td>${record.testName || '-'}</td>
                         <td>${record.userName || '-'}</td>
                         <td class="text-center ${record.isPaid ? 'status-paid' : 'status-unpaid'}">
@@ -572,11 +572,11 @@ export default function ReferralAmountPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-              <h3 className="text-xs sm:text-sm font-medium text-blue-600">Total Unpaid</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-blue-600">Total Referral Unpaid</h3>
               <p className="text-xl sm:text-2xl font-bold text-blue-900">₹{getTotalAmount(false).toLocaleString()}</p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-              <h3 className="text-xs sm:text-sm font-medium text-green-600">Total Paid</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-green-600">Total Referral Paid</h3>
               <p className="text-xl sm:text-2xl font-bold text-green-900">₹{getTotalAmount(true).toLocaleString()}</p>
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
@@ -903,7 +903,9 @@ export default function ReferralAmountPage() {
                                 {referral.gender || '-'}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                ₹{referral.netAmount ? referral.netAmount.toLocaleString() : '-'}
+                                {referral.netAmount != null && referral.totalAmount != null 
+                                  ? `₹${referral.netAmount.toLocaleString()} (${referral.totalAmount.toLocaleString()} - ${(referral.discount || 0).toLocaleString()} - ${referral.amount.toLocaleString()})`
+                                  : '-'}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
                                 {referral.testName || '-'}

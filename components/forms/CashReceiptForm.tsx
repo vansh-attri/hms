@@ -12,6 +12,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 type PatientSearchRow = Awaited<ReturnType<typeof patientAPI.search>>[number];
 
+// Maximum allowed percentage for discount + referral amount combined
+const MAX_DISCOUNT_REFERRAL_PERCENT = 30;
+
 interface BillItem {
   testId: number;
   TestName: string;
@@ -231,10 +234,28 @@ export const CashReceiptForm: React.FC = () => {
 
   const handleRefAmountChange = (value: string) => {
     const refAmount = value === '' ? 0 : Number(value) || 0;
-    setFormData(prev => ({
-      ...prev,
-      refAmount
-    }));
+    setFormData(prev => {
+      const combinedAmount = prev.discount + refAmount;
+      const maxAllowed = (prev.totalAmount * MAX_DISCOUNT_REFERRAL_PERCENT) / 100;
+      
+      // Validate combined discount + referral doesn't exceed max percentage
+      if (prev.totalAmount > 0 && combinedAmount > maxAllowed) {
+        setValidationErrors(prevErrors => ({
+          ...prevErrors,
+          discountReferral: `Discount + Referral Amount cannot exceed ${MAX_DISCOUNT_REFERRAL_PERCENT}% of total (₹${maxAllowed.toFixed(0)})`
+        }));
+      } else {
+        setValidationErrors(prevErrors => ({
+          ...prevErrors,
+          discountReferral: ''
+        }));
+      }
+      
+      return {
+        ...prev,
+        refAmount
+      };
+    });
   };
 
 
@@ -428,6 +449,22 @@ export const CashReceiptForm: React.FC = () => {
   const handleDiscountChange = (value: string) => {
     const discount = value === '' ? 0 : Number(value) || 0;
     setFormData(prev => {
+      const combinedAmount = discount + prev.refAmount;
+      const maxAllowed = (prev.totalAmount * MAX_DISCOUNT_REFERRAL_PERCENT) / 100;
+      
+      // Validate combined discount + referral doesn't exceed max percentage
+      if (prev.totalAmount > 0 && combinedAmount > maxAllowed) {
+        setValidationErrors(prevErrors => ({
+          ...prevErrors,
+          discountReferral: `Discount + Referral Amount cannot exceed ${MAX_DISCOUNT_REFERRAL_PERCENT}% of total (₹${maxAllowed.toFixed(0)})`
+        }));
+      } else {
+        setValidationErrors(prevErrors => ({
+          ...prevErrors,
+          discountReferral: ''
+        }));
+      }
+      
       const newNetAmount = prev.totalAmount - discount;
       return {
         ...prev,
@@ -827,6 +864,14 @@ export const CashReceiptForm: React.FC = () => {
     // Validate mobile number if provided
     if (formData.mobile && !validateMobile(formData.mobile)) {
       setMessage('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    // Validate discount + referral amount doesn't exceed max percentage
+    const combinedAmount = formData.discount + formData.refAmount;
+    const maxAllowed = (formData.totalAmount * MAX_DISCOUNT_REFERRAL_PERCENT) / 100;
+    if (formData.totalAmount > 0 && combinedAmount > maxAllowed) {
+      setMessage(`Discount + Referral Amount cannot exceed ${MAX_DISCOUNT_REFERRAL_PERCENT}% of total amount (₹${maxAllowed.toFixed(0)})`);
       return;
     }
 
@@ -1436,7 +1481,7 @@ export const CashReceiptForm: React.FC = () => {
                       onChange={(e) => handleDiscountChange(e.target.value)}
                       min="0"
                       max={formData.totalAmount}
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-right"
+                      className={`w-24 px-3 py-2 border rounded-lg text-right ${validationErrors.discountReferral ? 'border-red-500' : 'border-gray-300'}`}
                       placeholder="0"
                     />
                   </div>
@@ -1448,10 +1493,17 @@ export const CashReceiptForm: React.FC = () => {
                       value={formData.refAmount === 0 ? '' : formData.refAmount}
                       onChange={(e) => handleRefAmountChange(e.target.value)}
                       min="0"
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-right"
+                      className={`w-24 px-3 py-2 border rounded-lg text-right ${validationErrors.discountReferral ? 'border-red-500' : 'border-gray-300'}`}
                       placeholder="0"
                     />
                   </div>
+                  
+                  {/* Discount + Referral validation error */}
+                  {validationErrors.discountReferral && (
+                    <div className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">
+                      ⚠️ {validationErrors.discountReferral}
+                    </div>
+                  )}
                   
                   <div className="flex justify-between text-xl font-bold text-green-600 border-t border-gray-200 pt-4">
                     <span>Net Amount:</span>

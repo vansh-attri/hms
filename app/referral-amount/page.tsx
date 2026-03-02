@@ -582,8 +582,8 @@ export default function ReferralAmountPage() {
               <p className="text-xl sm:text-2xl font-bold text-green-900">₹{getTotalAmount(true).toLocaleString()}</p>
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
-              <h3 className="text-xs sm:text-sm font-medium text-gray-600">Total Referrals</h3>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{referrals.length}</p>
+              <h3 className="text-xs sm:text-sm font-medium text-gray-600">Total Referral Amount</h3>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">₹{(getTotalAmount(true) + getTotalAmount(false)).toLocaleString()}</p>
             </div>
           </div>
 

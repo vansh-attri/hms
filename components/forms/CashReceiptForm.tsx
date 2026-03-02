@@ -12,8 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 type PatientSearchRow = Awaited<ReturnType<typeof patientAPI.search>>[number];
 
-// Maximum allowed percentage for discount + referral amount combined
-const MAX_DISCOUNT_REFERRAL_PERCENT = 30;
+// Default max percentage (will be fetched from API)
+const DEFAULT_MAX_DISCOUNT_REFERRAL_PERCENT = 30;
 
 interface BillItem {
   testId: number;
@@ -117,11 +117,32 @@ export const CashReceiptForm: React.FC = () => {
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  
+  // Admin configurable max discount + referral percentage
+  const [maxDiscountReferralPercent, setMaxDiscountReferralPercent] = useState(DEFAULT_MAX_DISCOUNT_REFERRAL_PERCENT);
 
   // Load data from APIs
   useEffect(() => {
     loadInitialData();
+    fetchMaxDiscountSetting();
   }, []);
+
+  // Fetch the max discount setting from API
+  const fetchMaxDiscountSetting = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://hms-back-rosy.vercel.app/api'}/settings/MAX_DISCOUNT_REFERRAL_PERCENT`);
+      if (response.ok) {
+        const data = await response.json();
+        const value = Number(data.value);
+        if (!isNaN(value) && value >= 0 && value <= 100) {
+          setMaxDiscountReferralPercent(value);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching max discount setting:', error);
+      // Keep default value on error
+    }
+  };
 
   // Update username when user changes
   useEffect(() => {
@@ -236,13 +257,13 @@ export const CashReceiptForm: React.FC = () => {
     const refAmount = value === '' ? 0 : Number(value) || 0;
     setFormData(prev => {
       const combinedAmount = prev.discount + refAmount;
-      const maxAllowed = (prev.totalAmount * MAX_DISCOUNT_REFERRAL_PERCENT) / 100;
+      const maxAllowed = (prev.totalAmount * maxDiscountReferralPercent) / 100;
       
       // Validate combined discount + referral doesn't exceed max percentage
       if (prev.totalAmount > 0 && combinedAmount > maxAllowed) {
         setValidationErrors(prevErrors => ({
           ...prevErrors,
-          discountReferral: `Discount + Referral Amount cannot exceed ${MAX_DISCOUNT_REFERRAL_PERCENT}% of total (₹${maxAllowed.toFixed(0)})`
+          discountReferral: `Discount + Referral Amount cannot exceed ${maxDiscountReferralPercent}% of total (₹${maxAllowed.toFixed(0)})`
         }));
       } else {
         setValidationErrors(prevErrors => ({
@@ -450,13 +471,13 @@ export const CashReceiptForm: React.FC = () => {
     const discount = value === '' ? 0 : Number(value) || 0;
     setFormData(prev => {
       const combinedAmount = discount + prev.refAmount;
-      const maxAllowed = (prev.totalAmount * MAX_DISCOUNT_REFERRAL_PERCENT) / 100;
+      const maxAllowed = (prev.totalAmount * maxDiscountReferralPercent) / 100;
       
       // Validate combined discount + referral doesn't exceed max percentage
       if (prev.totalAmount > 0 && combinedAmount > maxAllowed) {
         setValidationErrors(prevErrors => ({
           ...prevErrors,
-          discountReferral: `Discount + Referral Amount cannot exceed ${MAX_DISCOUNT_REFERRAL_PERCENT}% of total (₹${maxAllowed.toFixed(0)})`
+          discountReferral: `Discount + Referral Amount cannot exceed ${maxDiscountReferralPercent}% of total (₹${maxAllowed.toFixed(0)})`
         }));
       } else {
         setValidationErrors(prevErrors => ({
@@ -869,9 +890,9 @@ export const CashReceiptForm: React.FC = () => {
 
     // Validate discount + referral amount doesn't exceed max percentage
     const combinedAmount = formData.discount + formData.refAmount;
-    const maxAllowed = (formData.totalAmount * MAX_DISCOUNT_REFERRAL_PERCENT) / 100;
+    const maxAllowed = (formData.totalAmount * maxDiscountReferralPercent) / 100;
     if (formData.totalAmount > 0 && combinedAmount > maxAllowed) {
-      setMessage(`Discount + Referral Amount cannot exceed ${MAX_DISCOUNT_REFERRAL_PERCENT}% of total amount (₹${maxAllowed.toFixed(0)})`);
+      setMessage(`Discount + Referral Amount cannot exceed ${maxDiscountReferralPercent}% of total amount (₹${maxAllowed.toFixed(0)})`);
       return;
     }
 

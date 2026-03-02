@@ -509,7 +509,7 @@ export default function ReferralAmountPage() {
                         <td class="text-center">${record.age || '-'}</td>
                         <td class="address-col">${record.address || '-'}</td>
                         <td class="text-center">${record.gender || '-'}</td>
-                        <td class="text-right">${record.netAmount != null && record.totalAmount != null ? `₹${record.netAmount.toLocaleString()} (${record.totalAmount.toLocaleString()} - ${(record.discount || 0).toLocaleString()} - ${record.amount.toLocaleString()})` : '-'}</td>
+                        <td class="text-right">${record.netAmount != null && record.totalAmount != null ? `₹${(record.totalAmount - (record.discount || 0) - (record.isPaid ? record.amount : 0)).toLocaleString()} (${record.totalAmount.toLocaleString()} - ${(record.discount || 0).toLocaleString()} - ${record.isPaid ? record.amount.toLocaleString() : '0'})` : '-'}</td>
                         <td>${record.testName || '-'}</td>
                         <td>${record.userName || '-'}</td>
                         <td class="text-center ${record.isPaid ? 'status-paid' : 'status-unpaid'}">
@@ -904,7 +904,7 @@ export default function ReferralAmountPage() {
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                 {referral.netAmount != null && referral.totalAmount != null 
-                                  ? `₹${referral.netAmount.toLocaleString()} (${referral.totalAmount.toLocaleString()} - ${(referral.discount || 0).toLocaleString()} - ${referral.amount.toLocaleString()})`
+                                  ? `₹${(referral.totalAmount - (referral.discount || 0) - (referral.isPaid ? referral.amount : 0)).toLocaleString()} (${referral.totalAmount.toLocaleString()} - ${(referral.discount || 0).toLocaleString()} - ${referral.isPaid ? referral.amount.toLocaleString() : '0'})`
                                   : '-'}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">

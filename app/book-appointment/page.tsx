@@ -187,8 +187,8 @@ export default function BookAppointmentPage() {
       const paymentSessionId = orderData.paymentSessionId;
       const orderId = orderData.orderId;
 
-      // Initialize Cashfree SDK (sandbox mode for TEST credentials)
-      const cashfree = window.Cashfree({ mode: 'sandbox' });
+  // Initialize Cashfree SDK (production mode)
+  const cashfree = window.Cashfree({ mode: 'production' });
       
       // Open checkout - this returns a promise
       const result = await cashfree.checkout({

@@ -176,6 +176,7 @@ export default function RootLayout({
             })
           }}
         />
+        <script src="https://t.contentsquare.net/uxa/535ee3529bbca.js" defer></script>
         
         {/* Google Tag Manager */}
         <Script id="google-tag-manager" strategy="afterInteractive">

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/FormElements';
-import { api, CashReceiptSummary, DashboardStats } from '@/utils/api';
+import { api, DashboardStats } from '@/utils/api';
 import { formatDate } from '@/utils/dateFormat';
 
 interface LocalDashboardStats {
@@ -72,6 +72,7 @@ export default function DashboardPage() {
         const receiptsData = await api.receipts.getAll();
         
         // Get recent transactions (last 5) - using CashReceiptSearchResult type
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const searchResults = receiptsData as any[];
         recentTransactions = searchResults
           .sort((a, b) => new Date(b.BillDate).getTime() - new Date(a.BillDate).getTime())

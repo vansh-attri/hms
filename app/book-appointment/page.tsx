@@ -223,6 +223,7 @@ export default function BookAppointmentPage() {
 
       // Payment successful - verify and confirm
       if (result.paymentDetails) {
+        try {
           const verifyHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
           if (selectedBranch) verifyHeaders['X-Branch'] = selectedBranch;
           

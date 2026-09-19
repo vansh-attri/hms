@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
 
+type Branch = 'hodal' | 'palwal' | '';
+
 interface Test {
   id: number;
   name: string;
@@ -42,6 +44,7 @@ export default function BookAppointmentPage() {
   const [cashReceiptId, setCashReceiptId] = useState<number | null>(null);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [cashfreeLoaded, setCashfreeLoaded] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Branch>('');
 
   const [formData, setFormData] = useState({
     patientName: '',
@@ -61,7 +64,9 @@ export default function BookAppointmentPage() {
     const fetchTests = async () => {
       try {
         // Fetch tests sorted by popularity (most booked first)
-        const response = await fetch(API_BASE_URL + '/appointments/tests/popular?limit=100');
+        const headers: Record<string, string> = {};
+        if (selectedBranch) headers['X-Branch'] = selectedBranch;
+        const response = await fetch(API_BASE_URL + '/appointments/tests/popular?limit=100', { headers });
         if (!response.ok) throw new Error('Failed to fetch tests');
         const data = await response.json();
         setTests(data);
@@ -70,14 +75,16 @@ export default function BookAppointmentPage() {
       }
     };
     fetchTests();
-  }, []);
+  }, [selectedBranch]);
 
   useEffect(() => {
     if (formData.appointmentDate) {
       const fetchSlots = async () => {
         setLoadingSlots(true);
         try {
-          const response = await fetch(API_BASE_URL + '/appointments/slots?date=' + formData.appointmentDate);
+          const headers: Record<string, string> = {};
+          if (selectedBranch) headers['X-Branch'] = selectedBranch;
+          const response = await fetch(API_BASE_URL + '/appointments/slots?date=' + formData.appointmentDate, { headers });
           if (!response.ok) throw new Error('Failed to fetch slots');
           const data = await response.json();
           // Use the new slots format with availability info, fallback to old format
@@ -100,7 +107,7 @@ export default function BookAppointmentPage() {
       };
       fetchSlots();
     }
-  }, [formData.appointmentDate]);
+  }, [formData.appointmentDate, selectedBranch]);
 
   const totalAmount = formData.selectedTests.reduce((sum, testId) => {
     const test = tests.find(t => t.id === testId);
@@ -133,6 +140,7 @@ export default function BookAppointmentPage() {
   };
 
   const validateStep = (s: number) => {
+    if (s === 0 && !selectedBranch) return 'Please select a branch to continue';
     if (s === 1) {
       if (!formData.patientName.trim()) return 'Please enter patient name';
       if (!formData.mobile.trim() || formData.mobile.length !== 10) return 'Please enter valid 10-digit mobile';
@@ -147,6 +155,8 @@ export default function BookAppointmentPage() {
   };
 
   const handleNext = () => {
+    // Always validate branch first
+    if (!selectedBranch) { setError('Please select a branch before proceeding'); return; }
     const err = validateStep(step);
     if (err) { setError(err); return; }
     setError(null);
@@ -166,10 +176,12 @@ export default function BookAppointmentPage() {
     setPaymentProcessing(true);
     
     try {
-      // Create payment order
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (selectedBranch) headers['X-Branch'] = selectedBranch;
+      
       const orderResponse = await fetch(API_BASE_URL + '/payments/create-order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({
           appointmentId: aptId,
           customerName: formData.patientName,
@@ -211,10 +223,12 @@ export default function BookAppointmentPage() {
 
       // Payment successful - verify and confirm
       if (result.paymentDetails) {
-        try {
+          const verifyHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (selectedBranch) verifyHeaders['X-Branch'] = selectedBranch;
+          
           const verifyResponse = await fetch(API_BASE_URL + '/payments/verify', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: verifyHeaders,
             body: JSON.stringify({
               orderId: orderId,
               appointmentId: aptId
@@ -258,9 +272,12 @@ export default function BookAppointmentPage() {
       const totalAmount = testsData.reduce((sum, t) => sum + t.testPrice, 0);
 
       // First create the appointment
+      const apptHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (selectedBranch) apptHeaders['X-Branch'] = selectedBranch;
+      
       const response = await fetch(API_BASE_URL + '/appointments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apptHeaders,
         body: JSON.stringify({
           PatientName: formData.patientName,
           RelationType: formData.relationType || null,
@@ -369,6 +386,45 @@ export default function BookAppointmentPage() {
           <p className="text-gray-600">Schedule your diagnostic test with ease</p>
         </div>
 
+        {/* Branch Selection */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2 border-dashed border-teal-200">
+          <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 text-xs font-bold">📍</span>
+            Select Branch <span className="text-red-500 text-sm">*</span>
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            {(['hodal', 'palwal'] as const).map((b) => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => { setSelectedBranch(b); setError(null); setTests([]); }}
+                className={`py-4 px-5 rounded-xl border-2 font-semibold text-sm transition-all flex items-center gap-3 ${
+                  selectedBranch === b
+                    ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
+                    : 'border-gray-200 text-gray-600 hover:border-teal-300 hover:bg-teal-50/50'
+                }`}
+              >
+                <span className="text-2xl">{b === 'hodal' ? '🏥' : '🏨'}</span>
+                <div className="text-left">
+                  <div className="font-bold capitalize">{b === 'hodal' ? 'Hodal' : 'Palwal'}</div>
+                  <div className="text-xs text-gray-500 font-normal">Branch</div>
+                </div>
+                {selectedBranch === b && (
+                  <svg className="w-5 h-5 text-teal-600 ml-auto flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
+          {selectedBranch && (
+            <p className="text-xs text-teal-600 mt-3 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              Booking appointment at <strong className="capitalize">&nbsp;{selectedBranch === 'hodal' ? 'Hodal' : 'Palwal'}</strong>&nbsp;branch
+            </p>
+          )}
+        </div>
+
         <div className="flex items-center justify-center mb-8">
           {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center">
@@ -387,6 +443,7 @@ export default function BookAppointmentPage() {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">{error}</div>
         )}
+
 
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
           {step === 1 && (

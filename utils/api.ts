@@ -296,7 +296,7 @@ export type ReferralCreateData = {
   Notes?: string;
 };  
 
-const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-back-rosy.vercel.app/api';
 
 // Generic API request function
 async function apiRequest<T>(
@@ -308,10 +308,14 @@ async function apiRequest<T>(
   // Get authentication token
   const token = typeof window !== 'undefined' ? localStorage.getItem('hms_token') : null;
   
+  // Get selected branch
+  const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') : null;
+  
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...(branch && { 'X-Branch': branch }),
     },
   };
 

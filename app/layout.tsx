@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { BranchProvider } from "@/contexts/BranchContext";
 import Script from "next/script";
 
 const geistSans = Geist({
@@ -212,7 +213,9 @@ gtag('config', 'G-541QDNKMQZ');`}
           />
         </noscript>
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <BranchProvider>
+            <AppShell>{children}</AppShell>
+          </BranchProvider>
         </AuthProvider>
       </body>
     </html>

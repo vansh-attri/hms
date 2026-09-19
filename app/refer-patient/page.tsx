@@ -16,13 +16,14 @@ interface ReferralFormData {
 }
 
 // API function to submit referral
-const submitReferral = async (formData: ReferralFormData) => {
-  const API_BASE_URL = 'https://hms-back-rosy.vercel.app/api';
+const submitReferral = async (formData: ReferralFormData, branch: string) => {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-back-rosy.vercel.app/api';
   
   const response = await fetch(`${API_BASE_URL}/referrals`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-Branch': branch,
     },
     body: JSON.stringify({
       PatientName: formData.patientName,
@@ -61,6 +62,7 @@ export default function ReferPatientPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [selectedBranch, setSelectedBranch] = useState<'hodal' | 'palwal' | ''>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -74,6 +76,10 @@ export default function ReferPatientPage() {
 
   const validateForm = (): boolean => {
     const newErrors: {[key: string]: string} = {};
+
+    if (!selectedBranch) {
+      newErrors.branch = 'Please select a centre';
+    }
 
     if (!formData.patientName.trim()) {
       newErrors.patientName = 'Patient name is required';
@@ -106,7 +112,7 @@ export default function ReferPatientPage() {
     setMessage('');
 
     try {
-      await submitReferral(formData);
+      await submitReferral(formData, selectedBranch);
       
       setMessage('Thank you! Your patient referral has been submitted successfully. We will contact you soon.');
       
@@ -177,6 +183,31 @@ export default function ReferPatientPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-4 md:space-y-6">
+            {/* Centre Selection */}
+            <div>
+              <label htmlFor="branch" className="block text-sm font-medium text-gray-700 mb-2">
+                Select Centre <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="branch"
+                value={selectedBranch}
+                onChange={(e) => {
+                  setSelectedBranch(e.target.value as 'hodal' | 'palwal' | '');
+                  if (errors.branch) setErrors(prev => ({ ...prev, branch: '' }));
+                }}
+                className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 min-h-[44px] ${
+                  errors.branch ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Select a Centre</option>
+                <option value="palwal">Palwal Centre</option>
+                <option value="hodal">Hodal Centre</option>
+              </select>
+              {errors.branch && (
+                <p className="mt-1 text-sm text-red-600">{errors.branch}</p>
+              )}
+            </div>
+
             {/* Patient Name & Relation Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>

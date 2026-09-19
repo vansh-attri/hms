@@ -130,7 +130,12 @@ export const CashReceiptForm: React.FC = () => {
   // Fetch the max discount setting from API
   const fetchMaxDiscountSetting = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://hms-back-rosy.vercel.app/api'}/settings/MAX_DISCOUNT_REFERRAL_PERCENT`);
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://hms-back-rosy.vercel.app/api'}/settings/MAX_DISCOUNT_REFERRAL_PERCENT`, {
+        headers: {
+          'X-Branch': branch
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         const value = Number(data.value);

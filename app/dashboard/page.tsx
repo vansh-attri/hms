@@ -71,12 +71,13 @@ export default function DashboardPage() {
       try {
         const receiptsData = await api.receipts.getAll();
         
-        // Get recent transactions (last 5) - using CashReceiptSummary type
-        recentTransactions = (receiptsData as CashReceiptSummary[])
+        // Get recent transactions (last 5) - using CashReceiptSearchResult type
+        const searchResults = receiptsData as any[];
+        recentTransactions = searchResults
           .sort((a, b) => new Date(b.BillDate).getTime() - new Date(a.BillDate).getTime())
           .slice(0, 5)
           .map((r) => ({
-            id: r.ReceiptID,
+            id: r.id || r.ReceiptID || Math.random(),
             patientName: r.PatientName,
             amount: r.NetAmount || 0,
             date: formatDate(r.BillDate),

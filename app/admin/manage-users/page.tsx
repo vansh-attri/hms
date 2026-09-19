@@ -22,6 +22,8 @@ interface UserFormData {
   status: 'active' | 'inactive';
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hms-back-rosy.vercel.app/api';
+
 export default function ManageUsersPage() {
   const { user: currentUser, isAdmin } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
@@ -50,9 +52,11 @@ export default function ManageUsersPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('hms_token');
-      const response = await fetch('https://hms-back-rosy.vercel.app/api/users', {
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const response = await fetch(`${API_BASE_URL}/users`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Branch': branch
         }
       });
 
@@ -78,15 +82,16 @@ export default function ManageUsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('hms_token');
-      const url = editingUser ? `https://hms-back-rosy.vercel.app/api/users/${editingUser.UserName}` : 'https://hms-back-rosy.vercel.app/api/users';
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const url = editingUser ? `${API_BASE_URL}/users/${editingUser.UserName}` : `${API_BASE_URL}/users`;
       const method = editingUser ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Branch': branch
         },
         body: JSON.stringify(formData)
       });
@@ -132,10 +137,12 @@ export default function ManageUsersPage() {
 
     try {
       const token = localStorage.getItem('hms_token');
-      const response = await fetch(`https://hms-back-rosy.vercel.app/api/users/${userName}`, {
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const response = await fetch(`${API_BASE_URL}/users/${userName}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Branch': branch
         }
       });
 

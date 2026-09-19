@@ -44,7 +44,12 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/settings`);
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const response = await fetch(`${API_BASE_URL}/settings`, {
+        headers: {
+          'X-Branch': branch
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch settings');
       const data = await response.json();
       setSettings(data);
@@ -73,9 +78,13 @@ export default function AdminSettingsPage() {
         return;
       }
       
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
       const response = await fetch(`${API_BASE_URL}/settings/MAX_DISCOUNT_REFERRAL_PERCENT`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Branch': branch
+        },
         body: JSON.stringify({
           value: maxDiscountPercent,
           updatedBy: user?.username || 'admin'

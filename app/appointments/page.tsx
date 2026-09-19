@@ -81,7 +81,10 @@ export default function AppointmentsPage() {
         url += `&status=${statusFilter}`;
       }
 
-      const response = await fetch(url);
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const response = await fetch(url, {
+        headers: { 'X-Branch': branch }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch appointments');
       }
@@ -116,7 +119,10 @@ export default function AppointmentsPage() {
 
   const fetchAppointmentDetails = async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/appointments/${id}`);
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
+      const response = await fetch(`${API_BASE_URL}/appointments/${id}`, {
+        headers: { 'X-Branch': branch }
+      });
       if (!response.ok) throw new Error('Failed to fetch appointment details');
       const data = await response.json();
       setSelectedAppointment(data);
@@ -128,16 +134,21 @@ export default function AppointmentsPage() {
 
   const updateAppointmentStatus = async (id: number, status: string) => {
     try {
+      const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
       if (status === 'confirmed') {
         const response = await fetch(`${API_BASE_URL}/appointments/${id}/confirm`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Branch': branch
+          },
           body: JSON.stringify({ paymentId: 'manual_confirmation' })
         });
         if (!response.ok) throw new Error('Failed to confirm appointment');
       } else if (status === 'cancelled') {
         const response = await fetch(`${API_BASE_URL}/appointments/${id}/cancel`, {
-          method: 'POST'
+          method: 'POST',
+          headers: { 'X-Branch': branch }
         });
         if (!response.ok) throw new Error('Failed to cancel appointment');
       }

@@ -37,13 +37,16 @@ export default function Home() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch(API_BASE_URL + '/appointments/tests/popular?limit=30');
+        const response = await fetch(API_BASE_URL + '/appointments/tests/popular?limit=30', {
+          headers: {
+            'X-Branch': 'palwal'
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch services');
         const data = await response.json();
         setServices(data);
       } catch (err) {
         console.error('Error fetching services:', err);
-        setServices([]);
       } finally {
         setLoadingServices(false);
       }

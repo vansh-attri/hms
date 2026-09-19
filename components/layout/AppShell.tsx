@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBranch } from '@/contexts/BranchContext';
 
 type NavItem = {
   id: string;
@@ -37,6 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [query, setQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout, isAdmin } = useAuth();
+  const { branch, branchLabel } = useBranch();
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -99,6 +101,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
               
+              {/* Branch indicator badge */}
+              {branch && (
+                <span className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${
+                  branch === 'hodal'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-purple-50 text-purple-700 border-purple-200'
+                }`}>
+                  <span>{branch === 'hodal' ? '🏥' : '🏨'}</span>
+                  {branchLabel} Branch
+                </span>
+              )}
+
               {/* User menu */}
               <div className="relative">
                 <button

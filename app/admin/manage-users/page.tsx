@@ -82,6 +82,7 @@ export default function ManageUsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('hms_token');
       const branch = typeof window !== 'undefined' ? localStorage.getItem('hms_branch') || 'palwal' : 'palwal';
       const url = editingUser ? `${API_BASE_URL}/users/${editingUser.UserName}` : `${API_BASE_URL}/users`;
       const method = editingUser ? 'PUT' : 'POST';

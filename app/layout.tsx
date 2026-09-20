@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { BranchProvider } from "@/contexts/BranchContext";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -217,6 +218,7 @@ gtag('config', 'G-541QDNKMQZ');`}
             <AppShell>{children}</AppShell>
           </BranchProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );

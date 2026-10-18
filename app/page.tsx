@@ -721,7 +721,7 @@ export default function Home() {
                     Kalra Colony, Palwal, Haryana 121102
                   </p>
                   <a 
-                    href="https://www.google.com/maps/place/DR.VIRENDER+ULTRASOUND+CENTRE/@27.9032685,77.3645594,17z/data=!3m1!4b1!4m6!3m5!1s0x39732d2bb765c6f5:0x7a313507b8813333!8m2!3d27.9032685!4d77.3645594!16s%2Fg%2F11fmd7qxkn" 
+                    href="https://www.google.com/maps/place/Siddhivinayak+Ultrasound+Centre/@28.1367095,77.3273822,17z/data=!3m1!4b1!4m6!3m5!1s0x390cd30048a213a5:0x163fb9c65cfbb4fc!8m2!3d28.1367095!4d77.3273822!16s%2Fg%2F11m5jwb0mz?entry=ttu&g_ep=EgoyMDI2MTAxMy4wIKXMDSoASAFQAw%3D%3D" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-teal-600 hover:text-teal-800 transition-colors mt-3 text-sm font-semibold"

@@ -721,7 +721,7 @@ export default function Home() {
                     Kalra Colony, Palwal, Haryana 121102
                   </p>
                   <a 
-                    href="https://www.google.com/maps/dir//Siddhivinayak+Ultrasound+Centre,+New,+Sohna+Rd,+opposite+Civil+Hospital,+Kalra+Colony,+Palwal,+Haryana+121102/@28.0035328,77.16864,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x390cd30048a213a5:0x163fb9c65cfbb4fc!2m2!1d77.3273822!2d28.1367095?hl=en&entry=ttu&g_ep=EgoyMDI2MTAxMy4wIKXMDSoASAFQAw%3D%3D" 
+                    href="https://www.google.com/maps/place/Siddhivinayak+Ultrasound+Centre/@28.1367095,77.3273822,17z/data=!3m1!4b1!4m6!3m5!1s0x390cd30048a213a5:0x163fb9c65cfbb4fc!8m2!3d28.1367095!4d77.3273822!16s%2Fg%2F11m5jwb0mz?entry=ttu&g_ep=EgoyMDI2MTAxMy4wIKXMDSoASAFQAw%3D%3D" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-teal-600 hover:text-teal-800 transition-colors mt-3 text-sm font-semibold"
